@@ -1,4 +1,7 @@
+import shlex
+import subprocess
 import flask
+import os
 from flask import request, jsonify
 
 app = flask.Flask(__name__)
@@ -8,15 +11,9 @@ app.config["DEBUG"] = True
 services = {
     0: {
         'id': 0,
-        'name': 'Game of life',
+        'name': 'Digital CSS clock',
+        'path': '../apps/clock/index.html',
     },
-    1: {
-        'id': 1,
-        'name': ''
-    },
-    2: {
-
-    }
 }
 
 
@@ -55,13 +52,13 @@ def api_id():
     else:
         return 'Error: No id field provided. Please specify an id.'
 
-    results = []
+    path = os.path.abspath(services[id]['path'])
 
-    for service in services:
-        if service['id'] == id:
-            results.append(service)
+    command_line = f'google-chrome --app="file://{path}" --user-data-dir=/tmp/temp-chrome-data'
+    args = shlex.split(command_line)
+    p = subprocess.Popen(args)
+    return jsonify(services[0])
 
-    return jsonify(results)
 
 load_services()
 app.run()
