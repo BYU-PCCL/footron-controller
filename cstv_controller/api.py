@@ -35,7 +35,7 @@ def api_reload():
 # Route for returning all available apps
 @flask_app.route("/apps", methods=["GET"])
 def api_apps():
-    return {id: app_response(app) for id, app in controller.apps}
+    return {id: app_response(app) for id, app in controller.apps.items()}
 
 
 @flask_app.route("/apps/<id>", methods=["GET"])
