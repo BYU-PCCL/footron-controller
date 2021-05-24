@@ -27,6 +27,9 @@ class Controller:
         self.apps = {app.id: app for app in load_apps_from_fs()}
 
     def set_app(self, id: str):
+        if self.current_app and self.current_app.id == id:
+            return
+
         # Unchecked exception, consumer's responsibility to know that app with ID exists
         app = self.apps[id]
         self._update_placard(app)
