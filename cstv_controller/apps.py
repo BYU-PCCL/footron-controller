@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Type
 
 _BASE_APPS_PATH = Path("/opt/cstv/apps")
-_JSON_MAPPINGS = {"type": "app_type"}
+_JSON_MAPPINGS = {}
 
 
 class AppInitError(Exception):
@@ -96,8 +96,10 @@ APP_TYPES: Dict[str, Type[BaseApp]] = {"web": WebApp}
 
 
 def _create_app_object(config: Dict, path: Path):
+    app_type = config["type"]
     try:
-        app = APP_TYPES[config["type"]].deserialize(config, path)
+        del config["type"]
+        app = APP_TYPES[app_type].deserialize(config, path)
     except AppInitError as e:
         print(
             f"Failed to load app at {path.absolute()} with error:\n{e}\n",
