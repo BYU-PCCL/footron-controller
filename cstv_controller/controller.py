@@ -45,7 +45,7 @@ class Controller:
         if app.artist:
             data["artist"] = app.artist
 
-        # TODO: Validate this somehow
+        # TODO: Validate this worked somehow
         self._domain_sockets_session.post(
             f"{self._placard_escaped_url}/content",
             json=data,
