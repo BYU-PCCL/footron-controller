@@ -6,15 +6,15 @@ app_list = {
     "app_list": [
         {
             "name" : "life",
-            "lifetime" : 60,
+            "lifetime" : 5,
         },
         {
             "name" : "smoke",
-            "lifetime" : 59,
+            "lifetime" : 5,
         },
         {
             "name" : "hair",
-            "lifetime" : 70,
+            "lifetime" : 5,
         },
     ]
 
@@ -26,20 +26,27 @@ app_list = {
 def shuffle_list(ls):
     playlist = []
     for x in ls :
-        playlist.append[{}]
+        playlist.append({})
 
-    list_length = ls.count()
-    for list_length in ls :
+    print(playlist)
+
+    list_length = len(ls)
+    for x in ls :
         addAt = random.randint(0, list_length-1)
-        while true:
+        while True:
             if playlist[addAt] == {}:
                 playlist[addAt] = x
+                # print("added " + x["name"] + " at " + str(addAt))
                 break
             else:
+                # print(addAt)
+                # print(playlist[addAt])
                 addAt += 1
                 if addAt > (list_length - 1):
                     addAt -= list_length
         
+    print(playlist)
+
     return playlist
 
 
@@ -47,14 +54,15 @@ def shuffle_list(ls):
 
 # send commands to controller
 
-cont = true
+cont = True
 
 while cont:
     playlist = shuffle_list(app_list["app_list"])
     for app in playlist:
-        print(app[0]["name"])
+        print(app["name"])
+        # print("playing: " + app["name"])
         # wait for confirmation that it's running?
-        time.sleep(app[0]["lifetime"])
+        time.sleep(app["lifetime"])
     # check for new app_list data? should it be able to be updated on the fly?
 
 # do forever
