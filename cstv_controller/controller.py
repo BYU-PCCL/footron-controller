@@ -11,24 +11,7 @@ _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "
 
 
 class Controller:
-    # Test data for the CS TV, a list of dictionaries
-    apps: Dict[str, BaseApp] = {
-        "clock1": WebApp(
-            "apps/clock/",
-            "clock1",
-            "Random CSS clock",
-            "This digital CSS clock that we stole from someone online will only serve to demonstrate the "
-            "capabilities of this very long description.",
-            artist="Some poor developer",
-        ),
-        "clock2": WebApp(
-            "apps/clock2/",
-            "clock2",
-            "Yet another CSS clock",
-            "This CSS clock is exactly like the last one.",
-            artist="A Somewhat Longer Artist Name",
-        ),
-    }
+    apps: Dict[str, BaseApp] = {}
     current_app: Optional[BaseApp]
 
     def __init__(self):
