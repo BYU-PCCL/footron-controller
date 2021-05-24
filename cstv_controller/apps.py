@@ -67,9 +67,9 @@ class WebApp(BaseApp):
         BaseApp.__init__(
             self, path, id, "web", title, description, show_sidebar, artist
         )
-        self.static_path = self.path.joinpath("static")
+        self.static_path = self.path.joinpath("static").joinpath("index.html")
 
-        if not self.static_path.exists() or not self.static_path.is_dir():
+        if not self.static_path.exists():
             raise AppInitError(
                 f"Couldn't load static path for app {self.id} at path {self.path.absolute()}"
             )
@@ -79,7 +79,7 @@ class WebApp(BaseApp):
     def start(self):
         command = [
             "google-chrome",
-            f'--app="file://{self.static_path}"',
+            f'--app=file://{self.static_path}',
             f"--user-data-dir=/tmp/cstv-chrome-data/{self.id}",
             "--no-first-run",
         ]
