@@ -1,69 +1,38 @@
+import copy
+import datetime
 import random
+import requests
 import time
 
+# from apscheduler.schedulers.background import BackgroundScheduler
+
 # Also gotta see what apps are actually able to be used (cameras online?)
-app_list = {
-    "app_list": [
-        {
-            "name" : "life",
-            "lifetime" : 5,
-        },
-        {
-            "name" : "smoke",
-            "lifetime" : 5,
-        },
-        {
-            "name" : "hair",
-            "lifetime" : 5,
-        },
-    ]
 
-}
 # read in json
-
-
-# shuffle list
-def shuffle_list(ls):
-    playlist = []
-    for x in ls :
-        playlist.append({})
-
-    print(playlist)
-
-    list_length = len(ls)
-    for x in ls :
-        addAt = random.randint(0, list_length-1)
-        while True:
-            if playlist[addAt] == {}:
-                playlist[addAt] = x
-                # print("added " + x["name"] + " at " + str(addAt))
-                break
-            else:
-                # print(addAt)
-                # print(playlist[addAt])
-                addAt += 1
-                if addAt > (list_length - 1):
-                    addAt -= list_length
-        
-    print(playlist)
-
-    return playlist
-
-
-
+applist = list(requests.get("http://127.0.0.1:5000/apps").json().items())
 
 # send commands to controller
 
 cont = True
 
 while cont:
-    playlist = shuffle_list(app_list["app_list"])
-    for app in playlist:
-        print(app["name"])
-        # print("playing: " + app["name"])
+    playlist = applist
+    random.shuffle(playlist)
+    
+    for app in playlist:    
+        lifetime = 9
+        if 'lifetime' in app:
+            lifetime = app['lifetime']
+
+        r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app[1]['id'] })
+        print(r)
+
         # wait for confirmation that it's running?
-        time.sleep(app["lifetime"])
-    # check for new app_list data? should it be able to be updated on the fly?
+        start_time = datetime.datetime.now()
+        while ((datetime.datetime.now() - start_time).total_seconds() < lifetime):
+            time.sleep(10)
+
+    # check for new applist data? should it be able to be updated on the fly?
 
 # do forever
     # while list isn't empty 
