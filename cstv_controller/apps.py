@@ -1,12 +1,18 @@
 import abc
 import json
+import multiprocessing
+import socketserver
 import subprocess
 import sys
+from functools import partial
 from pathlib import Path
 from typing import Optional, List, Dict, Type
+from http import server
 
 _BASE_APPS_PATH = Path("/opt/cstv/apps")
 _JSON_MAPPINGS = {}
+
+bound_ports = list()
 
 
 class AppInitError(Exception):
@@ -53,7 +59,8 @@ class BaseApp(abc.ABC):
 
 
 class WebApp(BaseApp):
-    process: Optional[subprocess.Popen]
+    _process: Optional[subprocess.Popen]
+    _server_process: Optional[multiprocessing.Process]
 
     def __init__(
         self,
@@ -67,26 +74,60 @@ class WebApp(BaseApp):
         BaseApp.__init__(
             self, path, id, "web", title, description, show_sidebar, artist
         )
-        self.static_path = self.path.joinpath("static").joinpath("index.html")
+        self._static_path = self.path.joinpath("static")
 
-        if not self.static_path.exists():
+        if not self._static_path.exists():
             raise AppInitError(
                 f"Couldn't load static path for app {self.id} at path {self.path.absolute()}"
             )
 
-        self.process = None
+        self._port = None
+        self._process = None
+        self._server_process = None
 
-    def start(self):
+    def _reserve_port(self):
+        # TODO: Consider actually checking if another application has reserved this port on the OS. Not sure if this
+        #  would be a problem since we have a lot of control over the OS
+        if not len(bound_ports):
+            self._port = 8085
+        else:
+            self._port = bound_ports[-1] + 1
+
+        bound_ports.append(self._port)
+
+    def _release_port(self):
+        bound_ports.remove(self._port)
+
+    def _server_process_loop(self):
+        with socketserver.TCPServer(
+            ("", self._port),
+            partial(server.SimpleHTTPRequestHandler, directory=str(self._static_path)),
+        ) as httpd:
+            httpd.serve_forever()
+
+    def _start_server(self):
+        self._reserve_port()
+        self._server_process = multiprocessing.Process(
+            target=self._server_process_loop
+        )
+        self._server_process.start()
+
+    def _start_browser(self):
         command = [
             "google-chrome",
-            f'--app=file://{self.static_path}',
+            f"--app=http://localhost:{self._port}",
             f"--user-data-dir=/tmp/cstv-chrome-data/{self.id}",
             "--no-first-run",
         ]
-        self.process = subprocess.Popen(command)
+        self._process = subprocess.Popen(command)
+
+    def start(self):
+        self._start_server()
+        self._start_browser()
 
     def stop(self):
-        self.process.terminate()
+        self._server_process.terminate()
+        self._process.terminate()
 
     def serialize(self):
         return super(self).serialize()
