@@ -4,5 +4,6 @@
     "title": "Random CSS Clock",
     "description": "This digital CSS clock that we stole from someone online will serve only to demonstrate the capabilities of this very long description.",
     "artist": "Some poor developer",
-    "show_sidebar": true
+    "show_sidebar": true,
+    "lifetime": 4
 }
