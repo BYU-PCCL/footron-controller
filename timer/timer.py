@@ -1,4 +1,3 @@
-import copy
 import datetime
 import random
 import requests
@@ -11,9 +10,21 @@ import time
 # read in json
 applist = list(requests.get("http://127.0.0.1:5000/apps").json().items())
 
-# send commands to controller
-
 cont = True
+
+def should_advance(start_time):
+        current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
+        if 'end_time' in current_app:
+            print("end_time mode")
+            if datetime.datetime.now() < current_app['end_time']:
+                return False
+        else:
+            print("lifetime mode")
+            if ((datetime.datetime.now() - start_time).total_seconds() < app['lifetime']):
+                return False
+
+        print("good to go, buddy")
+        return True
 
 while cont:
     playlist = applist
@@ -26,17 +37,27 @@ while cont:
         # print(r)
 
         current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
-
         start_time = datetime.datetime.now()
-        if 'endtime' in current_app:
-            #use endtime
-            while (datetime.datetime.now() < current_app['endtime']):
-                time.sleep(2)
-                current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
-        else:
-            # use lifetime
-            while ((datetime.datetime.now() - start_time).total_seconds() < app['lifetime']):
-                time.sleep(10)
+        advance = False
+
+        while(not advance):
+            time.sleep(5)
+            print("run ShouldAdvance")
+            advance = should_advance(start_time)
+
+
+
+
+        ##################################
+        # if 'end_time' in current_app:
+        #     #use endtime
+        #     while (datetime.datetime.now() < current_app['end_time']):
+        #         time.sleep(2)
+        #         current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
+        # else:
+        #     # use lifetime
+        #     while ((datetime.datetime.now() - start_time).total_seconds() < app['lifetime']):
+        #         time.sleep(10)
 
         
 
@@ -51,3 +72,6 @@ while cont:
         # wait for amount of time
         # follow list
     # reshuffle after list empty 
+
+
+    
