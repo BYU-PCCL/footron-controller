@@ -19,12 +19,16 @@ while cont:
     playlist = applist
     random.shuffle(playlist)
     
-    for app in playlist:    
+    for appbase in playlist:    
+        app = appbase[1]
+        print(app)
         lifetime = 9
         if 'lifetime' in app:
             lifetime = app['lifetime']
+        else:
+            print("lifetime not in app :(") # though there should always be a default value for lifetime in apps.py
 
-        r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app[1]['id'] })
+        r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
         print(r)
 
         # wait for confirmation that it's running?
