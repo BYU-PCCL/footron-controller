@@ -9,8 +9,11 @@ from pathlib import Path
 from typing import Optional, List, Dict, Type
 from http import server
 
-_BASE_APPS_PATH = Path("/opt/cstv/apps")
+_BASE_PATH = Path("/opt/cstv")
+
 _JSON_MAPPINGS = {}
+# Fields to be accessed programmatically only. This might be hacky but it works for now.
+_JSON_IGNORE = ["static_path"]
 
 bound_ports = list()
 
@@ -68,13 +71,16 @@ class WebApp(BaseApp):
         id,
         title,
         description,
+        route="",
+        static_path=None,
         show_sidebar=True,
         artist=None,
     ):
         BaseApp.__init__(
             self, path, id, "web", title, description, show_sidebar, artist
         )
-        self._static_path = self.path.joinpath("static")
+        self._static_path = static_path if static_path else self.path.joinpath("static")
+        self._route = route
 
         if not self._static_path.exists():
             raise AppInitError(
@@ -107,17 +113,18 @@ class WebApp(BaseApp):
 
     def _start_server(self):
         self._reserve_port()
-        self._server_process = multiprocessing.Process(
-            target=self._server_process_loop
-        )
+        self._server_process = multiprocessing.Process(target=self._server_process_loop)
         self._server_process.start()
 
     def _start_browser(self):
         command = [
             "google-chrome",
-            f"--app=http://localhost:{self._port}",
+            f"--app=http://localhost:{self._port}{self._route}",
             f"--user-data-dir=/tmp/cstv-chrome-data/{self.id}",
+            # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
+            # Allow videos to play without user interaction
+            "--autoplay-policy=no-user-gesture-required",
         ]
         self._process = subprocess.Popen(command)
 
@@ -130,9 +137,30 @@ class WebApp(BaseApp):
         self._process.terminate()
 
     def serialize(self):
-        return super(self).serialize()
+        data = super(self).serialize()
+        if self._route:
+            data["route"] = self._route
+        return data
 
 
+class Video(WebApp):
+    def __init__(self, path, id, title, description, artist, filename):
+        # TODO: Clean this up and make it make more sense
+        WebApp.__init__(
+            self,
+            path.parent.parent,
+            id=id,
+            title=title,
+            description=description,
+            route=f"/static/?url=/videos/{path.name}/{filename}",
+            show_sidebar=False,
+            static_path=path.parent.parent,
+            artist=artist,
+        )
+        self.app_type = "video"
+
+
+# Video isn't included here because it's kind of sort of an app. We really need to iron out the distinction.
 APP_TYPES: Dict[str, Type[BaseApp]] = {"web": WebApp}
 
 
@@ -154,13 +182,14 @@ def _map_json_to_app_object_fields(data):
     for (json_field, object_field) in _JSON_MAPPINGS.items():
         data[object_field] = data[json_field]
         del data[json_field]
+    for ignore_field in _JSON_IGNORE:
+        if ignore_field not in data:
+            continue
+        del data[ignore_field]
     return data
 
 
-def _load_app_at_path(path: Path) -> Optional[BaseApp]:
-    if not path.is_dir():
-        return
-
+def _load_config_at_path(path: Path):
     config_path = path.joinpath("config.json")
     # TODO: Add thumbnail
 
@@ -169,19 +198,52 @@ def _load_app_at_path(path: Path) -> Optional[BaseApp]:
 
     try:
         with open(config_path) as config_path:
-            app_config = json.load(config_path)
-    except ValueError as e:
+            config = json.load(config_path)
+    except ValueError:
         print(
-            f"Failed to parse config for app at '{path.absolute()}'",
+            f"Failed to parse config at path '{path.absolute()}'",
             file=sys.stderr,
         )
         return
 
-    return _create_app_object(app_config, path)
+    return config
 
 
-def load_apps_from_fs(path=_BASE_APPS_PATH) -> List[BaseApp]:
+def _load_video_at_path(path: Path) -> Optional[Video]:
+    if not path.is_dir():
+        return
+
+    config = _load_config_at_path(path)
+
+    return Video(path, **config)
+
+
+def _load_videos_fs(path: Path) -> List[Video]:
     if not path.exists():
+        path.mkdir(parents=True)
+    # TODO: Make this so it's not a weird controller-managed special case
+    videos_path = path.joinpath("videos")
+    return list(map(_load_video_at_path, videos_path.iterdir()))
+
+
+def _load_app_at_path(path: Path) -> Optional[BaseApp]:
+    if not path.is_dir():
+        return
+
+    return _create_app_object(_load_config_at_path(path), path)
+
+
+def _load_apps_fs(path):
+    if not path.exists():
+        # TODO: Creating a path at /opt/cstv/* doesn't work because we don't have permissions to write there. Should
+        #  we just throw an error here?
         path.mkdir(parents=True)
 
     return list(map(_load_app_at_path, path.iterdir()))
+
+
+def load_apps_from_fs(path=_BASE_PATH) -> List[BaseApp]:
+    return [
+        *_load_videos_fs(path.joinpath("video-player")),
+        *_load_apps_fs(path.joinpath("apps")),
+    ]
