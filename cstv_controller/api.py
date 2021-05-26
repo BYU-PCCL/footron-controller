@@ -16,6 +16,7 @@ def app_response(app: BaseApp):
         "title": app.title,
         "artist": app.artist,
         "description": app.description,
+        "lifetime": app.lifetime,
     }
 
 

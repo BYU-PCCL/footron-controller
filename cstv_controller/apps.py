@@ -12,7 +12,10 @@ from http import server
 _BASE_APPS_PATH = Path("/opt/cstv/apps")
 _JSON_MAPPINGS = {}
 
+_DEFAULT_LIFETIME = 60
+
 bound_ports = list()
+
 
 
 class AppInitError(Exception):
@@ -20,8 +23,11 @@ class AppInitError(Exception):
 
 
 class BaseApp(abc.ABC):
+
+
+
     def __init__(
-        self, path, id, app_type, title, description, show_sidebar=True, artist=None
+        self, path, id, app_type, title, description, show_sidebar=True, artist=None, lifetime=_DEFAULT_LIFETIME
     ):
 
         # TODO: Add user control component (though that may need to be done statically beforehand if we want to work
@@ -34,6 +40,7 @@ class BaseApp(abc.ABC):
         self.description = description
         self.artist = artist
         self.show_sidebar = show_sidebar
+        self.lifetime = lifetime
 
     @abc.abstractmethod
     def start(self):
@@ -51,6 +58,7 @@ class BaseApp(abc.ABC):
             "description": self.description,
             "artist": self.artist,
             "show_sidebar": self.show_sidebar,
+            "lifetime": self.lifetime,
         }
 
     @classmethod
@@ -70,9 +78,10 @@ class WebApp(BaseApp):
         description,
         show_sidebar=True,
         artist=None,
+        lifetime=_DEFAULT_LIFETIME,
     ):
         BaseApp.__init__(
-            self, path, id, "web", title, description, show_sidebar, artist
+            self, path, id, "web", title, description, show_sidebar, artist, lifetime
         )
         self._static_path = self.path.joinpath("static")
 
