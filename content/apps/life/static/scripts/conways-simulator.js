@@ -184,11 +184,14 @@ class ConwaySimulator {
   // }
   
   placeShape(){
-    // random x , y
-    // if random x is bigger than 1 and smaller than row/cols - 1
-
     if(this.x == 20){
-      this.makeGlider();
+      var rand = Math.floor(Math.random()*10);
+      if(rand % 2 == 0){
+        this.makeGlider
+      }
+      else{
+        this.makeSpaceShip();
+      }
       this.x = 0;
     } else {
       this.x++;
@@ -202,6 +205,42 @@ class ConwaySimulator {
   
     var x = Math.floor(Math.random() * (this.cols - 1) + 1);
     // console.log(x);
+
+    var u = Math.floor(Math.random()*10);
+    if(u % 2 == 0){
+      u = 1;
+    }
+    else{
+      u = -1;
+    }
+
+    var v = Math.floor(Math.random()*10);
+    if(v % 2 == 0){
+      v = 1;
+    }
+    else{
+      v = -1;
+    }
+
+    this.grid[y+u][x-v].alive = true;
+    this.grid[y][x].alive = true;
+    this.grid[y][x+v].alive = true;
+    this.grid[y-u][x-v].alive = true;
+    this.grid[y-u][x].alive = true;
+    
+  }
+
+  makeGliderTest() {
+
+    var y = Math.floor(Math.random() * ((this.rows - 2) - 2) + 2);
+    var x = Math.floor(Math.random() * ((this.cols - 2) - 2) + 2);
+
+    // var y = 2;
+    // // document.write(Math.floor(this.rows));
+    // // console.log(y);
+  
+    // var x = 2;
+    // // console.log(x);
 
     var u = Math.floor(Math.random()*10);
     if(u % 2 == 0){
@@ -290,7 +329,98 @@ class ConwaySimulator {
     
   }
 
+  makeSpaceShipLR() {
+    var y = Math.floor(Math.random() * ((this.rows - 3) - 3) + 3);
+    var x = Math.floor(Math.random() * ((this.cols - 3) - 3) + 3);
 
+    var u1 = Math.floor(Math.random()*10);
+    var u2;
+    if(u1 % 2 == 0){
+      u1 = 1;
+      u2 = 2;
+    }
+    else{
+      u1 = -1;
+      u2 = -2
+    }
+
+    var v1 = Math.floor(Math.random()*10);
+    var v2;
+    if(v1 % 2 == 0){
+      v1 = 1;
+      v2 = 2
+    }
+    else{
+      v1 = -1;
+      v2 = -2
+    }
+
+    this.grid[y-u2][x-v1].alive = true;
+    this.grid[y-u2][x].alive = true;
+    this.grid[y-u1][x-v2].alive = true;
+    this.grid[y-u1][x-v1].alive = true;
+    this.grid[y-u1][x].alive = true;
+    this.grid[y-u1][x+v1].alive = true;
+    this.grid[y][x-v2].alive = true;
+    this.grid[y][x-v1].alive = true;
+    this.grid[y][x+v1].alive = true;
+    this.grid[y][x+v2].alive = true;
+    this.grid[y+u1][x].alive = true;
+    this.grid[y+u1][x+v1].alive = true;
+
+  }
+
+  makeSpaceShip() {
+    var rand = Math.floor(Math.random()*10);
+    if(rand % 2 == 0){
+      this.makeSpaceShipLR();
+    }
+    else{
+      this.makeSpaceShipUD();
+    }
+
+  }
+  
+  makeSpaceShipUD() {
+    var y = Math.floor(Math.random() * ((this.rows - 3) - 3) + 3);
+    var x = Math.floor(Math.random() * ((this.cols - 3) - 3) + 3);
+
+    var u1 = Math.floor(Math.random()*10);
+    var u2;
+    if(u1 % 2 == 0){
+      u1 = 1;
+      u2 = 2;
+    }
+    else{
+      u1 = -1;
+      u2 = -2
+    }
+
+    var v1 = Math.floor(Math.random()*10);
+    var v2;
+    if(v1 % 2 == 0){
+      v1 = 1;
+      v2 = 2
+    }
+    else{
+      v1 = -1;
+      v2 = -2
+    }
+
+    this.grid[y-u2][x].alive = true;
+    this.grid[y-u1][x-v1].alive = true;
+    this.grid[y-u1][x].alive = true;
+    this.grid[y-u1][x+v1].alive = true;
+    this.grid[y][x-v2].alive = true;
+    this.grid[y][x-v1].alive = true;
+    this.grid[y][x+v1].alive = true;
+    this.grid[y+u1][x-v2].alive = true;
+    this.grid[y+u1][x-v1].alive = true;
+    this.grid[y+u1][x].alive = true;
+    this.grid[y+u2][x-v1].alive = true;
+    this.grid[y+u2][x].alive = true;
+  }
+  
   
 
   
