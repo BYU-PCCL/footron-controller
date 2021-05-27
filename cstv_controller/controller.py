@@ -34,7 +34,6 @@ class Controller:
 
         # Unchecked exception, consumer's responsibility to know that app with ID exists
         app = self.apps[id]
-        self.end_time = None
         self._update_placard(app)
         app.start()
         if self.current_app:
@@ -43,6 +42,7 @@ class Controller:
             #  an app was launched successfully
             sleep(0.5)
             self.current_app.stop()
+        self.end_time = None
         self.current_app = app
 
     def _update_placard(self, app: BaseApp):
