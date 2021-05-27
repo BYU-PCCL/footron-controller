@@ -170,7 +170,7 @@ class Video(WebApp):
             title=title,
             description=description,
             route=f"/static/?url=/videos/{path.name}/{filename}",
-            show_sidebar=False,
+            show_sidebar=True,
             static_path=path.parent.parent,
             artist=artist,
         )
