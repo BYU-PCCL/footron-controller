@@ -9,16 +9,15 @@ from pathlib import Path
 from typing import Optional, List, Dict, Type
 from http import server
 
-_BASE_PATH = Path("/opt/cstv")
+# _BASE_PATH = Path("/opt/cstv")
+_BASE_PATH = Path("./content")
 
 _JSON_MAPPINGS = {}
 # Fields to be accessed programmatically only. This might be hacky but it works for now.
-_JSON_IGNORE = ["static_path"]
-
+_JSON_IGNORE = ["static_path", "end_time"]
 _DEFAULT_LIFETIME = 60
 
 bound_ports = list()
-
 
 
 class AppInitError(Exception):
@@ -26,11 +25,17 @@ class AppInitError(Exception):
 
 
 class BaseApp(abc.ABC):
-
-
-
     def __init__(
-        self, path, id, app_type, title, description, show_sidebar=True, artist=None, lifetime=_DEFAULT_LIFETIME
+        self,
+        path,
+        id,
+        app_type,
+        title,
+        description,
+        show_sidebar=True,
+        artist=None,
+        lifetime=_DEFAULT_LIFETIME,
+        end_time=None
     ):
 
         # TODO: Add user control component (though that may need to be done statically beforehand if we want to work
@@ -44,6 +49,7 @@ class BaseApp(abc.ABC):
         self.artist = artist
         self.show_sidebar = show_sidebar
         self.lifetime = lifetime
+        self.end_time = end_time
 
     @abc.abstractmethod
     def start(self):
@@ -134,6 +140,8 @@ class WebApp(BaseApp):
             "--no-first-run",
             # Allow videos to play without user interaction
             "--autoplay-policy=no-user-gesture-required",
+            # Allow cross-origin requests
+            "--disable-web-security"
         ]
         self._process = subprocess.Popen(command)
 

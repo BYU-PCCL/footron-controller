@@ -11,13 +11,18 @@ controller = Controller()
 
 
 def app_response(app: BaseApp):
-    return {
+    response_data = {
         "id": app.id,
         "title": app.title,
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
     }
+
+    if app.end_time is not None:
+        response_data["end_time"] = app.end_time
+
+    return response_data
 
 
 # Route for the home page
@@ -47,7 +52,7 @@ def api_app(id):
     return app_response(controller.apps[id])
 
 
-@flask_app.route("/current-app", methods=["GET", "PUT"])
+@flask_app.route("/current-app", methods=["GET", "PUT", "PATCH"])
 def api_current_app():
     # TODO: Break this up into a lot of pieces
 
@@ -56,18 +61,32 @@ def api_current_app():
             return {}
 
         return app_response(controller.current_app)
-    elif request.method == "PUT":
+    elif request.method in ["PUT", "PATCH"]:
         body = request.json
         if body is None:
             return {"error": "No request body provided"}, 400
-        if "id" not in body:
-            return {"error": "'id' not found in request body"}, 400
 
-        id = body["id"]
-        if id not in controller.apps:
-            return {"error": f"App with id '{id}' not registered"}, 400
+        if request.method == "PUT":
+            if "id" not in body:
+                return {"error": "'id' not found in request body"}, 400
 
-        controller.set_app(id)
+            id = body["id"]
+            if id not in controller.apps:
+                return {"error": f"App with id '{id}' not registered"}, 400
+
+            controller.set_app(id)
+        elif request.method == "PATCH":
+            if "end_time" not in body:
+                return {"error": "PATCH on /current-app is only supported for end_time"}, 400
+
+            print(body)
+            end_time = body["end_time"]
+            if end_time is not None and not isinstance(end_time, int):
+                return {"error": "end_time must be either an integer or null"}, 400
+
+            controller.current_app.end_time = end_time
+            print(controller.current_app)
+
         return {"status": "ok"}
 
 
