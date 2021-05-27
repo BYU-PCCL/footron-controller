@@ -48,17 +48,14 @@ class BaseApp(abc.ABC):
         self.artist = artist
         self.show_sidebar = show_sidebar
         self.lifetime = lifetime
-        self.end_time = None
 
     @abc.abstractmethod
     def start(self):
         # This is set programmatically during the lifetime of the app
-        self.end_time = None
         ...
 
     @abc.abstractmethod
     def stop(self):
-        self.end_time = None
         ...
 
     def serialize(self):
@@ -148,13 +145,10 @@ class WebApp(BaseApp):
         self._process = subprocess.Popen(command)
 
     def start(self):
-        super().start()
-        self.end_time = None
         self._start_server()
         self._start_browser()
 
     def stop(self):
-        super().stop()
         self._server_process.terminate()
         self._process.terminate()
 

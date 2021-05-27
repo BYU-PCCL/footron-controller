@@ -57,8 +57,8 @@ def api_current_app():
         current_app = controller.current_app
 
         response_data = app_response(current_app)
-        if current_app.end_time is not None:
-            response_data["end_time"] = current_app.end_time
+        if controller.end_time is not None:
+            response_data["end_time"] = controller.end_time
 
         return response_data
     elif request.method in ["PUT", "PATCH"]:
@@ -79,13 +79,11 @@ def api_current_app():
             if "end_time" not in body:
                 return {"error": "PATCH on /current-app is only supported for end_time"}, 400
 
-            print(body)
             end_time = body["end_time"]
             if end_time is not None and not isinstance(end_time, int):
                 return {"error": "end_time must be either an integer or null"}, 400
 
-            controller.current_app.end_time = end_time
-            print(controller.current_app)
+            controller.end_time = end_time
 
         return {"status": "ok"}
 

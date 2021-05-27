@@ -13,6 +13,7 @@ _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "
 class Controller:
     apps: Dict[str, BaseApp] = {}
     current_app: Optional[BaseApp]
+    end_time: Optional[int]
 
     def __init__(self):
         self._domain_sockets_session = requests_unixsocket.Session()
@@ -21,6 +22,7 @@ class Controller:
         )
 
         self.current_app = None
+        self.end_time = None
         self.load_apps()
 
     def load_apps(self):
@@ -32,6 +34,7 @@ class Controller:
 
         # Unchecked exception, consumer's responsibility to know that app with ID exists
         app = self.apps[id]
+        self.end_time = None
         self._update_placard(app)
         app.start()
         if self.current_app:
