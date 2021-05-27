@@ -11,18 +11,13 @@ controller = Controller()
 
 
 def app_response(app: BaseApp):
-    response_data = {
+    return {
         "id": app.id,
         "title": app.title,
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
     }
-
-    if app.end_time is not None:
-        response_data["end_time"] = app.end_time
-
-    return response_data
 
 
 # Route for the home page
@@ -59,8 +54,13 @@ def api_current_app():
     if request.method == "GET":
         if not controller.current_app:
             return {}
+        current_app = controller.current_app
 
-        return app_response(controller.current_app)
+        response_data = app_response(current_app)
+        if current_app.end_time is not None:
+            response_data["end_time"] = current_app.end_time
+
+        return response_data
     elif request.method in ["PUT", "PATCH"]:
         body = request.json
         if body is None:
