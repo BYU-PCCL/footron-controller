@@ -16,5 +16,6 @@ canvas {
   padding: 0;
   height: 111%;
   width: 101%;
+  overflow: hidden;
 }
 
