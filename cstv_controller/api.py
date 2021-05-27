@@ -76,12 +76,26 @@ def api_current_app():
 
             controller.set_app(id)
         elif request.method == "PATCH":
+            # Requiring an ID is a little bit of a hacky way to prevent an app that is transitioning out from setting
+            # properties on the incoming app. This of course assumes no foul play on the part of the app,
+            # which shouldn't be a concern for now because all apps are manually reviewed.
+            if "id" not in body:
+                return {"error": "id of requesting app must be specified in `id`"}, 400
+
             if "end_time" not in body:
-                return {"error": "PATCH on /current-app is only supported for end_time"}, 400
+                return {"error": "PATCH on /current-app is only supported for `end_time`"}, 400
 
             end_time = body["end_time"]
             if end_time is not None and not isinstance(end_time, int):
-                return {"error": "end_time must be either an integer or null"}, 400
+                return {"error": "`end_time` must be either an integer or null"}, 400
+
+            id = body["id"]
+
+            if id is None or not isinstance(id, str):
+                return {"error": "`id` must be a string"}, 400
+
+            if id != controller.current_app.id:
+                return {"error": "`id` specified is not current app"}, 400
 
             controller.end_time = end_time
 

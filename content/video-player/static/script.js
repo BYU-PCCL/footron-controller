@@ -3,6 +3,7 @@ const videoElement = document.querySelector("#video")
 
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('id');
     videoElement.src = urlParams.get('url');
     // noinspection JSIgnoredPromiseFromCall
     videoElement.play()
@@ -19,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({"end_time": Math.floor(endTime)}),
+            body: JSON.stringify({"id": videoId, "end_time": Math.floor(endTime)}),
         })
     }, 500)
 });

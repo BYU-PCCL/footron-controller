@@ -168,7 +168,7 @@ class Video(WebApp):
             id=id,
             title=title,
             description=description,
-            route=f"/static/?url=/videos/{path.name}/{filename}",
+            route=f"/static/?url=/videos/{path.name}/{filename}&id={id}",
             show_sidebar=True,
             static_path=path.parent.parent,
             artist=artist,
