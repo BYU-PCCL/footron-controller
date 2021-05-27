@@ -15,16 +15,4 @@ document.addEventListener("DOMContentLoaded", function(event) {
   let sim = new ConwaySimulator(rows, cols, pixelSize, roundDelay, chanceOfLife);
   container.prepend(sim.canvas);
   sim.start();
-
-  let startStopBut = document.getElementById('start-stop');
-  ['click', 'touch'].map((eventName) => {
-    startStopBut.addEventListener(eventName, () => {
-      if(sim.intervalId) {
-        sim.stop();
-      }
-      else {
-        sim.start();
-      }
-    });
-  });
 });
