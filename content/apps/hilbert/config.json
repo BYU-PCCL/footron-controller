@@ -1,0 +1,9 @@
+{
+    "id": "hilbert",
+    "type": "docker",
+    "title": "Hilbert Curve",
+    "description": "This is a Hilbert curve visualization. At some point, I'm sure Connor will want to write a better description.",
+    "artist": "Connor Christopherson",
+    "image_id": "pccl/app_hilbert:0.1",
+    "lifetime": 240
+}
