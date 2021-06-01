@@ -1,6 +1,7 @@
 import abc
 import json
 import multiprocessing
+import os
 import socketserver
 import subprocess
 import sys
@@ -8,8 +9,12 @@ from functools import partial
 from pathlib import Path
 from typing import Optional, List, Dict, Type
 from http import server
+import docker
 
 # _BASE_PATH = Path("/opt/cstv")
+from docker.models.containers import Container
+from docker.types import DeviceRequest
+
 _BASE_PATH = Path("./content")
 
 _JSON_MAPPINGS = {}
@@ -17,7 +22,10 @@ _JSON_MAPPINGS = {}
 _JSON_IGNORE = ["static_path", "end_time"]
 _DEFAULT_LIFETIME = 60
 
-bound_ports = list()
+bound_http_ports = []
+bound_zmq_ports = []
+
+docker_client = docker.from_env()
 
 
 class AppInitError(Exception):
@@ -105,19 +113,6 @@ class WebApp(BaseApp):
         self._process = None
         self._server_process = None
 
-    def _reserve_port(self):
-        # TODO: Consider actually checking if another application has reserved this port on the OS. Not sure if this
-        #  would be a problem since we have a lot of control over the OS
-        if not len(bound_ports):
-            self._port = 8085
-        else:
-            self._port = bound_ports[-1] + 1
-
-        bound_ports.append(self._port)
-
-    def _release_port(self):
-        bound_ports.remove(self._port)
-
     def _server_process_loop(self):
         with socketserver.TCPServer(
             ("", self._port),
@@ -126,7 +121,7 @@ class WebApp(BaseApp):
             httpd.serve_forever()
 
     def _start_server(self):
-        self._reserve_port()
+        self._port = _reserve_port(bound_http_ports, 8085)
         self._server_process = multiprocessing.Process(target=self._server_process_loop)
         self._server_process.start()
 
@@ -151,12 +146,67 @@ class WebApp(BaseApp):
     def stop(self):
         self._server_process.terminate()
         self._process.terminate()
+        _release_port(self._port, bound_http_ports)
 
     def serialize(self):
         data = super(self).serialize()
         if self._route:
             data["route"] = self._route
         return data
+
+
+class DockerApp(BaseApp):
+    _container: Optional[Container]
+
+    def __init__(
+        self,
+        image_id,
+        path,
+        id,
+        title,
+        description,
+        show_sidebar=True,
+        artist=None,
+        lifetime=_DEFAULT_LIFETIME,
+    ):
+        BaseApp.__init__(
+            self, path, id, "docker", title, description, show_sidebar, artist, lifetime
+        )
+
+        self._image_id = image_id
+        self._container = None
+        self._http_port = None
+        self._zmq_port = None
+
+    def start(self):
+        self._http_port = _reserve_port(bound_http_ports, 8085)
+        self._zmq_port = _reserve_port(bound_zmq_ports, 5555)
+        self._container = docker_client.containers.run(
+            self._image_id,
+            detach=True,
+            # TODO: See if this is needed
+            # runtime="nvidia",
+            volumes={"/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"}},
+            environment=[
+                f"DISPLAY={os.environ['DISPLAY']}",
+                "NVIDIA_DRIVER_CAPABILITIES=all",
+            ],
+            device_requests=[
+                # TODO: See if "all" is needed instead of "gpu"
+                # DeviceRequest(driver="nvidia", count=-1, capabilities=[["all"]])
+                DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
+            ],
+            # TODO: Figure out how to expose ROS2 ports
+            ports={f"{self._http_port}/tcp": "80", f"{self._zmq_port}/tcp": "5555"},
+        )
+
+    def stop(self):
+        self._container.kill()
+        _release_port(self._http_port, bound_http_ports)
+        _release_port(self._zmq_port, bound_zmq_ports)
+
+    def serialize(self):
+        return {**super(self).serialize(), "image_id": self._image_id}
 
 
 class Video(WebApp):
@@ -176,8 +226,26 @@ class Video(WebApp):
         self.app_type = "video"
 
 
-# Video isn't included here because it's kind of sort of an app. We really need to iron out the distinction.
-APP_TYPES: Dict[str, Type[BaseApp]] = {"web": WebApp}
+# Video isn't included here because it's kind of sort of an app. We really need to
+# iron out the distinction.
+APP_TYPES: Dict[str, Type[BaseApp]] = {"web": WebApp, "docker": DockerApp}
+
+
+def _reserve_port(port_list, default_port):
+    # TODO: Consider actually checking if another application has reserved this port
+    #  on the OS. Not sure if this would be a problem since we have a lot of control
+    #  over the OS
+    if not len(port_list):
+        port = default_port
+    else:
+        port = port_list[-1] + 1
+
+    port_list.append(port)
+    return port
+
+
+def _release_port(port, port_list):
+    port_list.remove(port)
 
 
 def _create_app_object(config: Dict, path: Path):
