@@ -135,7 +135,7 @@ class WebApp(BaseApp):
             # Allow videos to play without user interaction
             "--autoplay-policy=no-user-gesture-required",
             # Allow cross-origin requests
-            "--disable-web-security"
+            "--disable-web-security",
         ]
         self._process = subprocess.Popen(command)
 
