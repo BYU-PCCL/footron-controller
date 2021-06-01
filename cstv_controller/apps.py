@@ -201,7 +201,8 @@ class DockerApp(BaseApp):
         )
 
     def stop(self):
-        self._container.kill()
+        if self._container.status == "running":
+            self._container.kill()
         _release_port(self._http_port, bound_http_ports)
         _release_port(self._zmq_port, bound_zmq_ports)
 
