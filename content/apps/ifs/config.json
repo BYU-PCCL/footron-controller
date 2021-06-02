@@ -1,0 +1,9 @@
+{
+    "id": "ifs",
+    "type": "docker",
+    "title": "IFS Visualization",
+    "description": "David David David David David David David David. David? David.<br><br>David David David David--David.",
+    "artist": "David Wingate",
+    "image_id": "pccl/app_ifs:0.1",
+    "lifetime": 120
+}
