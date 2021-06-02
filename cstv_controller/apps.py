@@ -45,8 +45,8 @@ class BaseApp(abc.ABC):
         lifetime=_DEFAULT_LIFETIME,
     ):
 
-        # TODO: Add user control component (though that may need to be done statically beforehand if we want to work
-        #  with the "compiled" JS)
+        # TODO: Add user control component (though that may need to be done
+        #  statically beforehand if we want to work with the "compiled" JS)
 
         self.path = Path(path)
         self.id = id
@@ -106,7 +106,8 @@ class WebApp(BaseApp):
 
         if not self._static_path.exists():
             raise AppInitError(
-                f"Couldn't load static path for app {self.id} at path {self.path.absolute()}"
+                f"Couldn't load static path for app {self.id}"
+                " at path {self.path.absolute()}"
             )
 
         self._port = None
@@ -317,8 +318,8 @@ def _load_app_at_path(path: Path) -> Optional[BaseApp]:
 
 def _load_apps_fs(path):
     if not path.exists():
-        # TODO: Creating a path at /opt/cstv/* doesn't work because we don't have permissions to write there. Should
-        #  we just throw an error here?
+        # TODO: Creating a path at /opt/cstv/* doesn't work because we don't have
+        #  permissions to write there. Should we just throw an error here?
         path.mkdir(parents=True)
 
     return list(map(_load_app_at_path, path.iterdir()))

@@ -37,9 +37,9 @@ class Controller:
         self._update_placard(app)
         app.start()
         if self.current_app:
-            # Wait for first application to fade out so transition is seamless
-            # TODO: Don't block here, though it makes sense that the response should only be sent once we know that
-            #  an app was launched successfully
+            # Wait for first application to fade out so transition is seamless TODO:
+            #  Don't block here, though it makes sense that the response should only
+            #  be sent once we know that an app was launched successfully
             sleep(0.5)
             self.current_app.stop()
         self.end_time = None
