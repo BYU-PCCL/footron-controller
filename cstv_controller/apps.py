@@ -139,7 +139,7 @@ class WebApp(BaseApp):
             httpd.serve_forever()
 
     def _start_server(self):
-        self._port = _reserve_port(_bound_http_ports, 8085)
+        self._port = _reserve_port(_bound_http_ports, 8080)
         self._server_process = multiprocessing.Process(target=self._server_process_loop)
         self._server_process.start()
 
@@ -207,7 +207,7 @@ class DockerApp(BaseApp):
         self._zmq_port = None
 
     def start(self):
-        self._http_port = _reserve_port(_bound_http_ports, 8085)
+        self._http_port = _reserve_port(_bound_http_ports, 8080)
         self._zmq_port = _reserve_port(_bound_zmq_ports, 5555)
         self._container = docker_client.containers.run(
             self._image_id,
