@@ -193,8 +193,6 @@ class DockerApp(BaseApp):
                 "NVIDIA_DRIVER_CAPABILITIES=all",
             ],
             device_requests=[
-                # TODO: See if "all" is needed instead of "gpu"
-                # DeviceRequest(driver="nvidia", count=-1, capabilities=[["all"]])
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
             ],
             # TODO: Figure out how to expose ROS2 ports
