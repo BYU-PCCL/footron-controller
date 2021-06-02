@@ -222,7 +222,7 @@ class DockerApp(BaseApp):
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
             ],
             # TODO: Figure out how to expose ROS2 ports
-            ports={f"{self._http_port}/tcp": "80", f"{self._zmq_port}/tcp": "5555"},
+            ports={"80": self._http_port, "5555": self._zmq_port},
         )
 
     def stop(self):
