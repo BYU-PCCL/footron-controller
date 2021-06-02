@@ -184,8 +184,6 @@ class DockerApp(BaseApp):
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
-            # TODO: See if this is needed
-            # runtime="nvidia",
             volumes={"/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"}},
             remove=True,
             environment=[
