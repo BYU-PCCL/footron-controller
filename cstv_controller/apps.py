@@ -187,6 +187,7 @@ class DockerApp(BaseApp):
             # TODO: See if this is needed
             # runtime="nvidia",
             volumes={"/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"}},
+            remove=True,
             environment=[
                 f"DISPLAY={os.environ['DISPLAY']}",
                 "NVIDIA_DRIVER_CAPABILITIES=all",
