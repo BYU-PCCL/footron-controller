@@ -22,8 +22,8 @@ _JSON_MAPPINGS = {}
 _JSON_IGNORE = ["static_path", "end_time"]
 _DEFAULT_LIFETIME = 60
 
-bound_http_ports = []
-bound_zmq_ports = []
+_bound_http_ports = []
+_bound_zmq_ports = []
 
 docker_client = docker.from_env()
 
@@ -121,7 +121,7 @@ class WebApp(BaseApp):
             httpd.serve_forever()
 
     def _start_server(self):
-        self._port = _reserve_port(bound_http_ports, 8085)
+        self._port = _reserve_port(_bound_http_ports, 8085)
         self._server_process = multiprocessing.Process(target=self._server_process_loop)
         self._server_process.start()
 
@@ -146,7 +146,7 @@ class WebApp(BaseApp):
     def stop(self):
         self._server_process.terminate()
         self._process.terminate()
-        _release_port(self._port, bound_http_ports)
+        _release_port(self._port, _bound_http_ports)
 
     def serialize(self):
         data = super(self).serialize()
@@ -179,8 +179,8 @@ class DockerApp(BaseApp):
         self._zmq_port = None
 
     def start(self):
-        self._http_port = _reserve_port(bound_http_ports, 8085)
-        self._zmq_port = _reserve_port(bound_zmq_ports, 5555)
+        self._http_port = _reserve_port(_bound_http_ports, 8085)
+        self._zmq_port = _reserve_port(_bound_zmq_ports, 5555)
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
@@ -204,8 +204,8 @@ class DockerApp(BaseApp):
     def stop(self):
         if self._container.status in ["running", "created"]:
             self._container.kill()
-        _release_port(self._http_port, bound_http_ports)
-        _release_port(self._zmq_port, bound_zmq_ports)
+        _release_port(self._http_port, _bound_http_ports)
+        _release_port(self._zmq_port, _bound_zmq_ports)
 
     def serialize(self):
         return {**super(self).serialize(), "image_id": self._image_id}
