@@ -3,6 +3,7 @@ from flask import request
 
 from .apps import BaseApp
 from .controller import Controller
+import atexit
 
 flask_app = flask.Flask(__name__)
 flask_app.config["DEBUG"] = True
@@ -108,6 +109,15 @@ def api_current_app():
             controller.end_time = end_time
 
         return {"status": "ok"}
+
+
+@atexit.register
+def cleanup():
+    # TODO: Handle closing in the middle of a transition (keep track of all running
+    #  apps in a dict or something)
+
+    # Docker containers won't clean themselves up for example
+    controller.current_app.stop()
 
 
 flask_app.run()
