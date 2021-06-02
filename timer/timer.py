@@ -10,6 +10,22 @@ import time
 # read in json
 applist = list(requests.get("http://127.0.0.1:5000/apps").json().values())
 
+collections = {}
+playlist_base = []
+
+for exp in applist:
+    if 'collection' in exp:
+        if exp['collection'] not in collections:
+            playlist_base.append([exp['collection']])
+            collections[exp['collection']] = [exp]
+
+        else:
+            collections[exp['collection']].append(exp)
+    else:
+        playlist_base.append([exp])
+    
+
+
 cont = True
 
 def should_advance(start_time, app):
@@ -24,11 +40,16 @@ def should_advance(start_time, app):
         return True
 
 while cont:
-    playlist = applist
+    playlist = playlist_base
     random.shuffle(playlist)
     for app in playlist:    
         # app = appbase[1]
+
+        if app in collections:
+            app = random.choice(collections[app])
+
         r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
+
         # print(r)
 
         current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
