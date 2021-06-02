@@ -43,6 +43,7 @@ class BaseApp(abc.ABC):
         show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
+        collection=None,
     ):
 
         # TODO: Add user control component (though that may need to be done
@@ -56,6 +57,7 @@ class BaseApp(abc.ABC):
         self.artist = artist
         self.show_sidebar = show_sidebar
         self.lifetime = lifetime
+        self.collection = collection
 
     @abc.abstractmethod
     def start(self):
@@ -67,7 +69,7 @@ class BaseApp(abc.ABC):
         ...
 
     def serialize(self):
-        return {
+        data = {
             "id": self.id,
             "type": self.app_type,
             "title": self.title,
@@ -76,6 +78,11 @@ class BaseApp(abc.ABC):
             "show_sidebar": self.show_sidebar,
             "lifetime": self.lifetime,
         }
+
+        if self.collection:
+            data["collection"] = self.collection
+
+        return data
 
     @classmethod
     def deserialize(cls, data, path):
@@ -97,9 +104,19 @@ class WebApp(BaseApp):
         show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
+        collection=None,
     ):
         BaseApp.__init__(
-            self, path, id, "web", title, description, show_sidebar, artist, lifetime
+            self,
+            path,
+            id,
+            "web",
+            title,
+            description,
+            show_sidebar,
+            artist,
+            lifetime,
+            collection,
         )
         self._static_path = static_path if static_path else self.path.joinpath("static")
         self._route = route
@@ -169,9 +186,19 @@ class DockerApp(BaseApp):
         show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
+        collection=None,
     ):
         BaseApp.__init__(
-            self, path, id, "docker", title, description, show_sidebar, artist, lifetime
+            self,
+            path,
+            id,
+            "docker",
+            title,
+            description,
+            show_sidebar,
+            artist,
+            lifetime,
+            collection,
         )
 
         self._image_id = image_id
@@ -209,7 +236,7 @@ class DockerApp(BaseApp):
 
 
 class Video(WebApp):
-    def __init__(self, path, id, title, description, artist, filename):
+    def __init__(self, path, id, title, description, artist, filename, collection):
         # TODO: Clean this up and make it make more sense
         WebApp.__init__(
             self,
@@ -221,6 +248,7 @@ class Video(WebApp):
             show_sidebar=True,
             static_path=path.parent.parent,
             artist=artist,
+            collection=collection
         )
         self.app_type = "video"
 

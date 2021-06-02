@@ -11,13 +11,18 @@ controller = Controller()
 
 
 def app_response(app: BaseApp):
-    return {
+    data = {
         "id": app.id,
         "title": app.title,
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
     }
+
+    if app.collection:
+        data["collection"] = app.collection
+
+    return data
 
 
 # Route for the home page
