@@ -142,7 +142,8 @@ def cleanup():
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    controller.current_app.stop()
+    if controller.current_app is not None:
+        controller.current_app.stop()
 
 
 flask_app.run()
