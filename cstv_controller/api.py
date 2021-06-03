@@ -21,6 +21,7 @@ def app_response(app: BaseApp):
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
+        "lastUpdate": int(controller.last_update.timestamp())
     }
 
     if app.collection:

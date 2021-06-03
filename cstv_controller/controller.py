@@ -1,3 +1,4 @@
+import datetime
 import os
 import urllib.parse
 from time import sleep
@@ -16,6 +17,7 @@ class Controller:
     collections: Dict[str, Collection] = {}
     current_app: Optional[BaseApp]
     end_time: Optional[int]
+    last_update: datetime.datetime
 
     def __init__(self):
         self._domain_sockets_session = requests_unixsocket.Session()
@@ -30,6 +32,7 @@ class Controller:
     def load_from_fs(self):
         self.load_apps()
         self.load_collections()
+        self.last_update = datetime.datetime.now()
 
     def load_apps(self):
         self.apps = {app.id: app for app in load_apps_from_fs()}
