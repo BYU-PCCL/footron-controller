@@ -146,4 +146,5 @@ def cleanup():
         controller.current_app.stop()
 
 
-flask_app.run()
+if __name__ == "__main__":
+    flask_app.run()

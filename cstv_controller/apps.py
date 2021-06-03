@@ -236,7 +236,7 @@ class DockerApp(BaseApp):
 
 
 class Video(WebApp):
-    def __init__(self, path, id, title, description, artist, filename, collection):
+    def __init__(self, path, id, title, description, filename, collection=None, artist=None):
         # TODO: Clean this up and make it make more sense
         WebApp.__init__(
             self,
