@@ -9,7 +9,7 @@ from .constants import CONTENT_PATH
 class Collection:
     id: str
     title: str
-    description: Optional[str]
+    description: Optional[str] = None
     artist: Optional[str] = None
 
 
