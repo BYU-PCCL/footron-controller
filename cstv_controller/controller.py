@@ -1,3 +1,4 @@
+import datetime
 import os
 import urllib.parse
 from time import sleep
@@ -6,14 +7,17 @@ from typing import Dict, Optional
 import requests_unixsocket
 
 from .apps import BaseApp, load_apps_from_fs
+from .collections import load_collections_from_fs, Collection
 
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
 
 
 class Controller:
     apps: Dict[str, BaseApp] = {}
+    collections: Dict[str, Collection] = {}
     current_app: Optional[BaseApp]
     end_time: Optional[int]
+    last_update: datetime.datetime
 
     def __init__(self):
         self._domain_sockets_session = requests_unixsocket.Session()
@@ -23,10 +27,20 @@ class Controller:
 
         self.current_app = None
         self.end_time = None
+        self.load_from_fs()
+
+    def load_from_fs(self):
         self.load_apps()
+        self.load_collections()
+        self.last_update = datetime.datetime.now()
 
     def load_apps(self):
         self.apps = {app.id: app for app in load_apps_from_fs()}
+
+    def load_collections(self):
+        self.collections = {
+            collection.id: collection for collection in load_collections_from_fs()
+        }
 
     def set_app(self, id: str):
         if self.current_app and self.current_app.id == id:

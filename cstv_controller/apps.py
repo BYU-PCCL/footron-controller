@@ -15,7 +15,7 @@ import docker
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
-_BASE_PATH = Path("./content")
+from .constants import CONTENT_PATH
 
 _JSON_MAPPINGS = {}
 # Fields to be accessed programmatically only. This might be hacky but it works for now.
@@ -236,7 +236,7 @@ class DockerApp(BaseApp):
 
 
 class Video(WebApp):
-    def __init__(self, path, id, title, description, artist, filename, collection):
+    def __init__(self, path, id, title, description, filename, collection=None, artist=None):
         # TODO: Clean this up and make it make more sense
         WebApp.__init__(
             self,
@@ -353,7 +353,7 @@ def _load_apps_fs(path):
     return list(map(_load_app_at_path, path.iterdir()))
 
 
-def load_apps_from_fs(path=_BASE_PATH) -> List[BaseApp]:
+def load_apps_from_fs(path=CONTENT_PATH) -> List[BaseApp]:
     return [
         *_load_videos_fs(path.joinpath("video-player")),
         *_load_apps_fs(path.joinpath("apps")),

@@ -1,7 +1,10 @@
+import dataclasses
+
 import flask
 from flask import request
 
 from .apps import BaseApp
+from .collections import Collection
 from .controller import Controller
 import atexit
 
@@ -18,6 +21,7 @@ def app_response(app: BaseApp):
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
+        "lastUpdate": int(controller.last_update.timestamp())
     }
 
     if app.collection:
@@ -26,16 +30,20 @@ def app_response(app: BaseApp):
     return data
 
 
+def collection_response(collection: Collection):
+    return dataclasses.asdict(collection)
+
+
 # Route for the home page
 @flask_app.route("/", methods=["GET"])
 def home():
     return "<h1>CS TV Controller</h1><p>This is the site for the CS TV API</p>"
 
 
-# Route for loading apps
+# Route for reloading data
 @flask_app.route("/reload", methods=["GET"])
 def api_reload():
-    controller.load_apps()
+    controller.load_from_fs()
     return {"status": "ok"}
 
 
@@ -51,6 +59,24 @@ def api_app(id):
         return {}
 
     return app_response(controller.apps[id])
+
+
+# Route for returning all available apps
+@flask_app.route("/collections", methods=["GET"])
+def api_collections():
+    return {
+        id: collection_response(collection)
+        for id, collection in controller.collections.items()
+    }
+
+
+# Route for returning all available apps
+@flask_app.route("/collections/<id>", methods=["GET"])
+def api_collection(id):
+    if id not in controller.collections:
+        return {}
+
+    return collection_response(controller.collections[id])
 
 
 @flask_app.route("/current-app", methods=["GET", "PUT", "PATCH"])
@@ -117,7 +143,9 @@ def cleanup():
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    controller.current_app.stop()
+    if controller.current_app is not None:
+        controller.current_app.stop()
 
 
-flask_app.run()
+if __name__ == "__main__":
+    flask_app.run()
