@@ -1,3 +1,4 @@
+import copy
 import datetime
 import random
 import requests
@@ -16,15 +17,18 @@ playlist_base = []
 for exp in applist:
     if 'collection' in exp:
         if exp['collection'] not in collections:
-            playlist_base.append([exp['collection']])
+            playlist_base.append(exp['collection'])
             collections[exp['collection']] = [exp]
-
         else:
             collections[exp['collection']].append(exp)
     else:
-        playlist_base.append([exp])
-    
+        playlist_base.append(exp)
 
+collections_shuffle = copy.deepcopy(collections)
+
+
+for collection in collections_shuffle:
+    random.shuffle(collections_shuffle[collection])
 
 cont = True
 
@@ -40,14 +44,19 @@ def should_advance(start_time, app):
         return True
 
 while cont:
-    playlist = playlist_base
+    playlist = []
+    for exp in playlist_base:
+        if exp in list(collections.keys()):
+            if len(collections_shuffle[exp]) == 0:
+                collections_shuffle = copy.deepcopy(collections)
+                random.shuffle(collections_shuffle[exp])
+            playlist.append(collections_shuffle[exp].pop())
+        else:
+            playlist.append(exp)
+
     random.shuffle(playlist)
-    for app in playlist:    
-        # app = appbase[1]
-
-        if app in collections:
-            app = random.choice(collections[app])
-
+    for app in playlist:
+            
         r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
 
         # print(r)
