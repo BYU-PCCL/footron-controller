@@ -48,7 +48,7 @@ while cont:
     for exp in playlist_base:
         if exp in list(collections.keys()):
             if len(collections_shuffle[exp]) == 0:
-                collections_shuffle = copy.deepcopy(collections)
+                collections_shuffle[exp] = copy.deepcopy(collections[exp])
                 random.shuffle(collections_shuffle[exp])
             playlist.append(collections_shuffle[exp].pop())
         else:
