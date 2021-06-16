@@ -81,7 +81,6 @@ while cont:
         # print(r)
 
         current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
-        # start_time = (datetime.datetime.now() - datetime.datetime(1970,1,1)).total_seconds()
         start_time = datetime.datetime.now().timestamp()
         advance = False
 
