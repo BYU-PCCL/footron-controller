@@ -47,18 +47,11 @@ def should_advance(start_time, app):
                 f"{_placard_escaped_url}/end-time",
                 json={'end_time': current_app['end_time']},
             )
-            print(current_app['end_time'])
 
             if datetime.datetime.now() < datetime.datetime.fromtimestamp(current_app['end_time']):
                 return False
         else:
             end_time = start_time + (app['lifetime'])
-            print("start_time")
-            print(start_time)
-            print("life")
-            print(app['lifetime'])
-            print("end")
-            print(end_time)
             current_date = datetime.datetime.now().timestamp()
             _domain_sockets_session.post(
                 f"{_placard_escaped_url}/end-time",
@@ -85,7 +78,6 @@ while cont:
     for app in playlist:
             
         r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
-
         # print(r)
 
         current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
