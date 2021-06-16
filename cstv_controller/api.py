@@ -14,7 +14,7 @@ flask_app.config["DEBUG"] = True
 controller = Controller()
 
 
-def app_response(app: BaseApp):
+def experience_response(app: BaseApp):
     data = {
         "id": app.id,
         "title": app.title,
@@ -47,21 +47,20 @@ def api_reload():
     return {"status": "ok"}
 
 
-# Route for returning all available apps
-@flask_app.route("/apps", methods=["GET"])
-def api_apps():
-    return {id: app_response(app) for id, app in controller.apps.items()}
+# TODO: Finish
+@flask_app.route("/experiences", methods=["GET"])
+def api_experiences():
+    return {id: experience_response(app) for id, app in controller.apps.items()}
 
 
-@flask_app.route("/apps/<id>", methods=["GET"])
-def api_app(id):
+@flask_app.route("/experiences/<id>", methods=["GET"])
+def api_experience(id):
     if id not in controller.apps:
         return {}
 
-    return app_response(controller.apps[id])
+    return experience_response(controller.apps[id])
 
 
-# Route for returning all available apps
 @flask_app.route("/collections", methods=["GET"])
 def api_collections():
     return {
@@ -70,7 +69,6 @@ def api_collections():
     }
 
 
-# Route for returning all available apps
 @flask_app.route("/collections/<id>", methods=["GET"])
 def api_collection(id):
     if id not in controller.collections:
@@ -79,8 +77,8 @@ def api_collection(id):
     return collection_response(controller.collections[id])
 
 
-@flask_app.route("/current-app", methods=["GET", "PUT", "PATCH"])
-def api_current_app():
+@flask_app.route("/current", methods=["GET", "PUT", "PATCH"])
+def api_current_experience():
     # TODO: Break this up into a lot of pieces
 
     if request.method == "GET":
@@ -88,7 +86,7 @@ def api_current_app():
             return {}
         current_app = controller.current_app
 
-        response_data = app_response(current_app)
+        response_data = experience_response(current_app)
         if controller.end_time is not None:
             response_data["end_time"] = controller.end_time
 
