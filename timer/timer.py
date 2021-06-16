@@ -14,9 +14,6 @@ _placard_escaped_url = (
         )
 
 
-
-# from apscheduler.schedulers.background import BackgroundScheduler
-
 # Also gotta see what apps are actually able to be used (cameras online?)
 
 # read in json
@@ -72,6 +69,7 @@ def should_advance(start_time, app):
 
         return True
 
+
 while cont:
     playlist = []
     for exp in playlist_base:
@@ -103,16 +101,5 @@ while cont:
         
 
 
-        
-
     # check for new applist data? should it be able to be updated on the fly?
-
-# do forever
-    # while list isn't empty 
-        # send id 
-        # wait for amount of time
-        # follow list
-    # reshuffle after list empty 
-
-
     
