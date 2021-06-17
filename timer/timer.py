@@ -93,4 +93,3 @@ while cont:
 
 
     # check for new applist data? should it be able to be updated on the fly?
-    
