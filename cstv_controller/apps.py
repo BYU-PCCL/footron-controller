@@ -301,14 +301,13 @@ def _map_json_to_app_object_fields(data):
 
 
 def _load_config_at_path(path: Path):
-    config_path = path.joinpath("config.json")
     # TODO: Add thumbnail
 
-    if not config_path.exists():
+    if not path.exists():
         return
 
     try:
-        with open(config_path) as config_path:
+        with open(path) as config_path:
             config = json.load(config_path)
     except ValueError:
         print(
@@ -324,7 +323,7 @@ def _load_video_at_path(path: Path) -> Optional[Video]:
     if not path.is_dir():
         return
 
-    config = _load_config_at_path(path)
+    config = _load_config_at_path(path.joinpath("video.json"))
 
     return Video(path, **config)
 
@@ -341,7 +340,7 @@ def _load_app_at_path(path: Path) -> Optional[BaseApp]:
     if not path.is_dir():
         return
 
-    return _create_app_object(_load_config_at_path(path), path)
+    return _create_app_object(_load_config_at_path(path.joinpath("app.json")), path)
 
 
 def _load_apps_fs(path):
