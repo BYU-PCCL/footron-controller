@@ -17,7 +17,7 @@ _placard_escaped_url = (
 # Also gotta see what apps are actually able to be used (cameras online?)
 
 # read in json
-applist = list(requests.get("http://127.0.0.1:5000/apps").json().values())
+applist = list(requests.get("http://127.0.0.1:5000/experiences").json().values())
 
 collections = {}
 playlist_base = []
@@ -41,7 +41,7 @@ for collection in collections_shuffle:
 cont = True
 
 def should_advance(start_time, app):
-        current_app = requests.get("http://127.0.0.1:5000/current-app").json()
+        current_app = requests.get("http://127.0.0.1:5000/current").json()
         if 'end_time' in current_app:
             _domain_sockets_session.post(
                 f"{_placard_escaped_url}/end-time",
@@ -77,10 +77,10 @@ while cont:
     random.shuffle(playlist)
     for app in playlist:
             
-        r = requests.put("http://localhost:5000/current-app", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
+        r = requests.put("http://localhost:5000/current", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
         # print(r)
 
-        current_app = list(requests.get("http://127.0.0.1:5000/current-app").json().items())
+        current_app = list(requests.get("http://127.0.0.1:5000/current").json().items())
         start_time = datetime.datetime.now().timestamp()
         advance = False
 
