@@ -21,7 +21,7 @@ def experience_response(app: BaseApp):
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
-        "last_update": int(controller.last_update.timestamp())
+        "last_update": int(controller.last_update.timestamp()),
     }
 
     if app.collection:
