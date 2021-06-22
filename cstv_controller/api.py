@@ -117,7 +117,7 @@ def api_current_experience():
 
             if "end_time" not in body:
                 return {
-                    "error": "PATCH on /current-app is only supported for `end_time`"
+                    "error": "PATCH on /current is only supported for `end_time`"
                 }, 400
 
             end_time = body["end_time"]
