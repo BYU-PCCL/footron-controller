@@ -146,7 +146,7 @@ class WebApp(BaseApp):
     def _start_browser(self):
         command = [
             "google-chrome",
-            f"--app=http://localhost:{self._port}{self._route}",
+            "--kiosk",
             f"--user-data-dir=/tmp/cstv-chrome-data/{self.id}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
@@ -154,6 +154,7 @@ class WebApp(BaseApp):
             "--autoplay-policy=no-user-gesture-required",
             # Allow cross-origin requests
             "--disable-web-security",
+            f"http://localhost:{self._port}{self._route}",
         ]
         self._process = subprocess.Popen(command)
 
