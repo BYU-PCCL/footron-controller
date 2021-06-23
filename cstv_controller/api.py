@@ -2,6 +2,7 @@ import dataclasses
 
 import flask
 from flask import request
+from flask_cors import CORS
 
 from .apps import BaseApp
 from .collections import Collection
@@ -10,6 +11,7 @@ import atexit
 
 flask_app = flask.Flask(__name__)
 flask_app.config["DEBUG"] = True
+CORS(flask_app)
 
 controller = Controller()
 
