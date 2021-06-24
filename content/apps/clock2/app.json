@@ -4,6 +4,5 @@
     "title": "Yet another CSS clock",
     "description": "This CSS clock is exactly like the last one.",
     "artist": "A Somewhat Longer Artist Name",
-    "show_sidebar": false,
     "lifetime":29
 }

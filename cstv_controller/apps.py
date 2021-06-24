@@ -40,7 +40,6 @@ class BaseApp(abc.ABC):
         app_type,
         title,
         description,
-        show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
         collection=None,
@@ -55,7 +54,6 @@ class BaseApp(abc.ABC):
         self.title = title
         self.description = description
         self.artist = artist
-        self.show_sidebar = show_sidebar
         self.lifetime = lifetime
         self.collection = collection
 
@@ -75,7 +73,6 @@ class BaseApp(abc.ABC):
             "title": self.title,
             "description": self.description,
             "artist": self.artist,
-            "show_sidebar": self.show_sidebar,
             "lifetime": self.lifetime,
         }
 
@@ -101,7 +98,6 @@ class WebApp(BaseApp):
         description,
         route="",
         static_path=None,
-        show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
         collection=None,
@@ -113,7 +109,6 @@ class WebApp(BaseApp):
             "web",
             title,
             description,
-            show_sidebar,
             artist,
             lifetime,
             collection,
@@ -184,7 +179,6 @@ class DockerApp(BaseApp):
         id,
         title,
         description,
-        show_sidebar=True,
         artist=None,
         lifetime=_DEFAULT_LIFETIME,
         collection=None,
@@ -196,7 +190,6 @@ class DockerApp(BaseApp):
             "docker",
             title,
             description,
-            show_sidebar,
             artist,
             lifetime,
             collection,
@@ -248,7 +241,6 @@ class Video(WebApp):
             title=title,
             description=description,
             route=f"/static/?url=/videos/{path.name}/{filename}&id={id}",
-            show_sidebar=True,
             static_path=path.parent.parent,
             artist=artist,
             collection=collection,
