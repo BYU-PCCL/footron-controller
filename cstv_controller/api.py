@@ -5,7 +5,7 @@ from flask import request
 from flask_cors import CORS
 
 from .apps import BaseApp
-from .collections import Collection
+from .collection import Collection
 from .controller import Controller
 import atexit
 
