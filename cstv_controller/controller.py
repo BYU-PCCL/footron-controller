@@ -66,7 +66,7 @@ class Controller:
             data["artist"] = app.artist
 
         # TODO: Validate this worked somehow
-        self._domain_sockets_session.post(
-            f"{self._placard_escaped_url}/content",
+        self._domain_sockets_session.patch(
+            f"{self._placard_escaped_url}/placard",
             json=data,
         )
