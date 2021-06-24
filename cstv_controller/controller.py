@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import requests_unixsocket
 
 from .apps import BaseApp, load_apps_from_fs
-from .collections import load_collections_from_fs, Collection
+from .collection import load_collections_from_fs, Collection
 
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
 
