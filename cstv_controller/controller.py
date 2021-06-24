@@ -70,9 +70,3 @@ class Controller:
             f"{self._placard_escaped_url}/content",
             json=data,
         )
-
-        sidebar_visibility_endpoint = "show" if app.show_sidebar else "hide"
-        self._domain_sockets_session.post(
-            f"{self._placard_escaped_url}/{sidebar_visibility_endpoint}",
-            json=data,
-        )
