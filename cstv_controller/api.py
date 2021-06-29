@@ -137,6 +137,17 @@ def api_current_experience():
         return {"status": "ok"}
 
 
+@flask_app.route("/placard", methods=["GET", "PATCH"])
+def api_placard():
+    if request.method == "GET":
+        return controller.placard.get()
+
+    # TODO: Should we be doing more checking here? The placard itself does checking. Is there any merit to limiting the
+    #  length of the content body itself?
+    if request.method == "PATCH":
+        return controller.placard.update(request.json)
+
+
 @atexit.register
 def cleanup():
     # TODO: Handle closing in the middle of a transition (keep track of all running
