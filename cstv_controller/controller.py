@@ -1,15 +1,10 @@
 import datetime
-import os
-import urllib.parse
 from time import sleep
 from typing import Dict, Optional
 
-import requests_unixsocket
-
+from .placard import PlacardApi
 from .apps import BaseApp, load_apps_from_fs
 from .collection import load_collections_from_fs, Collection
-
-_PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
 
 
 class Controller:
@@ -18,15 +13,14 @@ class Controller:
     current_app: Optional[BaseApp]
     end_time: Optional[int]
     last_update: datetime.datetime
+    placard: PlacardApi
 
     def __init__(self):
-        self._domain_sockets_session = requests_unixsocket.Session()
-        self._placard_escaped_url = (
-            f"http+unix://{urllib.parse.quote_plus(_PLACARD_SOCKETS_PATH)}"
-        )
-
         self.current_app = None
         self.end_time = None
+
+        self.placard = PlacardApi()
+
         self.load_from_fs()
 
     def load_from_fs(self):
@@ -66,7 +60,4 @@ class Controller:
             data["artist"] = app.artist
 
         # TODO: Validate this worked somehow
-        self._domain_sockets_session.patch(
-            f"{self._placard_escaped_url}/placard",
-            json=data,
-        )
+        self.placard.update(data)
