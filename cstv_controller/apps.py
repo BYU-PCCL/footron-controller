@@ -240,7 +240,7 @@ class Video(WebApp):
             id=id,
             title=title,
             description=description,
-            route=f"/static/?url=/videos/{path.name}/{filename}&id={id}",
+            route=f"/static/?url=/videos/{path.name}/{filename}&posterUrl=/videos/{path.name}/poster.jpg&id={id}",
             static_path=path.parent.parent,
             artist=artist,
             collection=collection,

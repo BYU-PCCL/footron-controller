@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const videoId = urlParams.get('id');
     videoElement.src = urlParams.get('url');
     // noinspection JSIgnoredPromiseFromCall
+    videoElement.poster = urlParams.get('posterUrl')
     videoElement.play()
 
     setInterval(() => {
