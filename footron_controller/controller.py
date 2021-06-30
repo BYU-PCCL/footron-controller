@@ -59,10 +59,12 @@ class Controller:
             self.current_app = app
 
     def _update_placard(self, app: BaseApp):
-        data = {"title": app.title, "description": app.description}
-
-        if app.artist:
-            data["artist"] = app.artist
+        data = {
+            "title": app.title,
+            "description": app.description,
+            # We include the artist even if it is none because we need a complete PATCH
+            "artist": app.artist,
+        }
 
         # TODO: Validate this worked somehow
         self.placard.update(data)
