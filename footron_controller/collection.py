@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import List, Optional
 
-from .constants import CONTENT_PATH
+from .constants import EXPERIENCES_PATH
 
 
 @dataclass
@@ -13,7 +13,7 @@ class Collection:
     artist: Optional[str] = None
 
 
-def load_collections_from_fs(path=CONTENT_PATH) -> List[Collection]:
+def load_collections_from_fs(path=EXPERIENCES_PATH) -> List[Collection]:
     collections_file_path = path.joinpath("collections.json")
 
     if not collections_file_path.exists():
