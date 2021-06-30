@@ -7,7 +7,11 @@ import os
 import urllib.parse
 
 
-CONTROLLER_URL = os.environ["FT_CONTROLLER_URL"] if "FT_CONTROLLER_URL" in os.environ else "http://localhost:8000"
+CONTROLLER_URL = (
+    os.environ["FT_CONTROLLER_URL"]
+    if "FT_CONTROLLER_URL" in os.environ
+    else "http://localhost:8000"
+)
 EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "experiences")
 CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
@@ -20,12 +24,12 @@ collections = {}
 playlist_base = []
 
 for exp in applist:
-    if 'collection' in exp:
-        if exp['collection'] not in collections:
-            playlist_base.append(exp['collection'])
-            collections[exp['collection']] = [exp]
+    if "collection" in exp:
+        if exp["collection"] not in collections:
+            playlist_base.append(exp["collection"])
+            collections[exp["collection"]] = [exp]
         else:
-            collections[exp['collection']].append(exp)
+            collections[exp["collection"]].append(exp)
     else:
         playlist_base.append(exp)
 
@@ -37,17 +41,20 @@ for collection in collections_shuffle:
 
 cont = True
 
-def should_advance(start_time, app):
-        current_app = requests.get(CURRENT_ENDPOINT).json()
-        if 'end_time' in current_app:
-            if datetime.datetime.now() < datetime.datetime.fromtimestamp(current_app['end_time']):
-                return False
-        else:
-            current_date = datetime.datetime.now().timestamp()
-            if ((current_date - start_time) < app['lifetime']):
-                return False
 
-        return True
+def should_advance(start_time, app):
+    current_app = requests.get(CURRENT_ENDPOINT).json()
+    if "end_time" in current_app:
+        if datetime.datetime.now() < datetime.datetime.fromtimestamp(
+            current_app["end_time"]
+        ):
+            return False
+    else:
+        current_date = datetime.datetime.now().timestamp()
+        if (current_date - start_time) < app["lifetime"]:
+            return False
+
+    return True
 
 
 while cont:
@@ -63,8 +70,12 @@ while cont:
 
     random.shuffle(playlist)
     for app in playlist:
-            
-        r = requests.put(CURRENT_ENDPOINT, headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
+
+        r = requests.put(
+            CURRENT_ENDPOINT,
+            headers={"Content-Type": "application/json"},
+            json={"id": app["id"]},
+        )
         # print(r)
 
         current_app = list(requests.get(CURRENT_ENDPOINT).json().items())
@@ -73,10 +84,8 @@ while cont:
 
         # wait for confirmation that it's running?
 
-        while(not advance):
+        while not advance:
             time.sleep(1)
             advance = should_advance(start_time, app)
-        
-
 
     # check for new applist data? should it be able to be updated on the fly?
