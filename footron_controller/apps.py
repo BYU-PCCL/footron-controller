@@ -11,7 +11,6 @@ from typing import Optional, List, Dict, Type
 from http import server
 import docker
 
-# _BASE_PATH = Path("/opt/cstv")
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
@@ -340,8 +339,6 @@ def _load_app_at_path(path: Path) -> Optional[BaseApp]:
 
 def _load_apps_fs(path):
     if not path.exists():
-        # TODO: Creating a path at /opt/cstv/* doesn't work because we don't have
-        #  permissions to write there. Should we just throw an error here?
         path.mkdir(parents=True)
 
     return list(map(_load_app_at_path, path.iterdir()))
