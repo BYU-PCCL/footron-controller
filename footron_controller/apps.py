@@ -141,7 +141,7 @@ class WebApp(BaseApp):
         command = [
             "google-chrome",
             "--kiosk",
-            f"--user-data-dir=/tmp/cstv-chrome-data/{self.id}",
+            f"--user-data-dir=/tmp/footron-chrome-data/{self.id}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
             # Allow videos to play without user interaction
