@@ -8,7 +8,7 @@ import urllib.parse
 
 
 CONTROLLER_URL = os.environ["FT_CONTROLLER_URL"] if "FT_CONTROLLER_URL" in os.environ else "http://localhost:8000"
-EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
+EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "experiences")
 CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
 # Also gotta see what apps are actually able to be used (cameras online?)
