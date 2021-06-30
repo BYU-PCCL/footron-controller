@@ -43,15 +43,20 @@ class Controller:
         # Unchecked exception, consumer's responsibility to know that app with ID exists
         app = self.apps[id]
         self._update_placard(app)
-        app.start()
-        if self.current_app:
-            # Wait for first application to fade out so transition is seamless TODO:
-            #  Don't block here, though it makes sense that the response should only
-            #  be sent once we know that an app was launched successfully
-            sleep(0.5)
-            self.current_app.stop()
-        self.end_time = None
-        self.current_app = app
+
+        try:
+            app.start()
+            if self.current_app:
+                # Wait for first application to fade out so transition is seamless TODO:
+                #  Don't block here, though it makes sense that the response should only
+                #  be sent once we know that an app was launched successfully
+                sleep(0.5)
+                self.current_app.stop()
+        finally:
+            # App start() and stop() methods should have their own error handling, but if something is unhandled we need
+            #  keep our state maintained
+            self.end_time = None
+            self.current_app = app
 
     def _update_placard(self, app: BaseApp):
         data = {"title": app.title, "description": app.description}
