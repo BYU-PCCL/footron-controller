@@ -39,7 +39,7 @@ def collection_response(collection: Collection):
 # Route for the home page
 @flask_app.route("/", methods=["GET"])
 def home():
-    return "<h1>CS TV Controller</h1><p>This is the site for the CS TV API</p>"
+    return "<h1>FOOTRON</h1>"
 
 
 # Route for reloading data
