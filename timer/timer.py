@@ -3,12 +3,18 @@ import datetime
 import random
 import requests
 import time
+import os
+import urllib.parse
 
+
+CONTROLLER_URL = os.environ["FT_CONTROLLER_URL"] if "FT_CONTROLLER_URL" in os.environ else "http://localhost:8000"
+EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
+CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
 # Also gotta see what apps are actually able to be used (cameras online?)
 
 # read in json
-applist = list(requests.get("http://127.0.0.1:5000/experiences").json().values())
+applist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
 
 collections = {}
 playlist_base = []
@@ -32,7 +38,7 @@ for collection in collections_shuffle:
 cont = True
 
 def should_advance(start_time, app):
-        current_app = requests.get("http://127.0.0.1:5000/current").json()
+        current_app = requests.get(CURRENT_ENDPOINT).json()
         if 'end_time' in current_app:
             if datetime.datetime.now() < datetime.datetime.fromtimestamp(current_app['end_time']):
                 return False
@@ -58,10 +64,10 @@ while cont:
     random.shuffle(playlist)
     for app in playlist:
             
-        r = requests.put("http://localhost:5000/current", headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
+        r = requests.put(CURRENT_ENDPOINT, headers={'Content-Type': 'application/json'}, json={'id': app['id'] })
         # print(r)
 
-        current_app = list(requests.get("http://127.0.0.1:5000/current").json().items())
+        current_app = list(requests.get(CURRENT_ENDPOINT).json().items())
         start_time = datetime.datetime.now().timestamp()
         advance = False
 
