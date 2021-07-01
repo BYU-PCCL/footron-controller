@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const endTime = (Date.now() / 1000) + (videoElement.duration - videoElement.currentTime);
 
-        fetch('http://localhost:5000/current', {
+        fetch('http://localhost:8000/current', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
