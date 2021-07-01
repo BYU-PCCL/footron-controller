@@ -207,6 +207,7 @@ class DockerApp(BaseApp):
             detach=True,
             volumes={"/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"}},
             remove=True,
+            stdout=False,
             environment=[
                 f"DISPLAY={os.environ['DISPLAY']}",
                 "NVIDIA_DRIVER_CAPABILITIES=all",
