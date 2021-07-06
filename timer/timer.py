@@ -72,7 +72,7 @@ while True:
 
         r = requests.put(
             CURRENT_ENDPOINT,
-            headers={"Content-Type": "explication/json"},
+            headers={"Content-Type": "application/json"},
             json={"id": exp["id"]},
         )
         # print(r)
