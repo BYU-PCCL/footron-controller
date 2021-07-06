@@ -15,15 +15,16 @@ CONTROLLER_URL = (
 EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "experiences")
 CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
-# Also gotta see what apps are actually able to be used (cameras online?)
+# Also gotta see what exps are actually able to be used (cameras online?)
 
 # read in json
-applist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
+explist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
 
 collections = {}
 playlist_base = []
+last_exp = ""
 
-for exp in applist:
+for exp in explist:
     if "collection" in exp:
         if exp["collection"] not in collections:
             playlist_base.append(exp["collection"])
@@ -35,29 +36,27 @@ for exp in applist:
 
 collections_shuffle = copy.deepcopy(collections)
 
-
 for collection in collections_shuffle:
     random.shuffle(collections_shuffle[collection])
 
-cont = True
 
+def should_advance(start_time, exp):
+    current_exp = requests.get(CURRENT_ENDPOINT).json()
 
-def should_advance(start_time, app):
-    current_app = requests.get(CURRENT_ENDPOINT).json()
-    if "end_time" in current_app:
+    if "end_time" in current_exp:
         if datetime.datetime.now() < datetime.datetime.fromtimestamp(
-            current_app["end_time"]
+            current_exp["end_time"]
         ):
             return False
     else:
         current_date = datetime.datetime.now().timestamp()
-        if (current_date - start_time) < app["lifetime"]:
+        if (current_date - start_time) < exp["lifetime"]:
             return False
 
     return True
 
 
-while cont:
+while True:
     playlist = []
     for exp in playlist_base:
         if exp in list(collections.keys()):
@@ -69,16 +68,17 @@ while cont:
             playlist.append(exp)
 
     random.shuffle(playlist)
-    for app in playlist:
+    for exp in playlist:
 
         r = requests.put(
             CURRENT_ENDPOINT,
-            headers={"Content-Type": "application/json"},
-            json={"id": app["id"]},
+            headers={"Content-Type": "explication/json"},
+            json={"id": exp["id"]},
         )
         # print(r)
 
-        current_app = list(requests.get(CURRENT_ENDPOINT).json().items())
+        current_exp = list(requests.get(CURRENT_ENDPOINT).json().items())
+        last_exp = current_exp["id"]
         start_time = datetime.datetime.now().timestamp()
         advance = False
 
@@ -86,6 +86,8 @@ while cont:
 
         while not advance:
             time.sleep(1)
-            advance = should_advance(start_time, app)
+            if last_exp != current_exp["id"]:
+                start_time = datetime.datetime.now().timestamp()
+            advance = should_advance(start_time, exp)
 
-    # check for new applist data? should it be able to be updated on the fly?
+    # check for new explist data? should it be able to be updated on the fly?
