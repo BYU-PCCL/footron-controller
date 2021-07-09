@@ -1,8 +1,0 @@
-{
-    "id": "clock1",
-    "type": "web",
-    "title": "Random CSS Clock",
-    "description": "This digital CSS clock that we stole from someone online will serve only to demonstrate the capabilities of this very long description.",
-    "artist": "Some poor developer",
-    "lifetime": 4
-}
