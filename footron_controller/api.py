@@ -1,19 +1,36 @@
+import asyncio
 import dataclasses
+from typing import Optional
 
-import flask
-from flask import request
-from flask_cors import CORS
+from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
+from .types import PlacardData
 from .apps import BaseApp
 from .collection import Collection
 from .controller import Controller
-import atexit
 
-flask_app = flask.Flask(__name__)
-flask_app.config["DEBUG"] = True
-CORS(flask_app)
+fastapi_app = FastAPI()
 
-controller = Controller()
+fastapi_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_controller = Controller()
+
+
+class SetCurrentExperienceBody(BaseModel):
+    id: str
+
+
+class UpdateCurrentExperienceBody(BaseModel):
+    id: str
+    end_time: Optional[int]
 
 
 def experience_response(app: BaseApp):
@@ -23,7 +40,7 @@ def experience_response(app: BaseApp):
         "artist": app.artist,
         "description": app.description,
         "lifetime": app.lifetime,
-        "last_update": int(controller.last_update.timestamp()),
+        "last_update": int(_controller.last_update.timestamp()),
     }
 
     if app.collection:
@@ -36,127 +53,96 @@ def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
 
 
-# Route for the home page
-@flask_app.route("/", methods=["GET"])
-def home():
-    return "<h1>FOOTRON</h1>"
-
-
 # Route for reloading data
-@flask_app.route("/reload", methods=["GET"])
+@fastapi_app.get("/reload")
 def api_reload():
-    controller.load_from_fs()
+    _controller.load_from_fs()
     return {"status": "ok"}
 
 
 # TODO: Finish
-@flask_app.route("/experiences", methods=["GET"])
-def api_experiences():
-    return {id: experience_response(app) for id, app in controller.apps.items()}
+@fastapi_app.get("/experiences")
+def experiences():
+    return {id: experience_response(app) for id, app in _controller.apps.items()}
 
 
-@flask_app.route("/experiences/<id>", methods=["GET"])
-def api_experience(id):
-    if id not in controller.apps:
+@fastapi_app.get("/experiences/<id>")
+def experience(id):
+    if id not in _controller.apps:
         return {}
 
-    return experience_response(controller.apps[id])
+    return experience_response(_controller.apps[id])
 
 
-@flask_app.route("/collections", methods=["GET"])
-def api_collections():
+@fastapi_app.get("/collections")
+def collections():
     return {
         id: collection_response(collection)
-        for id, collection in controller.collections.items()
+        for id, collection in _controller.collections.items()
     }
 
 
-@flask_app.route("/collections/<id>", methods=["GET"])
-def api_collection(id):
-    if id not in controller.collections:
+@fastapi_app.get("/collections/<id>")
+def collection(id):
+    if id not in _controller.collections:
         return {}
 
-    return collection_response(controller.collections[id])
+    return collection_response(_controller.collections[id])
 
 
-@flask_app.route("/current", methods=["GET", "PUT", "PATCH"])
-def api_current_experience():
-    # TODO: Break this up into a lot of pieces
+@fastapi_app.get("/current")
+def current_experience():
+    if not _controller.current_app:
+        return {}
+    current_app = _controller.current_app
 
-    if request.method == "GET":
-        if not controller.current_app:
-            return {}
-        current_app = controller.current_app
+    response_data = experience_response(current_app)
+    if _controller.end_time is not None:
+        response_data["end_time"] = _controller.end_time
 
-        response_data = experience_response(current_app)
-        if controller.end_time is not None:
-            response_data["end_time"] = controller.end_time
-
-        return response_data
-    elif request.method in ["PUT", "PATCH"]:
-        body = request.json
-        if body is None:
-            return {"error": "No request body provided"}, 400
-
-        if request.method == "PUT":
-            if "id" not in body:
-                return {"error": "'id' not found in request body"}, 400
-
-            id = body["id"]
-            if id not in controller.apps:
-                return {"error": f"App with id '{id}' not registered"}, 400
-
-            controller.set_app(id)
-        elif request.method == "PATCH":
-            # Requiring an ID is a little bit of a hacky way to prevent an app that
-            # is transitioning out from setting properties on the incoming app. This
-            # of course assumes no foul play on the part of the app, which shouldn't
-            # be a concern for now because all apps are manually reviewed.
-            if "id" not in body:
-                return {"error": "id of requesting app must be specified in `id`"}, 400
-
-            if "end_time" not in body:
-                return {
-                    "error": "PATCH on /current is only supported for `end_time`"
-                }, 400
-
-            end_time = body["end_time"]
-            if end_time is not None and not isinstance(end_time, int):
-                return {"error": "`end_time` must be either an integer or null"}, 400
-
-            id = body["id"]
-
-            if id is None or not isinstance(id, str):
-                return {"error": "`id` must be a string"}, 400
-
-            if id != controller.current_app.id:
-                return {"error": "`id` specified is not current app"}, 400
-
-            controller.end_time = end_time
-
-        return {"status": "ok"}
+    return response_data
 
 
-@flask_app.route("/placard", methods=["GET", "PATCH"])
-def api_placard():
-    if request.method == "GET":
-        return controller.placard.get()
+@fastapi_app.put("/current")
+async def set_current_experience(body: SetCurrentExperienceBody):
+    if body.id not in _controller.apps:
+        raise HTTPException(
+            status_code=400, detail=f"App with id '{body.id}' not registered"
+        )
 
-    # TODO: Should we be doing more checking here? The placard itself does checking. Is there any merit to limiting the
-    #  length of the content body itself?
-    if request.method == "PATCH":
-        return controller.placard.update(request.json)
+    await _controller.set_app(body.id)
+    return {"status": "ok"}
 
 
-@atexit.register
-def cleanup():
+@fastapi_app.patch("/current")
+def update_current_experience(body: UpdateCurrentExperienceBody):
+    # Requiring an ID is a little bit of a hacky way to prevent an app that
+    # is transitioning out from setting properties on the incoming app. This
+    # of course assumes no foul play on the part of the app, which shouldn't
+    # be a concern for now because all apps are manually reviewed.
+    if body.id != _controller.current_app.id:
+        raise HTTPException(status_code=400, detail="`id` specified is not current app")
+
+    _controller.end_time = body.end_time
+
+    return {"status": "ok"}
+
+
+@fastapi_app.get("/placard")
+async def placard():
+    return await _controller.placard.get()
+
+
+@fastapi_app.patch("/placard")
+def update_placard(body: PlacardData):
+    return _controller.placard.update(body)
+
+
+@fastapi_app.on_event("shutdown")
+def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    if controller.current_app is not None:
-        controller.current_app.stop()
-
-
-if __name__ == "__main__":
-    flask_app.run()
+    if _controller.current_app is not None:
+        _controller.current_app.stop()

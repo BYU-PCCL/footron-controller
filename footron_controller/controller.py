@@ -1,7 +1,8 @@
+import asyncio
 import datetime
-from time import sleep
 from typing import Dict, Optional
 
+from .types import PlacardData
 from .placard import PlacardApi
 from .apps import BaseApp, load_apps_from_fs
 from .collection import load_collections_from_fs, Collection
@@ -36,35 +37,29 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
-    def set_app(self, id: str):
+    async def set_app(self, id: str):
         if self.current_app and self.current_app.id == id:
             return
 
         # Unchecked exception, consumer's responsibility to know that app with ID exists
         app = self.apps[id]
-        self._update_placard(app)
+        await self._update_placard(app)
 
         try:
             app.start()
             if self.current_app:
-                # Wait for first application to fade out so transition is seamless TODO:
-                #  Don't block here, though it makes sense that the response should only
-                #  be sent once we know that an app was launched successfully
-                sleep(0.5)
+                # Wait for first application to fade out so transition is seamless
+                await asyncio.sleep(0.5)
                 self.current_app.stop()
         finally:
-            # App start() and stop() methods should have their own error handling, but if something is unhandled we need
-            #  keep our state maintained
+            # App start() and stop() methods should have their own error handling,
+            # but if something is unhandled we need keep our state maintained
             self.end_time = None
             self.current_app = app
 
-    def _update_placard(self, app: BaseApp):
-        data = {
-            "title": app.title,
-            "description": app.description,
-            # We include the artist even if it is none because we need a complete PATCH
-            "artist": app.artist,
-        }
-
+    async def _update_placard(self, app: BaseApp):
         # TODO: Validate this worked somehow
-        self.placard.update(data)
+        await self.placard.update(
+            # We include the artist even if it is none because we need a complete PATCH
+            PlacardData(title=app.title, description=app.description, artist=app.artist)
+        )
