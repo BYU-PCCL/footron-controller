@@ -1,8 +1,7 @@
-import asyncio
 import dataclasses
 from typing import Optional
 
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 

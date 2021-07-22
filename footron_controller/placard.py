@@ -1,7 +1,6 @@
 import os
 
 import aiohttp
-import atexit
 
 from .types import PlacardData
 
