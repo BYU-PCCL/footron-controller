@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 from .experiences import load_experiences_fs, BaseExperience
 from .placard import PlacardApi, PlacardData
+from .releases import ReleaseManager
 from .collection import load_collections_from_fs, Collection
 
 
@@ -14,12 +15,14 @@ class Controller:
     end_time: Optional[int]
     last_update: datetime.datetime
     placard: PlacardApi
+    releases: ReleaseManager
 
-    def __init__(self):
+    def __init__(self, releases: ReleaseManager):
         self.current_experience = None
         self.end_time = None
 
         self.placard = PlacardApi()
+        self.releases = releases
 
         self.load_from_fs()
 
@@ -30,7 +33,8 @@ class Controller:
 
     def load_experiences(self):
         self.experiences = {
-            experience.id: experience for experience in load_experiences_fs()
+            experience.id: experience
+            for experience in load_experiences_fs(self.releases.path)
         }
 
     def load_collections(self):

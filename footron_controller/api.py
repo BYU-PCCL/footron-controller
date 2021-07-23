@@ -1,12 +1,15 @@
 import asyncio
 import atexit
 import dataclasses
+import hashlib
+import tarfile
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from .releases import ReleaseManager
 from .placard import PlacardData
 from .experiences import BaseExperience
 from .collection import Collection
@@ -22,6 +25,7 @@ fastapi_app.add_middleware(
     allow_headers=["*"],
 )
 
+_releases: ReleaseManager
 _controller: Controller
 
 
@@ -32,6 +36,10 @@ class SetCurrentExperienceBody(BaseModel):
 class UpdateCurrentExperienceBody(BaseModel):
     id: str
     end_time: Optional[int]
+
+
+class SetExperienceReleaseBody(BaseModel):
+    hash: str
 
 
 def experience_response(experience: BaseExperience):
@@ -159,8 +167,43 @@ async def update_placard(body: PlacardData):
 
 @fastapi_app.on_event("startup")
 def on_startup():
-    global _controller
-    _controller = Controller()
+    global _releases, _controller
+    _releases = ReleaseManager()
+    _controller = Controller(_releases)
+
+
+@fastapi_app.get("/releases")
+def releases():
+    return _releases.data
+
+
+@fastapi_app.post("/releases/{id}")
+async def add_release(id: str, file: UploadFile = File(...)):
+    # TODO: Is this too slow? Will it freeze the controller?
+    uncompressed_file = tarfile.open(fileobj=file.file, mode="r:gz")
+    tar_fileobj = uncompressed_file.fileobj
+
+    hash = hashlib.sha256()
+    while True:
+        chunk = tar_fileobj.read(4096)
+        if not chunk:
+            break
+        hash.update(chunk)
+
+    # Produces a hash different than sha256sum on the same file locally--this might not
+    # be a problem but we should be aware that it could be. Might be an encoding thing,
+    # not sure.
+    hash = bytes.hex(hash.digest())
+
+    uncompressed_file.extractall(_releases.create_release(id, hash))
+
+    return {"hash": hash}
+
+
+@fastapi_app.put("/releases/{id}")
+async def set_release(id: str, body: SetExperienceReleaseBody):
+    _releases.set_release(id, body.hash)
+    return {"status": "ok"}
 
 
 @atexit.register
