@@ -133,8 +133,8 @@ async def placard():
 
 
 @fastapi_app.patch("/placard")
-def update_placard(body: PlacardData):
-    return _controller.placard.update(body)
+async def update_placard(body: PlacardData):
+    return await _controller.placard.update(body)
 
 
 @fastapi_app.on_event("startup")
