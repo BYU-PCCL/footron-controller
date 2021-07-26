@@ -31,6 +31,7 @@ class BaseExperience(BaseModel, abc.ABC):
     description: str
     artist: Optional[str]
     collection: Optional[str]
+    lifetime: Optional[int]
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 
