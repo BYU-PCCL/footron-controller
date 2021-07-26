@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Union, Any
 
 from pydantic import BaseModel
 
@@ -8,3 +8,6 @@ class PlacardData(BaseModel):
     description: Optional[str]
     artist: Optional[str]
     url: Optional[str]
+
+
+JsonDict = Dict[str, Union[Any, Any]]
