@@ -15,6 +15,7 @@ from .environments import (
 )
 from .constants import EXPERIENCES_PATH, JsonDict
 
+_DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"
 
 
@@ -31,7 +32,7 @@ class BaseExperience(BaseModel, abc.ABC):
     description: str
     artist: Optional[str]
     collection: Optional[str]
-    lifetime: Optional[int]
+    lifetime: int = _DEFAULT_LIFETIME
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 

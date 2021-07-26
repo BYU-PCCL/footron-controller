@@ -11,8 +11,6 @@ from .ports import PortManager, get_port_manager
 from .browser_runner import BrowserRunner
 from .constants import PACKAGE_STATIC_PATH
 
-_DEFAULT_LIFETIME = 60
-
 docker_client = docker.from_env()
 
 
