@@ -2,7 +2,6 @@ import asyncio
 import datetime
 from typing import Dict, Optional
 
-import ports
 from .experiences import load_experiences_fs, BaseExperience
 from .placard import PlacardApi, PlacardData
 from .collection import load_collections_from_fs, Collection
