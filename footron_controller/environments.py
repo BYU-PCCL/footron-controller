@@ -92,7 +92,7 @@ class DockerEnvironment(BaseEnvironment):
         self._http_port = None
         self._zmq_port = None
 
-    def start(self):
+    async def start(self):
         self._http_port = self._ports.reserve_port()
         self._zmq_port = self._ports.reserve_port()
         self._container = docker_client.containers.run(
@@ -112,7 +112,7 @@ class DockerEnvironment(BaseEnvironment):
             ports={"80": self._http_port, "5555": self._zmq_port},
         )
 
-    def stop(self):
+    async def stop(self):
         if self._container.status in ["running", "created"]:
             self._container.kill()
 
