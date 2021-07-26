@@ -95,9 +95,15 @@ class BrowserRunner:
         await self._site.start()
 
     def _stop_browser(self):
+        if not self._browser_process:
+            return
+
         self._browser_process.terminate()
 
     async def _stop_static_server(self):
+        if not self._runner or not self._site:
+            return
+
         await self._site.stop()
         await self._runner.cleanup()
         self._ports.release_port(self._port)
