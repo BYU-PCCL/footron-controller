@@ -15,7 +15,7 @@ from .environments import (
 )
 from .constants import EXPERIENCES_PATH, JsonDict
 
-FIELD_MSG_TYPE = "type"
+_FIELD_TYPE = "type"
 
 
 class ExperienceType(str, Enum):
@@ -82,13 +82,13 @@ experience_type_map: Dict[ExperienceType, Type[BaseExperience]] = {
 
 
 def _serialize_experience(data: JsonDict, path: Path) -> BaseExperience:
-    if FIELD_MSG_TYPE not in data:
-        raise TypeError(f"Experience doesn't contain required field '{FIELD_MSG_TYPE}'")
+    if _FIELD_TYPE not in data:
+        raise TypeError(f"Experience doesn't contain required field '{_FIELD_TYPE}'")
 
-    if not isinstance(data[FIELD_MSG_TYPE], ExperienceType):
-        data[FIELD_MSG_TYPE] = ExperienceType(data[FIELD_MSG_TYPE])
+    if not isinstance(data[_FIELD_TYPE], ExperienceType):
+        data[_FIELD_TYPE] = ExperienceType(data[_FIELD_TYPE])
 
-    msg_type: ExperienceType = data[FIELD_MSG_TYPE]
+    msg_type: ExperienceType = data[_FIELD_TYPE]
 
     return experience_type_map[msg_type](**data, path=path)
 
