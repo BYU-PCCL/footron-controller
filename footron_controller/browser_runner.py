@@ -76,7 +76,7 @@ class BrowserRunner:
         return web.FileResponse(file_path)
 
     async def _start_static_server(self):
-        self._port = self._ports.reserve_port(_bound_http_ports)
+        self._port = self._ports.reserve_port()
         self._runner = AppRunner(
             self._app,
             handle_signals=True,
