@@ -144,10 +144,10 @@ def on_startup():
 
 
 @fastapi_app.on_event("shutdown")
-def on_shutdown():
+async def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
     if _controller.current_experience is not None:
-        _controller.current_experience.stop()
+        await _controller.current_experience.stop()
