@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import urllib.parse
+from pathlib import Path
 from typing import Dict, Optional
 
 from aiohttp import web
@@ -8,28 +9,42 @@ from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
 # Probably shouldn't do global state like this
+from .ports import get_port_manager
+from .constants import BASE_DATA_PATH
+
 _bound_http_ports = []
+
+CHROME_PROFILE_PATH = BASE_DATA_PATH / "chrome-data"
 
 
 class BrowserRunner:
+    _profile_key: str
     _url: str
     _port: int
+    _routes: Dict[str, str]
     _browser_process: Optional[subprocess.Popen]
     _runner = Optional[AppRunner]
     _site = Optional[TCPSite]
+    _ports = get_port_manager()
 
-    def __init__(self, routes: Dict[str, str], url: str):
-        self._app = web.Application()
-        self._app.add_routes(
-            [web.static(url, filepath) for (url, filepath) in routes.items()]
-        )
+    def __init__(self, profile_key: str, routes: Dict[str, str], url: str = "/"):
+        self._profile_key = profile_key
+        self._app = web.Application(middlewares=[self.static_serve])
+        self._routes = {route.rstrip("/"): path for route, path in routes.items()}
         self._url = url
 
+    @staticmethod
+    def _create_profile_path():
+        if CHROME_PROFILE_PATH.exists():
+            return
+        CHROME_PROFILE_PATH.mkdir(parents=True)
+
     def _start_browser(self):
+        self._create_profile_path()
         command = [
             "google-chrome",
             "--kiosk",
-            f"--user-data-dir=/tmp/footron-chrome-data/{self.id}",
+            f"--user-data-dir={CHROME_PROFILE_PATH / self._profile_key}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
             # Allow videos to play without user interaction
@@ -40,14 +55,34 @@ class BrowserRunner:
         ]
         self._browser_process = subprocess.Popen(command)
 
+    # Based on https://github.com/aio-libs/aiohttp/issues/1220#issuecomment-546572413
+    @web.middleware
+    async def static_serve(self, request, handler):
+        matching_route, root_path = next(
+            (route, Path(path))
+            for route, path in self._routes.items()
+            if request.path.startswith(route)
+        )
+        relative_file_path = Path(request.path.replace(matching_route, "")).relative_to(
+            "/"
+        )
+        file_path = root_path / relative_file_path
+        if not file_path.exists():
+            return web.HTTPNotFound()
+        if file_path.is_dir():
+            file_path /= "index.html"
+            if not file_path.exists():
+                return web.HTTPNotFound()
+        return web.FileResponse(file_path)
+
     async def _start_static_server(self):
-        self._port = _reserve_port(_bound_http_ports, 8080)
+        self._port = self._ports.reserve_port(_bound_http_ports)
         self._runner = AppRunner(
             self._app,
             handle_signals=True,
             access_log_class=AccessLogger,
             access_log_format=AccessLogger.LOG_FORMAT,
-            access_log=logging.getLogger("footron.browser_runner"),
+            access_log=logging.getLogger(__name__),
         )
 
         await self._runner.setup()
@@ -62,32 +97,15 @@ class BrowserRunner:
     def _stop_browser(self):
         self._browser_process.terminate()
 
-    def _stop_static_server(self):
+    async def _stop_static_server(self):
         await self._site.stop()
         await self._runner.cleanup()
-        _release_port(self._port, _bound_http_ports)
+        self._ports.release_port(self._port)
 
     async def start(self):
         await self._start_static_server()
         self._start_browser()
 
     async def stop(self):
-        self._stop_static_server()
+        await self._stop_static_server()
         self._stop_browser()
-
-
-def _reserve_port(port_list, default_port):
-    # TODO: Consider actually checking if another application has reserved this port
-    #  on the OS. Not sure if this would be a problem since we have a lot of control
-    #  over the OS
-    if not len(port_list):
-        port = default_port
-    else:
-        port = port_list[-1] + 1
-
-    port_list.append(port)
-    return port
-
-
-def _release_port(port, port_list):
-    port_list.remove(port)

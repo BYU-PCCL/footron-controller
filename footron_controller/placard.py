@@ -1,10 +1,17 @@
 import os
+from typing import Optional
 
 import aiohttp
-
-from .types import PlacardData
+from pydantic import BaseModel
 
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
+
+
+class PlacardData(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    artist: Optional[str]
+    url: Optional[str]
 
 
 class PlacardApi:
