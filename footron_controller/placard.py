@@ -22,7 +22,7 @@ class PlacardApi:
 
     async def update(self, data: PlacardData):
         async with self._aiohttp_session.patch(
-            "http://localhost/placard", json=data.dict()
+            "http://localhost/placard", json=data.dict(exclude_none=True)
         ) as response:
             return await response.json()
 
