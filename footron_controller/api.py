@@ -1,3 +1,4 @@
+import atexit
 import dataclasses
 from typing import Optional
 
@@ -143,7 +144,7 @@ def on_startup():
     _controller = Controller()
 
 
-@fastapi_app.on_event("shutdown")
+@atexit.register
 async def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  apps in a dict or something)
