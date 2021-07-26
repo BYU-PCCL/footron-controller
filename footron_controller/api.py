@@ -1,3 +1,5 @@
+import asyncio
+import atexit
 import dataclasses
 from typing import Optional
 
@@ -5,8 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .types import PlacardData
-from .apps import BaseApp
+from .placard import PlacardData
+from .experiences import BaseExperience
 from .collection import Collection
 from .controller import Controller
 
@@ -20,7 +22,7 @@ fastapi_app.add_middleware(
     allow_headers=["*"],
 )
 
-_controller = Controller()
+_controller: Controller
 
 
 class SetCurrentExperienceBody(BaseModel):
@@ -32,18 +34,18 @@ class UpdateCurrentExperienceBody(BaseModel):
     end_time: Optional[int]
 
 
-def experience_response(app: BaseApp):
+def experience_response(experience: BaseExperience):
     data = {
-        "id": app.id,
-        "title": app.title,
-        "artist": app.artist,
-        "description": app.description,
-        "lifetime": app.lifetime,
+        "id": experience.id,
+        "title": experience.title,
+        "artist": experience.artist,
+        "description": experience.description,
+        "lifetime": experience.lifetime,
         "last_update": int(_controller.last_update.timestamp()),
     }
 
-    if app.collection:
-        data["collection"] = app.collection
+    if experience.collection:
+        data["collection"] = experience.collection
 
     return data
 
@@ -62,15 +64,15 @@ def api_reload():
 # TODO: Finish
 @fastapi_app.get("/experiences")
 def experiences():
-    return {id: experience_response(app) for id, app in _controller.apps.items()}
+    return {id: experience_response(app) for id, app in _controller.experiences.items()}
 
 
 @fastapi_app.get("/experiences/<id>")
 def experience(id):
-    if id not in _controller.apps:
+    if id not in _controller.experiences:
         return {}
 
-    return experience_response(_controller.apps[id])
+    return experience_response(_controller.experiences[id])
 
 
 @fastapi_app.get("/collections")
@@ -91,9 +93,9 @@ def collection(id):
 
 @fastapi_app.get("/current")
 def current_experience():
-    if not _controller.current_app:
+    if not _controller.current_experience:
         return {}
-    current_app = _controller.current_app
+    current_app = _controller.current_experience
 
     response_data = experience_response(current_app)
     if _controller.end_time is not None:
@@ -104,7 +106,7 @@ def current_experience():
 
 @fastapi_app.put("/current")
 async def set_current_experience(body: SetCurrentExperienceBody):
-    if body.id not in _controller.apps:
+    if body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"App with id '{body.id}' not registered"
         )
@@ -119,7 +121,7 @@ def update_current_experience(body: UpdateCurrentExperienceBody):
     # is transitioning out from setting properties on the incoming app. This
     # of course assumes no foul play on the part of the app, which shouldn't
     # be a concern for now because all apps are manually reviewed.
-    if body.id != _controller.current_app.id:
+    if body.id != _controller.current_experience.id:
         raise HTTPException(status_code=400, detail="`id` specified is not current app")
 
     _controller.end_time = body.end_time
@@ -133,15 +135,23 @@ async def placard():
 
 
 @fastapi_app.patch("/placard")
-def update_placard(body: PlacardData):
-    return _controller.placard.update(body)
+async def update_placard(body: PlacardData):
+    return await _controller.placard.update(body)
 
 
-@fastapi_app.on_event("shutdown")
+@fastapi_app.on_event("startup")
+def on_startup():
+    global _controller
+    _controller = Controller()
+
+
+@atexit.register
 def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    if _controller.current_app is not None:
-        _controller.current_app.stop()
+    if _controller.current_experience is not None:
+        loop = asyncio.get_event_loop()
+        stop_task = loop.create_task(_controller.current_experience.stop())
+        loop.run_until_complete(stop_task)
