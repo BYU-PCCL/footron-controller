@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 import dataclasses
 from typing import Optional
@@ -145,10 +146,12 @@ def on_startup():
 
 
 @atexit.register
-async def on_shutdown():
+def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  apps in a dict or something)
 
     # Docker containers won't clean themselves up for example
     if _controller.current_experience is not None:
-        await _controller.current_experience.stop()
+        loop = asyncio.get_event_loop()
+        stop_task = loop.create_task(_controller.current_experience.stop())
+        loop.run_until_complete(stop_task)
