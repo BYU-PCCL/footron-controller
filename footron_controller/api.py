@@ -195,6 +195,11 @@ async def add_release(id: str, file: UploadFile = File(...)):
     # not sure.
     hash = bytes.hex(hash.digest())
 
+    if _releases.release_exists(id, hash):
+        return HTTPException(
+            status_code=400, detail=f"This release already exists with hash '{hash}'"
+        )
+
     uncompressed_file.extractall(_releases.create_release(id, hash))
 
     return {"hash": hash}
