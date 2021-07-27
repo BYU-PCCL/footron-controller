@@ -21,6 +21,7 @@ class BrowserRunner:
     _profile_key: str
     _url: str
     _port: int
+    _app: web.Application
     _routes: Dict[str, str]
     _browser_process: Optional[subprocess.Popen]
     _runner = Optional[AppRunner]

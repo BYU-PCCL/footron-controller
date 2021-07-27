@@ -64,7 +64,10 @@ def api_reload():
 # TODO: Finish
 @fastapi_app.get("/experiences")
 def experiences():
-    return {id: experience_response(app) for id, app in _controller.experiences.items()}
+    return {
+        id: experience_response(experience)
+        for id, experience in _controller.experiences.items()
+    }
 
 
 @fastapi_app.get("/experiences/<id>")
@@ -95,9 +98,9 @@ def collection(id):
 def current_experience():
     if not _controller.current_experience:
         return {}
-    current_app = _controller.current_experience
+    current = _controller.current_experience
 
-    response_data = experience_response(current_app)
+    response_data = experience_response(current)
     if _controller.end_time is not None:
         response_data["end_time"] = _controller.end_time
 
@@ -108,21 +111,23 @@ def current_experience():
 async def set_current_experience(body: SetCurrentExperienceBody):
     if body.id not in _controller.experiences:
         raise HTTPException(
-            status_code=400, detail=f"App with id '{body.id}' not registered"
+            status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    await _controller.set_app(body.id)
+    await _controller.set_experience(body.id)
     return {"status": "ok"}
 
 
 @fastapi_app.patch("/current")
 def update_current_experience(body: UpdateCurrentExperienceBody):
-    # Requiring an ID is a little bit of a hacky way to prevent an app that
-    # is transitioning out from setting properties on the incoming app. This
-    # of course assumes no foul play on the part of the app, which shouldn't
-    # be a concern for now because all apps are manually reviewed.
+    # Requiring an ID is a little bit of a hacky way to prevent an experience that
+    # is transitioning out from setting properties on the incoming experience. This
+    # of course assumes no foul play on the part of the experience, which shouldn't
+    # be a concern for now because all experiences are manually reviewed.
     if body.id != _controller.current_experience.id:
-        raise HTTPException(status_code=400, detail="`id` specified is not current app")
+        raise HTTPException(
+            status_code=400, detail="`id` specified is not current experience"
+        )
 
     _controller.end_time = body.end_time
 
@@ -148,7 +153,7 @@ def on_startup():
 @atexit.register
 def on_shutdown():
     # TODO: Handle closing in the middle of a transition (keep track of all running
-    #  apps in a dict or something)
+    #  experiences in a dict or something)
 
     # Docker containers won't clean themselves up for example
     if _controller.current_experience is not None:

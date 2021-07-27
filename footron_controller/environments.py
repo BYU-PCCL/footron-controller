@@ -36,7 +36,7 @@ class WebEnvironment(BaseEnvironment):
 
         if not self._static_path.exists():
             raise EnvironmentInitializationError(
-                f"Couldn't load static path for app {profile_key}"
+                f"Couldn't load static path for experience {profile_key}"
                 f" at path {self._static_path.absolute()}"
             )
 

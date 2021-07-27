@@ -29,32 +29,35 @@ class Controller:
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
-        self.experiences = {app.id: app for app in load_experiences_fs()}
+        self.experiences = {
+            experience.id: experience for experience in load_experiences_fs()
+        }
 
     def load_collections(self):
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
         }
 
-    async def set_app(self, id: str):
+    async def set_experience(self, id: str):
         if self.current_experience and self.current_experience.id == id:
             return
 
-        # Unchecked exception, consumer's responsibility to know that app with ID exists
-        app = self.experiences[id]
-        await self._update_placard(app)
+        # Unchecked exception, consumer's responsibility to know that experience with
+        # ID exists
+        experience = self.experiences[id]
+        await self._update_placard(experience)
 
         try:
-            await app.start()
+            await experience.start()
             if self.current_experience:
-                # Wait for first application to fade out so transition is seamless
+                # Wait for first experience to fade out so transition is seamless
                 await asyncio.sleep(0.5)
                 await self.current_experience.stop()
         finally:
-            # App start() and stop() methods should have their own error handling,
-            # but if something is unhandled we need keep our state maintained
+            # Environment start() and stop() methods should have their own error
+            # handling, but if something is unhandled we need keep our state maintained
             self.end_time = None
-            self.current_experience = app
+            self.current_experience = experience
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow

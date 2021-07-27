@@ -19,7 +19,6 @@ BASE_DATA_PATH = (
     else Path(xdg_data_home(), "footron")
 )
 
-# Once we automate app packaging and deployment, we should use XDG_DATA_HOME instead
 BASE_CONFIG_PATH = (
     Path(os.environ["FT_CONFIG_PATH"])
     if "FT_CONFIG_PATH" in os.environ
