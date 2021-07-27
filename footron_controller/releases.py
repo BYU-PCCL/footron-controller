@@ -28,7 +28,7 @@ class ReleaseManager:
     # TODO: Figure out how we limit # of older releases kept per app--maybe by size?
     def __init__(self):
         self._releases_path = BASE_DATA_PATH / _RELEASES_DIR_NAME
-        self._linked_path = EXPERIENCES_PATH / "apps"
+        self._linked_path = EXPERIENCES_PATH
         self._data_path = self._releases_path / _DATA_FILENAME
 
         self._load_releases_data()
