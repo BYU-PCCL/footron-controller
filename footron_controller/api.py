@@ -220,7 +220,7 @@ async def set_release(id: str, body: SetExperienceReleaseBody):
 
 
 @atexit.register
-def on_shutdown():
+def cleanup():
     # TODO: Handle closing in the middle of a transition (keep track of all running
     #  experiences in a dict or something)
 
