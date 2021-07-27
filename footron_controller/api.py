@@ -183,6 +183,10 @@ async def add_release(id: str, file: UploadFile = File(...)):
     uncompressed_file = tarfile.open(fileobj=file.file, mode="r:gz")
     tar_fileobj = uncompressed_file.fileobj
 
+    # TODO: This _doesn't_ work for comparing contents, we need to do something like
+    #  https://gist.github.com/DaveCTurner/8765561 MAKING SURE THAT WE COMPARE FILE
+    #  PERMISSIONS (see https://docs.python.org/3/library/tarfile.html#tarinfo-objects
+    #  for a lead on where to get file metadata)
     hash = hashlib.sha256()
     while True:
         chunk = tar_fileobj.read(4096)
