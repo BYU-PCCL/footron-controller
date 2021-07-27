@@ -203,6 +203,7 @@ async def add_release(id: str, file: UploadFile = File(...)):
 @fastapi_app.put("/releases/{id}")
 async def set_release(id: str, body: SetExperienceReleaseBody):
     _releases.set_release(id, body.hash)
+    _controller.load_from_fs()
     return {"status": "ok"}
 
 
