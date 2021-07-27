@@ -6,8 +6,6 @@ from xdg import xdg_config_home, xdg_data_home
 
 from . import __file__ as module_path
 
-# TODO: If we ever move to a src/<package-name> layout, we'll need to add another
-#  .parent here
 PACKAGE_PATH = Path(module_path).parent
 print(module_path)
 
