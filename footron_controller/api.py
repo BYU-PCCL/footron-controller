@@ -39,7 +39,7 @@ class UpdateCurrentExperienceBody(BaseModel):
 
 
 class SetExperienceReleaseBody(BaseModel):
-    hash: str
+    hash: Optional[str]
 
 
 def experience_response(experience: BaseExperience):
@@ -202,7 +202,10 @@ async def add_release(id: str, file: UploadFile = File(...)):
 
 @fastapi_app.put("/releases/{id}")
 async def set_release(id: str, body: SetExperienceReleaseBody):
-    _releases.set_release(id, body.hash)
+    if body.hash:
+        _releases.set_release(id, body.hash)
+    else:
+        _releases.reset_release(id)
     _controller.load_from_fs()
     return {"status": "ok"}
 

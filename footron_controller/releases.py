@@ -60,6 +60,12 @@ class ReleaseManager:
                 default=pydantic.json.pydantic_encoder,
             )
 
+    def _create_linked_path(self):
+        if self._linked_path.exists():
+            return
+
+        self._linked_path.mkdir(parents=True)
+
     def create_release(self, id: str, hash: str):
         # TODO: This is probably the right place to clean up old releases
         if id not in self._release_data:
@@ -80,10 +86,10 @@ class ReleaseManager:
 
     def set_release(self, id: str, hash: str):
         if not self.release_exists(id, hash):
+            # TODO: Create our own errors for this
             raise FileNotFoundError(f"Release path does not exist: {id}/{hash}")
 
-        if not self._linked_path.exists():
-            self._linked_path.mkdir(parents=True)
+        self._create_linked_path()
 
         linked_path = self._linked_path / id
         if linked_path.exists():
@@ -94,6 +100,20 @@ class ReleaseManager:
         )
 
         self._release_data[id].current = hash
+        self._save_release_data()
+
+    def reset_release(self, id: str):
+        if id not in self._release_data:
+            # TODO: Create our own errors for this
+            raise FileNotFoundError(f"'{id}' has no releases")
+
+        self._create_linked_path()
+
+        linked_path = self._linked_path / id
+        if linked_path.exists():
+            linked_path.unlink()
+
+        self._release_data[id].current = None
         self._save_release_data()
 
     def release_exists(self, id, hash) -> bool:
