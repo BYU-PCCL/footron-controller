@@ -48,16 +48,17 @@ class Controller:
         await self._update_placard(experience)
 
         try:
-            await experience.start()
             if self.current_experience:
-                # Wait for first experience to fade out so transition is seamless
-                await asyncio.sleep(0.5)
                 await self.current_experience.stop()
         finally:
-            # Environment start() and stop() methods should have their own error
-            # handling, but if something is unhandled we need keep our state maintained
-            self.end_time = None
-            self.current_experience = experience
+            try:
+                await experience.start()
+            finally:
+                # Environment start() and stop() methods should have their own error
+                # handling, but if something is unhandled we need keep our state
+                # maintained
+                self.end_time = None
+                self.current_experience = experience
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
