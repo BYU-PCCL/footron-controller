@@ -114,5 +114,5 @@ class BrowserRunner:
         self._start_browser()
 
     async def stop(self):
-        await self._stop_static_server()
         self._stop_browser()
+        await self._stop_static_server()
