@@ -33,6 +33,7 @@ class BrowserRunner:
         self._app = web.Application(middlewares=[self.static_serve])
         self._routes = {route.rstrip("/"): path for route, path in routes.items()}
         self._url = url
+        self._browser_process = None
 
     @staticmethod
     def _create_profile_path():
