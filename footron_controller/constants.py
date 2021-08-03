@@ -23,6 +23,12 @@ BASE_CONFIG_PATH = (
     else Path(xdg_config_home(), "footron")
 )
 
+BASE_MESSAGING_URL = (
+    os.environ["FT_MSG_URL"]
+    if "FT_MSG_URL" in os.environ
+    t stelse "ws://localhost:8088/messaging/out/"
+)
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 JsonDict = Dict[str, Union[Any, Any]]

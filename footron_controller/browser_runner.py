@@ -10,7 +10,7 @@ from aiohttp.web_runner import AppRunner, TCPSite
 
 # Probably shouldn't do global state like this
 from .ports import get_port_manager
-from .constants import BASE_DATA_PATH
+from .constants import BASE_DATA_PATH, BASE_MESSAGING_URL
 
 _bound_http_ports = []
 
@@ -18,7 +18,7 @@ CHROME_PROFILE_PATH = BASE_DATA_PATH / "chrome-data"
 
 
 class BrowserRunner:
-    _profile_key: str
+    _id: str
     _url: str
     _port: int
     _app: web.Application
@@ -28,8 +28,8 @@ class BrowserRunner:
     _site = Optional[TCPSite]
     _ports = get_port_manager()
 
-    def __init__(self, profile_key: str, routes: Dict[str, str], url: str = "/"):
-        self._profile_key = profile_key
+    def __init__(self, id: str, routes: Dict[str, str], url: str = "/"):
+        self._id = id
         self._app = web.Application(middlewares=[self.static_serve])
         self._routes = {route.rstrip("/"): path for route, path in routes.items()}
         self._url = url
@@ -40,19 +40,37 @@ class BrowserRunner:
             return
         CHROME_PROFILE_PATH.mkdir(parents=True)
 
+    def _create_url(self):
+        base_url = urllib.parse.urljoin(f"http://localhost:{self._port}", self._url)
+        parsed_url = urllib.parse.urlsplit(base_url)
+        query_params = urllib.parse.parse_qsl(parsed_url.query)
+        query_params.append(
+            ("ftMsgUrl", urllib.parse.urljoin(BASE_MESSAGING_URL, self._id))
+        )
+        query_str = urllib.parse.urlencode(query_params)
+        return urllib.parse.urlunsplit(
+            (
+                parsed_url.scheme,
+                parsed_url.netloc,
+                parsed_url.path,
+                query_str,
+                parsed_url.fragment,
+            )
+        )
+
     def _start_browser(self):
         self._create_profile_path()
         command = [
             "google-chrome",
-            "--kiosk",
-            f"--user-data-dir={CHROME_PROFILE_PATH / self._profile_key}",
+            # "--kiosk",
+            f"--user-data-dir={CHROME_PROFILE_PATH / self._id}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
             # Allow videos to play without user interaction
             "--autoplay-policy=no-user-gesture-required",
             # Allow cross-origin requests
             "--disable-web-security",
-            urllib.parse.urljoin(f"http://localhost:{self._port}", self._url),
+            self._create_url(),
         ]
         self._browser_process = subprocess.Popen(command)
 
