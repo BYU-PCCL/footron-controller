@@ -131,9 +131,7 @@ async def set_current_experience(body: SetCurrentExperienceBody):
 @fastapi_app.patch("/current")
 def update_current_experience(body: UpdateCurrentExperienceBody):
     if not _controller.current_experience:
-        raise HTTPException(
-            status_code=400, detail="No current experience exists"
-        )
+        raise HTTPException(status_code=400, detail="No current experience exists")
 
     # Requiring an ID is a little bit of a hacky way to prevent an experience that
     # is transitioning out from setting properties on the incoming experience. This
