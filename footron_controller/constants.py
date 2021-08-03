@@ -26,7 +26,7 @@ BASE_CONFIG_PATH = (
 BASE_MESSAGING_URL = (
     os.environ["FT_MSG_URL"]
     if "FT_MSG_URL" in os.environ
-    t stelse "ws://localhost:8088/messaging/out/"
+    else "ws://localhost:8088/messaging/out/"
 )
 
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
