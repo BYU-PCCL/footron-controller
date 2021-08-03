@@ -62,7 +62,7 @@ class BrowserRunner:
         self._create_profile_path()
         command = [
             "google-chrome",
-            # "--kiosk",
+            "--kiosk",
             f"--user-data-dir={CHROME_PROFILE_PATH / self._id}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
