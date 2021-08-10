@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+# This is basically what Chrome does, but note that it isn't useful if there
+# are multiple instances of the same product. For that we need probably need
+# pyudev to get a serial number.
+from pathlib import Path
+
+video_devs = list(map(lambda p: p.name, Path("/dev").glob("video*")))
+id_lines = [
+    "/dev/{}: {}:{} ({})".format(device_name, *[
+        open(f"/sys/class/video4linux/{device_name}/device/../{id_filename}")
+        .read()
+        .strip()
+        for id_filename in ["idVendor", "idProduct", "product"]
+    ])
+    for device_name in video_devs
+]
+
+print()
+print(f"✨ Detected {len(id_lines)} video devices ✨")
+print()
+
+[print(line) for line in id_lines]
+
+print()
