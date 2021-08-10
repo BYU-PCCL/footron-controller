@@ -7,6 +7,7 @@ video_devs = list(map(lambda p: p.name, Path("/dev").glob("video*")))
 # This is basically what Chrome does, but note that it isn't useful if there
 # are multiple instances of the same product. For that we need probably need
 # pyudev to get a serial number.
+# See https://source.chromium.org/chromium/chromium/src/+/main:media/capture/video/linux/video_capture_device_factory_linux.cc
 id_lines = [
     "/dev/{}: {}:{} ({})".format(device_name, *[
         open(f"/sys/class/video4linux/{device_name}/device/../{id_filename}")
