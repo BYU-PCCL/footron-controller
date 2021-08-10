@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-# TODO: Determine if this is a bad port to start with
 from typing import Optional
 
+# TODO: Determine if this is a bad port to start with
 START_PORT = 8080
 
 _port_manager: Optional[PortManager] = None
