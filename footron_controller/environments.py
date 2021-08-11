@@ -111,6 +111,7 @@ class DockerEnvironment(BaseEnvironment):
             device_requests=[
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
             ],
+            # Chromium needs these to work, per @wingated
             cap_add=["SYS_ADMIN"],
             shm_size="1g",
             # TODO: Figure out how to expose ROS2 ports
