@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-video_devs = list(map(lambda p: p.name, Path("/dev").glob("video*")))
+video_devs = list(sorted(map(lambda p: p.name, Path("/dev").glob("video*"))))
 
 # This is basically what Chrome does, but note that it isn't useful if there
 # are multiple instances of the same product. For that we need probably need
