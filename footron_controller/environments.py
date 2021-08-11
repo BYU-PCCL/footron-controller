@@ -111,6 +111,8 @@ class DockerEnvironment(BaseEnvironment):
             device_requests=[
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
             ],
+            cap_add=["SYS_ADMIN"],
+            shm_size="1g",
             # TODO: Figure out how to expose ROS2 ports
             ports={"80": self._http_port, "5555": self._zmq_port},
         )
