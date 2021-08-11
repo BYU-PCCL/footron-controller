@@ -106,7 +106,7 @@ class DockerEnvironment(BaseEnvironment):
             environment=[
                 f"DISPLAY={os.environ['DISPLAY']}",
                 "NVIDIA_DRIVER_CAPABILITIES=all",
-                f"FT_MSG_URL={urllib.parse.urljoin(BASE_MESSAGING_URL, self._id)}"
+                f"FT_MSG_URL={urllib.parse.urljoin(BASE_MESSAGING_URL, self._id)}",
             ],
             device_requests=[
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
