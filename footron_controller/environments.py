@@ -11,6 +11,7 @@ from docker.types import DeviceRequest
 from .ports import PortManager, get_port_manager
 from .browser_runner import BrowserRunner
 from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
+from .video_devices import get_video_device_manager, VideoDeviceManager
 
 docker_client = docker.from_env()
 
@@ -79,6 +80,7 @@ class DockerEnvironment(BaseEnvironment):
     _id: str
     _container: Optional[Container]
     _ports: PortManager
+    _video_devices: VideoDeviceManager
     _http_port: Optional[int]
     _zmq_port: Optional[int]
 
@@ -91,12 +93,19 @@ class DockerEnvironment(BaseEnvironment):
         self._image_id = image_id
         self._container = None
         self._ports = get_port_manager()
+        self._video_devices = get_video_device_manager()
         self._http_port = None
         self._zmq_port = None
 
     async def start(self):
         self._http_port = self._ports.reserve_port()
         self._zmq_port = self._ports.reserve_port()
+        # For now, we will expose only a "center" video device, accessible as
+        # /dev/videocenter within containers
+        video_devices = [
+            f"{path}:/dev/video{name}:rw"
+            for name, path in self._video_devices.devices.items()
+        ]
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
@@ -111,6 +120,7 @@ class DockerEnvironment(BaseEnvironment):
             device_requests=[
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])
             ],
+            devices=[*video_devices],
             # Chromium needs these to work, per @wingated
             cap_add=["SYS_ADMIN"],
             shm_size="1g",
