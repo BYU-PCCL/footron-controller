@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 from typing import Optional, Union
 import docker
+import urllib.parse
 
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
 from .ports import PortManager, get_port_manager
 from .browser_runner import BrowserRunner
-from .constants import PACKAGE_STATIC_PATH
+from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
 
 docker_client = docker.from_env()
 
@@ -75,6 +76,7 @@ class VideoEnvironment(BaseEnvironment):
 
 
 class DockerEnvironment(BaseEnvironment):
+    _id: str
     _container: Optional[Container]
     _ports: PortManager
     _http_port: Optional[int]
@@ -82,8 +84,10 @@ class DockerEnvironment(BaseEnvironment):
 
     def __init__(
         self,
+        id: str,
         image_id,
     ):
+        self._id = id
         self._image_id = image_id
         self._container = None
         self._ports = get_port_manager()
@@ -102,6 +106,7 @@ class DockerEnvironment(BaseEnvironment):
             environment=[
                 f"DISPLAY={os.environ['DISPLAY']}",
                 "NVIDIA_DRIVER_CAPABILITIES=all",
+                f"FT_MSG_URL={urllib.parse.urljoin(BASE_MESSAGING_URL, self._id)}"
             ],
             device_requests=[
                 DeviceRequest(driver="nvidia", count=-1, capabilities=[["gpu"]])

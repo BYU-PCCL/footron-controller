@@ -56,7 +56,7 @@ class DockerExperience(BaseExperience):
     image_id: str
 
     def create_environment(self) -> DockerEnvironment:
-        return DockerEnvironment(self.image_id)
+        return DockerEnvironment(self.id, self.image_id)
 
 
 class WebExperience(BaseExperience):
