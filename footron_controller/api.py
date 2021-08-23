@@ -1,7 +1,7 @@
 import asyncio
 import atexit
 import dataclasses
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +32,7 @@ class SetCurrentExperienceBody(BaseModel):
 class UpdateCurrentExperienceBody(BaseModel):
     id: str
     end_time: Optional[int]
+    lock: Optional[Union[int, bool]]
 
 
 def experience_response(experience: BaseExperience):
@@ -113,6 +114,7 @@ def current_experience():
     response_data = experience_response(current)
     if _controller.end_time is not None:
         response_data["end_time"] = _controller.end_time
+    response_data["lock"] = _controller.lock
 
     return response_data
 
@@ -142,7 +144,10 @@ def update_current_experience(body: UpdateCurrentExperienceBody):
             status_code=400, detail="`id` specified is not current experience"
         )
 
-    _controller.end_time = body.end_time
+    if body.end_time:
+        _controller.end_time = body.end_time
+    if body.lock is not None:
+        _controller.lock = body.lock
 
     return {"status": "ok"}
 

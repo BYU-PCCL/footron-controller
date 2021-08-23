@@ -1,6 +1,6 @@
-import asyncio
 import datetime
 from typing import Dict, Optional
+import footron_protocol as protocol
 
 from .experiences import load_experiences_fs, BaseExperience
 from .placard import PlacardApi, PlacardData
@@ -12,12 +12,14 @@ class Controller:
     collections: Dict[str, Collection] = {}
     current_experience: Optional[BaseExperience]
     end_time: Optional[int]
+    lock: protocol.Lock
     last_update: datetime.datetime
     placard: PlacardApi
 
     def __init__(self):
         self.current_experience = None
         self.end_time = None
+        self.lock = False
 
         self.placard = PlacardApi()
 
