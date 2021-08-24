@@ -1,70 +1,74 @@
 import datetime
-from time import sleep
 from typing import Dict, Optional
+import footron_protocol as protocol
 
-from .placard import PlacardApi
-from .apps import BaseApp, load_apps_from_fs
+from .experiences import load_experiences_fs, BaseExperience
+from .placard import PlacardApi, PlacardData
 from .collection import load_collections_from_fs, Collection
 
 
 class Controller:
-    apps: Dict[str, BaseApp] = {}
+    experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
-    current_app: Optional[BaseApp]
+    current_experience: Optional[BaseExperience]
     end_time: Optional[int]
+    lock: protocol.Lock
     last_update: datetime.datetime
     placard: PlacardApi
 
     def __init__(self):
-        self.current_app = None
+        self.current_experience = None
         self.end_time = None
+        self.lock = False
 
         self.placard = PlacardApi()
 
         self.load_from_fs()
 
     def load_from_fs(self):
-        self.load_apps()
+        self.load_experiences()
         self.load_collections()
         self.last_update = datetime.datetime.now()
 
-    def load_apps(self):
-        self.apps = {app.id: app for app in load_apps_from_fs()}
+    def load_experiences(self):
+        self.experiences = {
+            experience.id: experience for experience in load_experiences_fs()
+        }
 
     def load_collections(self):
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
         }
 
-    def set_app(self, id: str):
-        if self.current_app and self.current_app.id == id:
+    async def set_experience(self, id: str):
+        if self.current_experience and self.current_experience.id == id:
             return
 
-        # Unchecked exception, consumer's responsibility to know that app with ID exists
-        app = self.apps[id]
-        self._update_placard(app)
+        # Unchecked exception, consumer's responsibility to know that experience with
+        # ID exists
+        experience = self.experiences[id]
+        await self._update_placard(experience)
 
         try:
-            app.start()
-            if self.current_app:
-                # Wait for first application to fade out so transition is seamless TODO:
-                #  Don't block here, though it makes sense that the response should only
-                #  be sent once we know that an app was launched successfully
-                sleep(0.5)
-                self.current_app.stop()
+            if self.current_experience:
+                await self.current_experience.stop()
         finally:
-            # App start() and stop() methods should have their own error handling, but if something is unhandled we need
-            #  keep our state maintained
-            self.end_time = None
-            self.current_app = app
+            try:
+                await experience.start()
+            finally:
+                # Environment start() and stop() methods should have their own error
+                # handling, but if something is unhandled we need keep our state
+                # maintained
+                self.end_time = None
+                self.current_experience = experience
 
-    def _update_placard(self, app: BaseApp):
-        data = {
-            "title": app.title,
-            "description": app.description,
-            # We include the artist even if it is none because we need a complete PATCH
-            "artist": app.artist,
-        }
-
+    async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
-        self.placard.update(data)
+        await self.placard.update(
+            # We include the artist even if it is none because we need a complete PATCH
+            PlacardData(
+                title=experience.title,
+                description=experience.description,
+                artist=experience.artist,
+            )
+        )

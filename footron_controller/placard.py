@@ -1,24 +1,31 @@
 import os
-import urllib.parse
+from typing import Optional
 
-import requests_unixsocket
+import aiohttp
+from pydantic import BaseModel
 
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
 
 
+class PlacardData(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    artist: Optional[str]
+    url: Optional[str]
+
+
 class PlacardApi:
     def __init__(self):
-        self._domain_sockets_session = requests_unixsocket.Session()
-        self._placard_escaped_url = (
-            f"http+unix://{urllib.parse.quote_plus(_PLACARD_SOCKETS_PATH)}"
+        self._aiohttp_session = aiohttp.ClientSession(
+            connector=aiohttp.UnixConnector(path=_PLACARD_SOCKETS_PATH)
         )
 
-    def update(self, data):
-        return self._domain_sockets_session.patch(
-            f"{self._placard_escaped_url}/placard", json=data
-        ).json()
+    async def update(self, data: PlacardData):
+        async with self._aiohttp_session.patch(
+            "http://localhost/placard", json=data.dict(exclude_none=True)
+        ) as response:
+            return await response.json()
 
-    def get(self):
-        return self._domain_sockets_session.get(
-            f"{self._placard_escaped_url}/placard"
-        ).json()
+    async def get(self):
+        async with self._aiohttp_session.get("http://localhost/placard") as response:
+            return await response.json()
