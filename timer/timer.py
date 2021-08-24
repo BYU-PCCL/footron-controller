@@ -1,6 +1,7 @@
 import copy
 import datetime
 import random
+from typing_extensions import runtime
 import requests
 import time
 import os
@@ -43,15 +44,13 @@ for collection in collections_shuffle:
 def should_advance(start_time, exp):
     current_exp = requests.get(CURRENT_ENDPOINT).json()
 
-    if "end_time" in current_exp:
-        if datetime.datetime.now() < datetime.datetime.fromtimestamp(
-            current_exp["end_time"]
-        ):
-            return False
-    else:
-        current_date = datetime.datetime.now().timestamp()
-        if (current_date - start_time) < exp["lifetime"]:
-            return False
+    if current_exp["lock"]:
+        return False
+    if "end_time" in current_exp and datetime.datetime.now() < datetime.datetime.fromtimestamp(current_exp["end_time"]):
+        return False
+    current_date = datetime.datetime.now().timestamp()
+    if (current_date - start_time) < exp["lifetime"]:
+        return False
 
     return True
 
@@ -68,16 +67,24 @@ while True:
             playlist.append(exp)
 
     random.shuffle(playlist)
-    for exp in playlist:
+    exp = None
+    for exp2 in playlist: # exp
+        if exp == None: # exp
+            exp = exp2
+            continue
+        # print("playing: " + exp["id"])
+        # print("=== Up next is: " + exp2["id"])
 
-        r = requests.put(
+        # r = 
+        requests.put(
             CURRENT_ENDPOINT,
             headers={"Content-Type": "application/json"},
             json={"id": exp["id"]},
         )
         # print(r)
+        # print("=== played successfully")
 
-        current_exp = list(requests.get(CURRENT_ENDPOINT).json().items())
+        current_exp = requests.get(CURRENT_ENDPOINT).json()
         last_exp = current_exp["id"]
         start_time = datetime.datetime.now().timestamp()
         advance = False
@@ -85,9 +92,14 @@ while True:
         # wait for confirmation that it's running?
 
         while not advance:
-            time.sleep(1)
+            time.sleep(1) # 1
             if last_exp != current_exp["id"]:
+                # wait, do we need to set last_exp = current_exp["id"] here?
+                # is current_exp even getting updated here? Is it the same here as in should_advance()?
+                # print("new exp: " + current_exp["id"])
                 start_time = datetime.datetime.now().timestamp()
             advance = should_advance(start_time, exp)
+
+        exp = exp2
 
     # check for new explist data? should it be able to be updated on the fly?
