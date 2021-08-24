@@ -7,7 +7,6 @@ from xdg import xdg_config_home, xdg_data_home
 from . import __file__ as module_path
 
 PACKAGE_PATH = Path(module_path).parent
-print(module_path)
 
 PACKAGE_STATIC_PATH = PACKAGE_PATH / "static"
 
