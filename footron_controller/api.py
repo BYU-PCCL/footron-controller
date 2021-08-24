@@ -175,6 +175,9 @@ def on_shutdown():
 
     # Docker containers won't clean themselves up for example
     if _controller.current_experience is not None:
-        loop = asyncio.get_event_loop()
-        stop_task = loop.create_task(_controller.current_experience.stop())
-        loop.run_until_complete(stop_task)
+        if asyncio.iscoroutinefunction(_controller.current_experience.stop):
+            loop = asyncio.get_event_loop()
+            stop_task = loop.create_task(_controller.current_experience.stop())
+            loop.run_until_complete(stop_task)
+        else:
+            _controller.current_experience.stop()

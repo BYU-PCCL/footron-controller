@@ -21,10 +21,10 @@ class EnvironmentInitializationError(Exception):
 
 
 class BaseEnvironment(abc.ABC):
-    async def start(self):
+    def start(self):
         ...
 
-    async def stop(self):
+    def stop(self):
         ...
 
 
@@ -97,7 +97,7 @@ class DockerEnvironment(BaseEnvironment):
         self._http_port = None
         self._zmq_port = None
 
-    async def start(self):
+    def start(self):
         self._http_port = self._ports.reserve_port()
         self._zmq_port = self._ports.reserve_port()
         # For now, we will expose only a "center" video device, accessible as
@@ -128,7 +128,7 @@ class DockerEnvironment(BaseEnvironment):
             ports={"80": self._http_port, "5555": self._zmq_port},
         )
 
-    async def stop(self):
+    def stop(self):
         if self._container.status in ["running", "created"]:
             self._container.kill()
 

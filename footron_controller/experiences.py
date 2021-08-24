@@ -1,4 +1,5 @@
 import abc
+import asyncio
 import json
 import sys
 from enum import Enum
@@ -41,10 +42,16 @@ class BaseExperience(BaseModel, abc.ABC):
         self._environment = self.create_environment()
 
     async def start(self):
-        await self._environment.start()
+        if asyncio.iscoroutinefunction(self._environment.start):
+            await self._environment.start()
+        else:
+            self._environment.start()
 
     async def stop(self):
-        await self._environment.stop()
+        if asyncio.iscoroutinefunction(self._environment.stop):
+            await self._environment.stop()
+        else:
+            self._environment.stop()
 
     @abc.abstractmethod
     def create_environment(self) -> BaseEnvironment:
