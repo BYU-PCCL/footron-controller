@@ -30,7 +30,7 @@ class SetCurrentExperienceBody(BaseModel):
 
 
 class UpdateCurrentExperienceBody(BaseModel):
-    id: str
+    id: Optional[str]
     end_time: Optional[int]
     lock: Optional[Union[int, bool]]
 
@@ -139,7 +139,7 @@ def update_current_experience(body: UpdateCurrentExperienceBody):
     # is transitioning out from setting properties on the incoming experience. This
     # of course assumes no foul play on the part of the experience, which shouldn't
     # be a concern for now because all experiences are manually reviewed.
-    if body.id != _controller.current_experience.id:
+    if body.id and body.id != _controller.current_experience.id:
         raise HTTPException(
             status_code=400, detail="`id` specified is not current experience"
         )
