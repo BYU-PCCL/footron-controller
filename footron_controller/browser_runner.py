@@ -1,4 +1,5 @@
 import logging
+import shutil
 import subprocess
 import urllib.parse
 from pathlib import Path
@@ -14,6 +15,7 @@ from .constants import BASE_DATA_PATH, BASE_MESSAGING_URL
 
 _bound_http_ports = []
 
+BASE_CHROME_PROFILE_PATH = BASE_DATA_PATH / "base-chrome-profile"
 CHROME_PROFILE_PATH = BASE_DATA_PATH / "chrome-data"
 
 
@@ -23,6 +25,7 @@ class BrowserRunner:
     _port: int
     _app: web.Application
     _routes: Dict[str, str]
+    _profile_path: Path
     _browser_process: Optional[subprocess.Popen]
     _runner = Optional[AppRunner]
     _site = Optional[TCPSite]
@@ -34,12 +37,14 @@ class BrowserRunner:
         self._routes = {route.rstrip("/"): path for route, path in routes.items()}
         self._url = url
         self._browser_process = None
+        self._profile_path = CHROME_PROFILE_PATH / self._id
 
-    @staticmethod
-    def _create_profile_path():
-        if CHROME_PROFILE_PATH.exists():
-            return
-        CHROME_PROFILE_PATH.mkdir(parents=True)
+    def _create_profile_path(self):
+        if not CHROME_PROFILE_PATH.exists():
+            CHROME_PROFILE_PATH.mkdir(parents=True)
+
+        if not self._profile_path.exists() and BASE_CHROME_PROFILE_PATH.exists():
+            shutil.copytree(BASE_CHROME_PROFILE_PATH, self._profile_path)
 
     def _create_url(self):
         base_url = urllib.parse.urljoin(f"http://localhost:{self._port}", self._url)
@@ -64,7 +69,7 @@ class BrowserRunner:
         command = [
             "google-chrome",
             "--kiosk",
-            f"--user-data-dir={CHROME_PROFILE_PATH / self._id}",
+            f"--user-data-dir={self._profile_path}",
             # Prevent popup asking to make Chrome your default browser
             "--no-first-run",
             # Allow videos to play without user interaction
