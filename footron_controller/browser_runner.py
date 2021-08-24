@@ -71,6 +71,9 @@ class BrowserRunner:
             "--autoplay-policy=no-user-gesture-required",
             # Allow cross-origin requests
             "--disable-web-security",
+            # Try to avoid white flash with dark mode settings
+            "--force-dark-mode",
+            "--enable-features=WebUIDarkMode",
             self._create_url(),
         ]
         self._browser_process = subprocess.Popen(command)
