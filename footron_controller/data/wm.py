@@ -1,46 +1,13 @@
-import json
-import os
-from typing import Optional
-
-import aiohttp
-from pydantic import BaseModel
-
-_PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
+import zmq
 
 
-class PlacardExperienceData(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    artist: Optional[str]
-
-
-class PlacardUrlData(BaseModel):
-    url: Optional[str]
-
-
-class PlacardApi:
+class WmApi:
     def __init__(self):
-        self._aiohttp_session = aiohttp.ClientSession(
-            connector=aiohttp.UnixConnector(path=_PLACARD_SOCKETS_PATH)
-        )
+        self._context = zmq.Context()
+        self._socket = self._context.socket(zmq.REQ)
+        self._socket.connect("tcp://localhost:5557")
 
-    async def set_experience(self, data: PlacardExperienceData):
-        async with self._aiohttp_session.put(
-            "http://localhost/experience", json=data.dict(exclude_none=True)
-        ) as response:
-            return await response.json()
-
-    async def experience(self):
-        async with self._aiohttp_session.get("http://localhost/experience") as response:
-            return await response.json()
-
-    async def set_url(self, url: str):
-        async with self._aiohttp_session.put(
-            "http://localhost/url",
-            json=PlacardUrlData(url=url).dict(exclude_none=True),
-        ) as response:
-            return await response.json()
-
-    async def url(self):
-        async with self._aiohttp_session.get("http://localhost/url") as response:
-            return await response.json()
+    def set_fullscreen(self, fullscreen: bool):
+        self._socket.send_json({"fullscreen": fullscreen})
+        # TODO: Do something with errors
+        _ = self._socket.recv_json()

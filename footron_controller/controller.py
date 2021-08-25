@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import footron_protocol as protocol
 
 from .experiences import load_experiences_fs, BaseExperience
+from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.collection import load_collections_from_fs, Collection
 
@@ -22,6 +23,7 @@ class Controller:
         self.lock = False
 
         self.placard = PlacardApi()
+        self.wm = WmApi()
 
         self.load_from_fs()
 
@@ -48,6 +50,7 @@ class Controller:
         # ID exists
         experience = self.experiences[id]
         await self._update_placard(experience)
+        self.wm.set_fullscreen(experience.fullscreen)
 
         try:
             if self.current_experience:
@@ -72,3 +75,4 @@ class Controller:
                 artist=experience.artist,
             )
         )
+        await self.placard.set_visibility(not experience.fullscreen)

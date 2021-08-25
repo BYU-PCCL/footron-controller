@@ -34,6 +34,7 @@ class BaseExperience(BaseModel, abc.ABC):
     artist: Optional[str]
     collection: Optional[str]
     lifetime: int = _DEFAULT_LIFETIME
+    fullscreen: bool = False
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 

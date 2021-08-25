@@ -18,6 +18,10 @@ class PlacardUrlData(BaseModel):
     url: Optional[str]
 
 
+class PlacardVisibilityData(BaseModel):
+    visible: bool
+
+
 class PlacardApi:
     def __init__(self):
         self._aiohttp_session = aiohttp.ClientSession(
@@ -43,4 +47,15 @@ class PlacardApi:
 
     async def url(self):
         async with self._aiohttp_session.get("http://localhost/url") as response:
+            return await response.json()
+
+    async def set_visibility(self, visible: bool):
+        async with self._aiohttp_session.put(
+            "http://localhost/visibility",
+            json=PlacardVisibilityData(visible=visible).dict(exclude_none=True),
+        ) as response:
+            return await response.json()
+
+    async def visibility(self):
+        async with self._aiohttp_session.get("http://localhost/visibility") as response:
             return await response.json()
