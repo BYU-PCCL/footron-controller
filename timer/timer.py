@@ -23,11 +23,14 @@ explist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
 
 collections = {}
 playlist_base = []
+commercial_base = []
 last_exp = ""
 
 for exp in explist:
     if "collection" in exp:
-        if exp["collection"] not in collections:
+        if exp["collection"] == "commercials":
+            commercial_base.append(exp)
+        elif exp["collection"] not in collections:
             playlist_base.append(exp["collection"])
             collections[exp["collection"]] = [exp]
         else:
@@ -57,9 +60,10 @@ def should_advance(start_time):
 
     return True
 
-
+commercial_timer = datetime.datetime.now().timestamp()
 while True:
     playlist = []
+    commercials = copy.deepcopy(commercial_base)
     for exp in playlist_base:
         if exp in list(collections.keys()):
             if len(collections_shuffle[exp]) == 0:
@@ -70,6 +74,7 @@ while True:
             playlist.append(exp)
 
     random.shuffle(playlist)
+    random.shuffle(commercials)
     exp = None
     for exp2 in playlist: # exp
         if exp == None: # exp
@@ -106,13 +111,21 @@ while True:
                 print("exp is changed: ", flush=True)
                 print("last exp= " + last_exp, flush=True)
                 print("current exp= " +current_exp["id"], flush=True)
-                # wait, do we need to set last_exp = current_exp["id"] here?
-                # is current_exp even getting updated here? Is it the same here as in should_advance()?
-                # print("new exp: " + current_exp["id"])
                 start_time = datetime.datetime.now().timestamp()
                 last_exp = current_exp["id"]
             advance = should_advance(start_time)
-
+            if advance and (commercial_timer - datetime.datetime.now().timestamp() >= 30) and len(commercial_base) != 0:
+                if len(commercials) == 0:
+                    commercials = random.shuffle(copy.deepcopy(commercial_base))
+                last_exp = commercials.pop()["id"]
+                requests.put(
+                    CURRENT_ENDPOINT,
+                    headers={"Content-Type": "application/json"},
+                    json={"id": last_exp},
+                )
+                print("played commerical: " + last_exp, flush=True)
+                commercial_timer = datetime.datetime.now().timestamp()
+            
         exp = exp2
 
     # check for new explist data? should it be able to be updated on the fly?
