@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import List, Optional
 
-from .constants import BASE_DATA_PATH
+from ..constants import BASE_DATA_PATH
 
 
 @dataclass

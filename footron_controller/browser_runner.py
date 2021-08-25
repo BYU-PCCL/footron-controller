@@ -10,7 +10,7 @@ from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
 # Probably shouldn't do global state like this
-from .ports import get_port_manager
+from .data.ports import get_port_manager
 from .constants import BASE_DATA_PATH, BASE_MESSAGING_URL
 
 _bound_http_ports = []

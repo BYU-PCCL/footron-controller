@@ -7,9 +7,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .placard import PlacardExperienceData, PlacardUrlData
+from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
-from .collection import Collection
+from .data.collection import Collection
 from .controller import Controller
 
 fastapi_app = FastAPI()

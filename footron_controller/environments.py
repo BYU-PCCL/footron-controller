@@ -8,10 +8,10 @@ import urllib.parse
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
-from .ports import PortManager, get_port_manager
+from .data.ports import PortManager, get_port_manager
 from .browser_runner import BrowserRunner
 from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
-from .video_devices import get_video_device_manager, VideoDeviceManager
+from .data.video_devices import get_video_device_manager, VideoDeviceManager
 
 docker_client = docker.from_env()
 
