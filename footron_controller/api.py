@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .placard import PlacardData
+from .placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .collection import Collection
 from .controller import Controller
@@ -152,14 +152,24 @@ def update_current_experience(body: UpdateCurrentExperienceBody):
     return {"status": "ok"}
 
 
-@fastapi_app.get("/placard")
-async def placard():
-    return await _controller.placard.get()
+@fastapi_app.get("/placard/experience")
+async def placard_experience():
+    return await _controller.placard.experience()
 
 
-@fastapi_app.patch("/placard")
-async def update_placard(body: PlacardData):
-    return await _controller.placard.update(body)
+@fastapi_app.patch("/placard/experience")
+async def update_placard_experience(body: PlacardExperienceData):
+    return await _controller.placard.set_experience(body)
+
+
+@fastapi_app.get("/placard/url")
+async def placard_url():
+    return await _controller.placard.url()
+
+
+@fastapi_app.patch("/placard/url")
+async def update_placard_url(body: PlacardUrlData):
+    return await _controller.placard.set_url(body.url)
 
 
 @fastapi_app.on_event("startup")

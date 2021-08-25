@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -7,10 +8,13 @@ from pydantic import BaseModel
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
 
 
-class PlacardData(BaseModel):
+class PlacardExperienceData(BaseModel):
     title: Optional[str]
     description: Optional[str]
     artist: Optional[str]
+
+
+class PlacardUrlData(BaseModel):
     url: Optional[str]
 
 
@@ -20,12 +24,23 @@ class PlacardApi:
             connector=aiohttp.UnixConnector(path=_PLACARD_SOCKETS_PATH)
         )
 
-    async def update(self, data: PlacardData):
-        async with self._aiohttp_session.patch(
-            "http://localhost/placard", json=data.dict(exclude_none=True)
+    async def set_experience(self, data: PlacardExperienceData):
+        async with self._aiohttp_session.put(
+            "http://localhost/experience", json=data.dict(exclude_none=True)
         ) as response:
             return await response.json()
 
-    async def get(self):
-        async with self._aiohttp_session.get("http://localhost/placard") as response:
+    async def experience(self):
+        async with self._aiohttp_session.get("http://localhost/experience") as response:
+            return await response.json()
+
+    async def set_url(self, url: str):
+        async with self._aiohttp_session.put(
+            "http://localhost/url",
+            json=PlacardUrlData(url=url).dict(exclude_none=True),
+        ) as response:
+            return await response.json()
+
+    async def url(self):
+        async with self._aiohttp_session.get("http://localhost/url") as response:
             return await response.json()

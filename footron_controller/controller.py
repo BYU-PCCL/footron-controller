@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import footron_protocol as protocol
 
 from .experiences import load_experiences_fs, BaseExperience
-from .placard import PlacardApi, PlacardData
+from .placard import PlacardApi, PlacardExperienceData
 from .collection import load_collections_from_fs, Collection
 
 
@@ -64,9 +64,9 @@ class Controller:
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
-        await self.placard.update(
+        await self.placard.set_experience(
             # We include the artist even if it is none because we need a complete PATCH
-            PlacardData(
+            PlacardExperienceData(
                 title=experience.title,
                 description=experience.description,
                 artist=experience.artist,
