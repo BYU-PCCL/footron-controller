@@ -41,16 +41,19 @@ for collection in collections_shuffle:
     random.shuffle(collections_shuffle[collection])
 
 
-def should_advance(start_time, exp):
+def should_advance(start_time):
     current_exp = requests.get(CURRENT_ENDPOINT).json()
 
     if current_exp["lock"]:
+        print("has a lock")
         return False
     if "end_time" in current_exp and datetime.datetime.now() < datetime.datetime.fromtimestamp(current_exp["end_time"]):
         return False
     current_date = datetime.datetime.now().timestamp()
-    if (current_date - start_time) < exp["lifetime"]:
+    if (current_date - start_time) < current_exp["lifetime"]:
         return False
+
+    print("should advance returned True")
 
     return True
 
@@ -72,8 +75,8 @@ while True:
         if exp == None: # exp
             exp = exp2
             continue
-        # print("playing: " + exp["id"])
-        # print("=== Up next is: " + exp2["id"])
+        print("playing: " + exp["id"], flush=True)
+        print("=== Up next is: " + exp2["id"], flush=True)
 
         # r = 
         requests.put(
@@ -85,6 +88,8 @@ while True:
         # print("=== played successfully")
 
         current_exp = requests.get(CURRENT_ENDPOINT).json()
+        while not current_exp:
+            time.sleep(1)
         last_exp = current_exp["id"]
         start_time = datetime.datetime.now().timestamp()
         advance = False
@@ -93,12 +98,20 @@ while True:
 
         while not advance:
             time.sleep(1) # 1
+            current_exp = requests.get(CURRENT_ENDPOINT).json()
+            # print("test", flush=True)
+            #print("le: " + last_exp, flush=True)
+            # print("ce: " + current_exp["id"], flush=True)
             if last_exp != current_exp["id"]:
+                print("exp is changed: ", flush=True)
+                print("last exp= " + last_exp, flush=True)
+                print("current exp= " +current_exp["id"], flush=True)
                 # wait, do we need to set last_exp = current_exp["id"] here?
                 # is current_exp even getting updated here? Is it the same here as in should_advance()?
                 # print("new exp: " + current_exp["id"])
                 start_time = datetime.datetime.now().timestamp()
-            advance = should_advance(start_time, exp)
+                last_exp = current_exp["id"]
+            advance = should_advance(start_time)
 
         exp = exp2
 
