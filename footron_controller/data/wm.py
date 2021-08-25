@@ -8,4 +8,4 @@ class WmApi:
         self._socket.connect("tcp://localhost:5557")
 
     def set_fullscreen(self, fullscreen: bool):
-        self._socket.send_json({"fullscreen": fullscreen})
+        self._socket.send_json({"fullscreen": fullscreen}, zmq.NOBLOCK)
