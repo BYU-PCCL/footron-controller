@@ -1,5 +1,6 @@
 import copy
 import datetime
+dt = datetime.datetime
 import random
 from typing_extensions import runtime
 import requests
@@ -18,7 +19,6 @@ CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
 # Also gotta see what exps are actually able to be used (cameras online?)
 
-# read in json
 explist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
 
 collections = {}
@@ -47,18 +47,18 @@ for collection in collections_shuffle:
 def should_advance(start_time):
     current_exp = requests.get(CURRENT_ENDPOINT).json()
     # print("current time", flush=True)
-    # print(datetime.datetime.now())
+    # print(dt.now())
     # print("endtime")
-    try: 
-        print(datetime.datetime.fromtimestamp(current_exp["end_time"]), flush=True)
-    except KeyError:
-        pass 
+    # try: 
+    #     print(dt.fromtimestamp(current_exp["end_time"]), flush=True)
+    # except KeyError:
+    #     pass 
 
     if current_exp["lock"]:
         return False
-    current_date = datetime.datetime.now()
+    current_date = dt.now()
     if "end_time" in current_exp:
-        if current_date < datetime.datetime.fromtimestamp(current_exp["end_time"]):
+        if current_date < dt.fromtimestamp(current_exp["end_time"]):
             return False   
     elif (current_date.timestamp() - start_time) < current_exp["lifetime"]:
         return False
@@ -70,7 +70,7 @@ def should_advance(start_time):
 
     return True
 
-commercial_timer = datetime.datetime.now().timestamp()
+commercial_timer = dt.now().timestamp()
 # print(commercial_base)
 while True:
     playlist = []
@@ -107,7 +107,7 @@ while True:
         while not current_exp:
             time.sleep(1)
         last_exp = current_exp["id"]
-        start_time = datetime.datetime.now().timestamp()
+        start_time = dt.now().timestamp()
         advance = False
 
         # wait for confirmation that it's running?
@@ -122,10 +122,10 @@ while True:
                 # print("exp is changed: ", flush=True)
                 # print("last exp= " + last_exp, flush=True)
                 # print("current exp= " +current_exp["id"], flush=True)
-                start_time = datetime.datetime.now().timestamp()
+                start_time = dt.now().timestamp()
                 last_exp = current_exp["id"]
             advance = should_advance(start_time)
-            if advance and (datetime.datetime.now().timestamp() - commercial_timer >= 30) and len(commercial_base) != 0:
+            if advance and (dt.now().timestamp() - commercial_timer >= 30) and len(commercial_base) != 0:
                 if len(commercials) == 0:
                     commercials = random.shuffle(copy.deepcopy(commercial_base))
                 last_exp = commercials.pop()["id"]
@@ -135,7 +135,7 @@ while True:
                     json={"id": last_exp},
                 )
                 # print("played commerical: " + last_exp, flush=True)
-                commercial_timer = datetime.datetime.now().timestamp()
+                commercial_timer = dt.now().timestamp()
                 advance = False
             
         exp = exp2
