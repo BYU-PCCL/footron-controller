@@ -43,17 +43,17 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
-    async def set_experience(self, id: str):
+    async def set_experience(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
-        experience = self.experiences[id]
+        experience = self.experiences[id] if id else None
         await self._update_placard(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(
-            self.wm.set_fullscreen(experience.fullscreen)
+            self.wm.set_fullscreen(experience.fullscreen if experience else False)
         )
 
         try:
@@ -61,7 +61,8 @@ class Controller:
                 await self.current_experience.stop()
         finally:
             try:
-                await experience.start()
+                if experience:
+                    await experience.start()
             finally:
                 # Environment start() and stop() methods should have their own error
                 # handling, but if something is unhandled we need keep our state
@@ -74,9 +75,15 @@ class Controller:
         await self.placard.set_experience(
             # We include the artist even if it is none because we need a complete PATCH
             PlacardExperienceData(
-                title=experience.title,
-                description=experience.description,
-                artist=experience.artist,
+                title=experience.title if experience else "Footron",
+                description=experience.description
+                if experience
+                else "Built with <pre><3</pre> by BYU students",
+                artist=experience.artist
+                if experience
+                else "Vin Howe, Chris Luangrath, Matt Powley",
             )
         )
-        await self.placard.set_visibility(not experience.fullscreen)
+        await self.placard.set_visibility(
+            not experience.fullscreen if experience else True
+        )

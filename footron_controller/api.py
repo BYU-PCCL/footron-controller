@@ -26,7 +26,7 @@ _controller: Controller
 
 
 class SetCurrentExperienceBody(BaseModel):
-    id: str
+    id: Optional[str]
 
 
 class UpdateCurrentExperienceBody(BaseModel):
