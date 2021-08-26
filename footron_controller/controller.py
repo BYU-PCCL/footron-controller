@@ -3,6 +3,7 @@ import datetime
 from typing import Dict, Optional
 import footron_protocol as protocol
 
+from constants import EMPTY_EXPERIENCE_DATA
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
@@ -76,14 +77,12 @@ class Controller:
         await self.placard.set_experience(
             # We include the artist even if it is none because we need a complete PATCH
             PlacardExperienceData(
-                title=experience.title if experience else "Footron",
-                description=experience.description
-                if experience
-                else "Built with <pre style='display:inline;'><3</pre> by BYU students",
-                artist=experience.artist
-                if experience
-                else "Vin Howe, Chris Luangrath, Matt Powley",
+                title=experience.title,
+                description=experience.description,
+                artist=experience.artist,
             )
+            if experience
+            else EMPTY_EXPERIENCE_DATA
         )
         await self.placard.set_visibility(
             not experience.fullscreen if experience else True

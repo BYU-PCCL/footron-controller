@@ -5,6 +5,7 @@ from typing import Dict, Union, Any
 from xdg import xdg_config_home, xdg_data_home
 
 from . import __file__ as module_path
+from .data.placard import PlacardExperienceData
 
 PACKAGE_PATH = Path(module_path).parent
 
@@ -29,5 +30,11 @@ BASE_MESSAGING_URL = (
 )
 
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
+
+EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
+    title="Footron",
+    artist="Vin Howe, Chris Luangrath, Matt Powley",
+    description="<pre>Built by BYU students</pre>",
+)
 
 JsonDict = Dict[str, Union[Any, Any]]
