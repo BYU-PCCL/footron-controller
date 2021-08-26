@@ -46,23 +46,24 @@ for collection in collections_shuffle:
 
 def should_advance(start_time):
     current_exp = requests.get(CURRENT_ENDPOINT).json()
+    # print("current time", flush=True)
+    # print(datetime.datetime.now())
+    # print("endtime")
+    try: 
+        print(datetime.datetime.fromtimestamp(current_exp["end_time"]), flush=True)
+    except KeyError:
+        pass 
 
     if current_exp["lock"]:
         return False
-    if "end_time" in current_exp and datetime.datetime.now() < datetime.datetime.fromtimestamp(current_exp["end_time"]):
+    current_date = datetime.datetime.now()
+    if "end_time" in current_exp:
+        if current_date < datetime.datetime.fromtimestamp(current_exp["end_time"]):
+            return False   
+    elif (current_date.timestamp() - start_time) < current_exp["lifetime"]:
         return False
-    print("current time", flush=True)
-    print(datetime.datetime.now().timestamp())
-    print("endtime")
-    try: 
-        print(datetime.datetime.fromtimestamp(current_exp["end_time"]))
-    except KeyError:
-        pass 
-    current_date = datetime.datetime.now().timestamp()
-    if (current_date - start_time) < current_exp["lifetime"]:
-        return False
-    print("current_date - start_time")
-    print(current_date - start_time)
+    # print("current_date - start_time")
+    # print(current_date.timestamp() - start_time)
     # print(str.format(current_date - start_time))
 
     # print("should advance returned True")
@@ -118,15 +119,13 @@ while True:
             #print("le: " + last_exp, flush=True)
             # print("ce: " + current_exp["id"], flush=True)
             if last_exp != current_exp["id"]:
-                print("exp is changed: ", flush=True)
-                print("last exp= " + last_exp, flush=True)
-                print("current exp= " +current_exp["id"], flush=True)
+                # print("exp is changed: ", flush=True)
+                # print("last exp= " + last_exp, flush=True)
+                # print("current exp= " +current_exp["id"], flush=True)
                 start_time = datetime.datetime.now().timestamp()
                 last_exp = current_exp["id"]
             advance = should_advance(start_time)
-            print("commercial timer - now")
-            print(commercial_timer - datetime.datetime.now().timestamp(), flush=True)
-            if advance and (commercial_timer - datetime.datetime.now().timestamp() >= 30) and len(commercial_base) != 0:
+            if advance and (datetime.datetime.now().timestamp() - commercial_timer >= 30) and len(commercial_base) != 0:
                 if len(commercials) == 0:
                     commercials = random.shuffle(copy.deepcopy(commercial_base))
                 last_exp = commercials.pop()["id"]
@@ -135,8 +134,9 @@ while True:
                     headers={"Content-Type": "application/json"},
                     json={"id": last_exp},
                 )
-                print("played commerical: " + last_exp, flush=True)
+                # print("played commerical: " + last_exp, flush=True)
                 commercial_timer = datetime.datetime.now().timestamp()
+                advance = False
             
         exp = exp2
 
