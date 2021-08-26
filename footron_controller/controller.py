@@ -28,7 +28,7 @@ class Controller:
         self.wm = WmApi()
 
         self.load_from_fs()
-        self._update_experience_display(None)
+        asyncio.get_event_loop().create_task(self._update_experience_display(None))
 
     def load_from_fs(self):
         self.load_experiences()
@@ -45,7 +45,7 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
-    def _update_experience_display(self, experience: Optional[BaseExperience]):
+    async def _update_experience_display(self, experience: Optional[BaseExperience]):
         await self._update_placard(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(
