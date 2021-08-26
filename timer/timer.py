@@ -18,8 +18,14 @@ EXPERIENCES_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "experiences")
 CURRENT_ENDPOINT = urllib.parse.urljoin(CONTROLLER_URL, "current")
 
 # Also gotta see what exps are actually able to be used (cameras online?)
-
-explist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
+repeat = True
+while repeat:
+    try:
+        explist = list(requests.get(EXPERIENCES_ENDPOINT).json().values())
+        repeat = False
+    except:
+        print("failed to read in experience list")
+        time.sleep(3)
 
 collections = {}
 playlist_base = []
@@ -36,6 +42,8 @@ for exp in explist:
         else:
             collections[exp["collection"]].append(exp)
     else:
+        if exp["unlisted"]:
+            continue
         playlist_base.append(exp)
 
 collections_shuffle = copy.deepcopy(collections)
@@ -116,26 +124,28 @@ while True:
             time.sleep(1) # 1
             current_exp = requests.get(CURRENT_ENDPOINT).json()
             # print("test", flush=True)
-            #print("le: " + last_exp, flush=True)
+            # print("le: " + last_exp, flush=True)
             # print("ce: " + current_exp["id"], flush=True)
             if last_exp != current_exp["id"]:
-                # print("exp is changed: ", flush=True)
-                # print("last exp= " + last_exp, flush=True)
-                # print("current exp= " +current_exp["id"], flush=True)
+                print("exp is changed: ", flush=True)
+                print("==last exp= " + last_exp, flush=True)
+                print("==current exp= " + current_exp["id"], flush=True)
                 start_time = dt.now().timestamp()
                 last_exp = current_exp["id"]
             advance = should_advance(start_time)
-            if advance and (dt.now().timestamp() - commercial_timer >= 30) and len(commercial_base) != 0:
+            if advance and (dt.now().timestamp() - commercial_timer >= 90) and len(commercial_base) != 0:
                 if len(commercials) == 0:
-                    commercials = random.shuffle(copy.deepcopy(commercial_base))
+                    # print("shuffle com", flush=True)
+                    commercials = copy.deepcopy(commercial_base)
+                    random.shuffle(commercials)
                 last_exp = commercials.pop()["id"]
                 requests.put(
                     CURRENT_ENDPOINT,
                     headers={"Content-Type": "application/json"},
                     json={"id": last_exp},
                 )
-                # print("played commerical: " + last_exp, flush=True)
-                commercial_timer = dt.now().timestamp()
+                print("played commerical: " + last_exp, flush=True)
+                commercial_timer = dt.now().timestamp() # - current_exp["end_time"]
                 advance = False
             
         exp = exp2
