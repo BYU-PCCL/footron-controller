@@ -59,6 +59,8 @@ def experience_response(experience: BaseExperience):
     if experience.collection:
         data["collection"] = experience.collection
 
+    # TODO: Handle scrubbing and other type-specific fields in some clean way
+
     return data
 
 
