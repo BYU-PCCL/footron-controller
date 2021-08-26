@@ -59,7 +59,7 @@ class Controller:
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
         experience = self.experiences[id] if id else None
-        self._update_experience_display(experience)
+        await self._update_experience_display(experience)
 
         try:
             if self.current_experience:
