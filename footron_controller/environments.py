@@ -1,8 +1,11 @@
 import abc
+import asyncio
+import logging
 import os
 from pathlib import Path
 from typing import Optional, Union
 import docker
+import docker.errors
 import urllib.parse
 
 from docker.models.containers import Container
@@ -14,6 +17,8 @@ from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
 
 docker_client = docker.from_env()
+
+logger = logging.getLogger(__name__)
 
 
 class EnvironmentInitializationError(Exception):
@@ -128,9 +133,33 @@ class DockerEnvironment(BaseEnvironment):
             ports={"80": self._http_port, "5555": self._zmq_port},
         )
 
-    def stop(self):
-        if self._container.status in ["running", "created"]:
+    def _kill_container_checked(self, container: Container):
+        if container.status not in ["running", "created"]:
+            return
+
+        try:
             self._container.kill()
+        except docker.errors.APIError as e:
+            logger.error(
+                f"Docker errored while trying to kill container for app ID {self._id}:"
+            )
+            logger.exception(e)
+
+    async def _verify_image_shutdown(self):
+        matching_containers = docker_client.containers.list(
+            filters={"ancestor": self._image_id, "status": "running"}
+        )
+        if not matching_containers:
+            return
+        logger.warning(
+            f"Found live containers with image ID {self._image_id}, attempting to kill in 1s"
+        )
+        await asyncio.sleep(1)
+        map(self._kill_container_checked, matching_containers)
+
+    async def stop(self):
+        self._kill_container_checked(self._container)
+        await self._verify_image_shutdown()
 
         self._ports.release_port(self._http_port)
         self._ports.release_port(self._zmq_port)
