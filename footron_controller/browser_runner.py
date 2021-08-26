@@ -134,13 +134,13 @@ class BrowserRunner:
             return
 
         try:
-            await self._site.stop()
+            await self._runner.cleanup()
+            logging.info("Cleaned up website")
         except RuntimeError as e:
             logging.error("Error while stopping static server:")
             logging.exception(e)
         # TODO: Figure out what we have to do to get aiohttp to let go of its ports
         # self._ports.release_port(self._port)
-        await self._runner.cleanup()
 
     async def start(self):
         await self._start_static_server()
