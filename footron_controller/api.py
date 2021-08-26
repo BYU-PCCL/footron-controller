@@ -124,7 +124,7 @@ def current_experience():
 
 @fastapi_app.put("/current")
 async def set_current_experience(body: SetCurrentExperienceBody):
-    if body.id not in _controller.experiences:
+    if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
