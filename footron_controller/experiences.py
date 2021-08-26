@@ -79,7 +79,7 @@ class WebExperience(BaseExperience):
 class VideoExperience(BaseExperience):
     type = ExperienceType.VIDEO
     filename: str
-    scrubbing: bool = True
+    scrubbing: bool = False
 
     def create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.path, self.filename)

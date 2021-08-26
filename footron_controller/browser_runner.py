@@ -10,6 +10,7 @@ from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
 # Probably shouldn't do global state like this
+from .util import mercilessly_kill_process
 from .data.ports import get_port_manager
 from .constants import BASE_DATA_PATH, BASE_MESSAGING_URL
 
@@ -122,17 +123,21 @@ class BrowserRunner:
 
         await self._site.start()
 
-    def _stop_browser(self):
+    async def _stop_browser(self):
         if not self._browser_process:
             return
 
-        self._browser_process.terminate()
+        await mercilessly_kill_process(self._browser_process)
 
     async def _stop_static_server(self):
         if not self._runner or not self._site:
             return
 
-        await self._site.stop()
+        try:
+            await self._site.stop()
+        except RuntimeError as e:
+            logging.error("Error while stopping static server:")
+            logging.exception(e)
         await self._runner.cleanup()
         self._ports.release_port(self._port)
 
@@ -141,5 +146,5 @@ class BrowserRunner:
         self._start_browser()
 
     async def stop(self):
-        self._stop_browser()
+        await self._stop_browser()
         await self._stop_static_server()

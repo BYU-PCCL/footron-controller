@@ -1,13 +1,18 @@
 import asyncio
 import datetime
+import logging
 from typing import Dict, Optional
+
+import aiohttp.client_exceptions
 import footron_protocol as protocol
 
-from constants import EMPTY_EXPERIENCE_DATA
+from .constants import EMPTY_EXPERIENCE_DATA
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.collection import load_collections_from_fs, Collection
+
+logger = logging.getLogger(__name__)
 
 
 class Controller:
@@ -28,6 +33,7 @@ class Controller:
         self.wm = WmApi()
 
         self.load_from_fs()
+        asyncio.get_event_loop().create_task(self._update_experience_display(None))
 
     def load_from_fs(self):
         self.load_experiences()
@@ -44,6 +50,13 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
+    async def _update_experience_display(self, experience: Optional[BaseExperience]):
+        asyncio.get_event_loop().create_task(self._update_placard(experience))
+        # We don't actually want to wait for this to complete
+        asyncio.get_event_loop().create_task(
+            self.wm.set_fullscreen(experience.fullscreen if experience else False)
+        )
+
     async def set_experience(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
@@ -51,11 +64,7 @@ class Controller:
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
         experience = self.experiences[id] if id else None
-        await self._update_placard(experience)
-        # We don't actually want to wait for this to complete
-        asyncio.get_event_loop().create_task(
-            self.wm.set_fullscreen(experience.fullscreen if experience else False)
-        )
+        await self._update_experience_display(experience)
 
         try:
             if self.current_experience:
@@ -74,16 +83,23 @@ class Controller:
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
-        await self.placard.set_experience(
-            # We include the artist even if it is none because we need a complete PATCH
-            PlacardExperienceData(
-                title=experience.title,
-                description=experience.description,
-                artist=experience.artist,
+        try:
+            await self.placard.set_experience(
+                PlacardExperienceData(
+                    title=experience.title,
+                    description=experience.description,
+                    artist=experience.artist,
+                )
+                if experience
+                else EMPTY_EXPERIENCE_DATA
             )
-            if experience
-            else EMPTY_EXPERIENCE_DATA
-        )
-        await self.placard.set_visibility(
-            not experience.fullscreen if experience else True
-        )
+            await self.placard.set_visibility(
+                not experience.fullscreen if experience else True
+            )
+        except aiohttp.client_exceptions.ClientError:
+            logger.warning(
+                "Updating placard failed with client exception, retrying in 1s"
+            )
+            # Wait for a second and try again
+            await asyncio.sleep(1)
+            await self._update_placard(experience)
