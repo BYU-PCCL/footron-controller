@@ -123,7 +123,7 @@ class BrowserRunner:
 
         await self._site.start()
 
-    def _stop_browser(self):
+    async def _stop_browser(self):
         if not self._browser_process:
             return
 
@@ -146,5 +146,5 @@ class BrowserRunner:
         self._start_browser()
 
     async def stop(self):
-        self._stop_browser()
+        await self._stop_browser()
         await self._stop_static_server()
