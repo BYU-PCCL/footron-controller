@@ -48,19 +48,29 @@ def should_advance(start_time):
     current_exp = requests.get(CURRENT_ENDPOINT).json()
 
     if current_exp["lock"]:
-        print("has a lock")
         return False
     if "end_time" in current_exp and datetime.datetime.now() < datetime.datetime.fromtimestamp(current_exp["end_time"]):
         return False
+    print("current time", flush=True)
+    print(datetime.datetime.now().timestamp())
+    print("endtime")
+    try: 
+        print(datetime.datetime.fromtimestamp(current_exp["end_time"]))
+    except KeyError:
+        pass 
     current_date = datetime.datetime.now().timestamp()
     if (current_date - start_time) < current_exp["lifetime"]:
         return False
+    print("current_date - start_time")
+    print(current_date - start_time)
+    # print(str.format(current_date - start_time))
 
-    print("should advance returned True")
+    # print("should advance returned True")
 
     return True
 
 commercial_timer = datetime.datetime.now().timestamp()
+# print(commercial_base)
 while True:
     playlist = []
     commercials = copy.deepcopy(commercial_base)
@@ -114,6 +124,8 @@ while True:
                 start_time = datetime.datetime.now().timestamp()
                 last_exp = current_exp["id"]
             advance = should_advance(start_time)
+            print("commercial timer - now")
+            print(commercial_timer - datetime.datetime.now().timestamp(), flush=True)
             if advance and (commercial_timer - datetime.datetime.now().timestamp() >= 30) and len(commercial_base) != 0:
                 if len(commercials) == 0:
                     commercials = random.shuffle(copy.deepcopy(commercial_base))
