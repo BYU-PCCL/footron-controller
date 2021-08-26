@@ -28,6 +28,7 @@ class Controller:
         self.wm = WmApi()
 
         self.load_from_fs()
+        self._update_experience_display(None)
 
     def load_from_fs(self):
         self.load_experiences()
@@ -44,6 +45,13 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
+    def _update_experience_display(self, experience: Optional[BaseExperience]):
+        await self._update_placard(experience)
+        # We don't actually want to wait for this to complete
+        asyncio.get_event_loop().create_task(
+            self.wm.set_fullscreen(experience.fullscreen if experience else False)
+        )
+
     async def set_experience(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
@@ -51,11 +59,7 @@ class Controller:
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
         experience = self.experiences[id] if id else None
-        await self._update_placard(experience)
-        # We don't actually want to wait for this to complete
-        asyncio.get_event_loop().create_task(
-            self.wm.set_fullscreen(experience.fullscreen if experience else False)
-        )
+        self._update_experience_display(experience)
 
         try:
             if self.current_experience:
