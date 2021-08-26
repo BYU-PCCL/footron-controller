@@ -68,6 +68,7 @@ class Controller:
                 # handling, but if something is unhandled we need keep our state
                 # maintained
                 self.end_time = None
+                self.lock = False
                 self.current_experience = experience
 
     async def _update_placard(self, experience: BaseExperience):
