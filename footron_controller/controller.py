@@ -85,7 +85,6 @@ class Controller:
         # TODO: Validate this worked somehow
         try:
             await self.placard.set_experience(
-                # We include the artist even if it is none because we need a complete PATCH
                 PlacardExperienceData(
                     title=experience.title,
                     description=experience.description,
