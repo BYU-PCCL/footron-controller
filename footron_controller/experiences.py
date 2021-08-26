@@ -35,6 +35,7 @@ class BaseExperience(BaseModel, abc.ABC):
     collection: Optional[str]
     lifetime: int = _DEFAULT_LIFETIME
     fullscreen: bool = False
+    unlisted: bool = False
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 
@@ -78,6 +79,7 @@ class WebExperience(BaseExperience):
 class VideoExperience(BaseExperience):
     type = ExperienceType.VIDEO
     filename: str
+    scrubbing: bool = True
 
     def create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.path, self.filename)

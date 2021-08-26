@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from typing import Dict, Optional
 import footron_protocol as protocol
@@ -50,7 +51,10 @@ class Controller:
         # ID exists
         experience = self.experiences[id]
         await self._update_placard(experience)
-        self.wm.set_fullscreen(experience.fullscreen)
+        # We don't actually want to wait for this to complete
+        asyncio.get_event_loop().create_task(
+            self.wm.set_fullscreen(experience.fullscreen)
+        )
 
         try:
             if self.current_experience:
