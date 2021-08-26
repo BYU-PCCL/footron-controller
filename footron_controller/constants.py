@@ -34,7 +34,7 @@ EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
     title="Footron",
     artist="Vin Howe, Chris Luangrath, Matt Powley",
-    description="<pre>Built by BYU students</pre>",
+    description="Built with <pre style='display:inline;'>&lt;3</pre> by BYU students",
 )
 
 JsonDict = Dict[str, Union[Any, Any]]
