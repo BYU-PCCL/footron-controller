@@ -3,7 +3,7 @@ import datetime
 from typing import Dict, Optional
 import footron_protocol as protocol
 
-from constants import EMPTY_EXPERIENCE_DATA
+from .constants import EMPTY_EXPERIENCE_DATA
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
