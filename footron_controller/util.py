@@ -11,6 +11,6 @@ async def mercilessly_kill_process(process: subprocess.Popen):
         if process.poll() is not None:
             break
         logger.warning(
-            f"Managed process with pid {process.pid} didn't die, trying again in 1s..."
+            f"Managed process with PID {process.pid} didn't die, trying again in 1s..."
         )
         await asyncio.sleep(1)
