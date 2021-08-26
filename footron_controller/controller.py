@@ -79,7 +79,7 @@ class Controller:
                 title=experience.title if experience else "Footron",
                 description=experience.description
                 if experience
-                else "Built with <pre><3</pre> by BYU students",
+                else "Built with <pre style='display:inline;'><3</pre> by BYU students",
                 artist=experience.artist
                 if experience
                 else "Vin Howe, Chris Luangrath, Matt Powley",
