@@ -50,7 +50,7 @@ class Controller:
         # ID exists
         experience = self.experiences[id]
         await self._update_placard(experience)
-        self.wm.set_fullscreen(experience.fullscreen)
+        await self.wm.set_fullscreen(experience.fullscreen)
 
         try:
             if self.current_experience:
