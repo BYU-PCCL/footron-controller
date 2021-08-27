@@ -19,15 +19,19 @@ class Controller:
     experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
     current_experience: Optional[BaseExperience]
+    current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
     lock: protocol.Lock
     last_update: datetime.datetime
     placard: PlacardApi
+    _experience_modify_lock: asyncio.Lock
 
     def __init__(self):
         self.current_experience = None
+        self.current_experience_start = None
         self.end_time = None
         self.lock = False
+        self._experience_modify_lock = asyncio.Lock()
 
         self.placard = PlacardApi()
         self.wm = WmApi()
@@ -56,6 +60,10 @@ class Controller:
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
 
     async def set_experience(self, id: Optional[str]):
+        async with self._experience_modify_lock:
+            await self._set_experience_impl(id)
+
+    async def _set_experience_impl(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
 
