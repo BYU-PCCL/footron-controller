@@ -44,16 +44,6 @@ def experience_response(experience: BaseExperience):
         "lifetime": experience.lifetime,
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
-        # TODO: Remove these dummy values once we get the API injecting them
-        "thumbnails": {
-            "wide": "https://via.placeholder.com/1280x800",
-            "thumb": "https://via.placeholder.com/800x800",
-        },
-        "colors": {
-            "primary": "#212121",
-            "secondaryLight": "#fafafa",
-            "secondaryDark": "#252525",
-        },
     }
 
     if experience.collection:
