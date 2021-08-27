@@ -14,6 +14,11 @@ class WmApi:
         self._socket.connect("tcp://localhost:5557")
 
     async def set_fullscreen(self, fullscreen: bool):
-        await self._socket.send_json({"fullscreen": fullscreen})
+        await self._socket.send_json({"type": "fullscreen", "fullscreen": fullscreen})
+        # Should really handle errors here
+        await self._socket.recv_json()
+
+    async def clear_viewport(self):
+        await self._socket.send_json({"type": "clear_viewport"})
         # Should really handle errors here
         await self._socket.recv_json()
