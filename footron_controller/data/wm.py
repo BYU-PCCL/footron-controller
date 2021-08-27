@@ -10,15 +10,11 @@ logger = logging.getLogger(__name__)
 class WmApi:
     def __init__(self):
         self._context = zmq.asyncio.Context()
-        self._socket = self._context.socket(zmq.REQ)
+        self._socket = self._context.socket(zmq.PAIR)
         self._socket.connect("tcp://localhost:5557")
 
     async def set_fullscreen(self, fullscreen: bool):
         await self._socket.send_json({"type": "fullscreen", "fullscreen": fullscreen})
-        # Should really handle errors here
-        await self._socket.recv_json()
 
     async def clear_viewport(self):
         await self._socket.send_json({"type": "clear_viewport"})
-        # Should really handle errors here
-        await self._socket.recv_json()

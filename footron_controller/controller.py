@@ -68,10 +68,13 @@ class Controller:
 
         try:
             if self.current_experience:
+                await self.wm.clear_viewport()
                 await self.current_experience.stop()
         finally:
             try:
-                await self.wm.clear_viewport()
+                # Hang around to wait for windows to close without closing current
+                # window
+                await asyncio.sleep(1)
                 if experience:
                     await experience.start()
             finally:
