@@ -29,6 +29,12 @@ BASE_MESSAGING_URL = (
     else "ws://localhost:8088/messaging/out/"
 )
 
+ROLLBAR_TOKEN = (
+    os.environ["FT_ROLLBAR"]
+    if "FT_ROLLBAR" in os.environ
+    else None
+)
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(

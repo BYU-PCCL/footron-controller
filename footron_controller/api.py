@@ -3,16 +3,29 @@ import atexit
 import dataclasses
 from typing import Optional, Union
 
+import rollbar
+from rollbar.contrib.fastapi import add_to as rollbar_add_to
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from .constants import ROLLBAR_TOKEN
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
 from .controller import Controller
 
+
 fastapi_app = FastAPI()
+
+if ROLLBAR_TOKEN:
+    rollbar.init(
+        ROLLBAR_TOKEN,
+        environment="production",
+        handler="async",
+        include_request_body=True,
+    )
+    rollbar_add_to(fastapi_app)
 
 fastapi_app.add_middleware(
     CORSMiddleware,
