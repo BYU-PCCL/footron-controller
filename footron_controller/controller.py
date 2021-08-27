@@ -51,11 +51,9 @@ class Controller:
         }
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
-        asyncio.get_event_loop().create_task(self._update_placard(experience))
         # We don't actually want to wait for this to complete
-        asyncio.get_event_loop().create_task(
-            self.wm.set_fullscreen(experience.fullscreen if experience else False)
-        )
+        asyncio.get_event_loop().create_task(self._update_placard(experience))
+        await self.wm.set_fullscreen(experience.fullscreen if experience else False)
 
     async def set_experience(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
