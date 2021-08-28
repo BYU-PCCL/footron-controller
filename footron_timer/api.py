@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime as dt
 from .models import Experience, CurrentExperience
 import random
@@ -8,6 +9,8 @@ import urllib.parse
 
 EXPERIENCES_ENDPOINT = "experiences"
 CURRENT_ENDPOINT = "current"
+
+logger = logging.getLogger(__name__)
 
 
 class TimerApi:
