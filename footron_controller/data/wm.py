@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 import zmq
@@ -17,4 +18,9 @@ class WmApi:
         await self._socket.send_json({"type": "fullscreen", "fullscreen": fullscreen})
 
     async def clear_viewport(self):
-        await self._socket.send_json({"type": "clear_viewport"})
+        await self._socket.send_json(
+            {
+                "type": "clear_viewport",
+                "before": int(datetime.datetime.now().timestamp() * 1000),
+            }
+        )
