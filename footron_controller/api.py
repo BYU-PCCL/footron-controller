@@ -129,7 +129,7 @@ async def set_current_experience(body: SetCurrentExperienceBody):
     ):
         raise HTTPException(
             status_code=429,
-            detail=f"Experiences can only be set every {CURRENT_EXPERIENCE_SET_DELAY_S} seconds",
+            detail=f"Current experience can only be set at minimum every {CURRENT_EXPERIENCE_SET_DELAY_S} seconds",
         )
 
     if body.id is not None and body.id not in _controller.experiences:
