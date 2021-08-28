@@ -145,6 +145,7 @@ async def set_current_experience(body: SetCurrentExperienceBody):
 
     return {"status": "ok"}
 
+
 @fastapi_app.patch("/current")
 def update_current_experience(body: UpdateCurrentExperienceBody):
     if not _controller.current_experience:
