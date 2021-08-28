@@ -67,15 +67,21 @@ class TimerApi:
         self.experiences = Playlist(exp_base)
         self.commercials = Playlist(commercial_base)
 
-    def set_current(self, current):
+    def set_current(self, current) -> bool:
         # TODO check HTTP code before updating internal state
-        requests.put(
+        response = requests.put(
             self._current_endpoint,
             headers={"Content-Type": "application/json"},
             json={"id": current.id},
         )
+
+        if response.status_code == 429:
+            logging.warning("Tried to set current experience too soon after user")
+            return False
+
         self._last = self._current
         self._current = current
+        return True
 
 
 class Playlist:
