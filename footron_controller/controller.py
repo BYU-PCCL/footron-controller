@@ -66,6 +66,7 @@ class Controller:
     async def _set_experience_impl(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
+        self.current_experience_start = datetime.datetime.now()
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists

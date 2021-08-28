@@ -1,12 +1,14 @@
 import asyncio
 import atexit
 import dataclasses
+import datetime
 from typing import Optional, Union
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from .constants import CURRENT_EXPERIENCE_SET_DELAY_S
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
@@ -114,6 +116,22 @@ def current_experience():
 
 @fastapi_app.put("/current")
 async def set_current_experience(body: SetCurrentExperienceBody):
+    delta_last_experience = (
+        (datetime.datetime.now() - _controller.current_experience_start)
+        if _controller.current_experience_start
+        else None
+    )
+
+    if (
+        delta_last_experience
+        and delta_last_experience.seconds < CURRENT_EXPERIENCE_SET_DELAY_S
+        and delta_last_experience.days == 0
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Experiences can only be set every {CURRENT_EXPERIENCE_SET_DELAY_S} seconds",
+        )
+
     if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
