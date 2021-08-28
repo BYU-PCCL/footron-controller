@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 import time
-from .api import TimerApi 
+from .api import TimerApi
 import os
 
 
@@ -14,8 +14,10 @@ COMMERCIAL_TIMEOUT = 15
 
 api = TimerApi(CONTROLLER_URL)
 
+
 def should_advance(start_time):
     current_exp = api.current()
+
     if not current_exp:
         return True
     # print("current time", flush=True)
@@ -26,10 +28,11 @@ def should_advance(start_time):
 
     if current_exp.lock:
         return False
+
     current_date = dt.now()
     if current_exp.end_time:
         if current_date < dt.fromtimestamp(current_exp.end_time):
-            return False   
+            return False
     elif start_time and (current_date - start_time).seconds < current_exp.lifetime:
         return False
     # print("current_date - start_time")
@@ -40,7 +43,9 @@ def should_advance(start_time):
 
     return True
 
+
 commercial_timer = dt.now()
+
 
 def advance():
     global commercial_timer
