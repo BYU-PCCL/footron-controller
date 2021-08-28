@@ -43,4 +43,6 @@ EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
     description="Built with <pre style='display:inline;'>&lt;3</pre> by BYU students",
 )
 
+CURRENT_EXPERIENCE_SET_DELAY_S = 2
+
 JsonDict = Dict[str, Union[Any, Any]]

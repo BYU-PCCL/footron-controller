@@ -44,7 +44,11 @@ class BrowserRunner:
         if not CHROME_PROFILE_PATH.exists():
             CHROME_PROFILE_PATH.mkdir(parents=True)
 
-        if not self._profile_path.exists() and BASE_CHROME_PROFILE_PATH.exists():
+        # Remove existing Chrome profile directory because it appears to fixkk
+        if self._profile_path.exists():
+            shutil.rmtree(self._profile_path)
+
+        if BASE_CHROME_PROFILE_PATH.exists():
             shutil.copytree(BASE_CHROME_PROFILE_PATH, self._profile_path)
 
     def _create_url(self):

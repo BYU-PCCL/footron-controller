@@ -1,6 +1,7 @@
 import asyncio
 import atexit
 import dataclasses
+import datetime
 from typing import Optional, Union
 
 import rollbar
@@ -9,7 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .constants import ROLLBAR_TOKEN
+from .constants import ROLLBAR_TOKEN, CURRENT_EXPERIENCE_SET_DELAY_S
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
@@ -57,16 +58,6 @@ def experience_response(experience: BaseExperience):
         "lifetime": experience.lifetime,
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
-        # TODO: Remove these dummy values once we get the API injecting them
-        "thumbnails": {
-            "wide": "https://via.placeholder.com/1280x800",
-            "thumb": "https://via.placeholder.com/800x800",
-        },
-        "colors": {
-            "primary": "#212121",
-            "secondaryLight": "#fafafa",
-            "secondaryDark": "#252525",
-        },
     }
 
     if experience.collection:
@@ -137,12 +128,33 @@ def current_experience():
 
 @fastapi_app.put("/current")
 async def set_current_experience(body: SetCurrentExperienceBody):
+    delta_last_experience = (
+        (datetime.datetime.now() - _controller.current_experience_start)
+        if _controller.current_experience_start
+        else None
+    )
+
+    if (
+        delta_last_experience
+        and delta_last_experience.seconds < CURRENT_EXPERIENCE_SET_DELAY_S
+        and delta_last_experience.days == 0
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Current experience can only be set at minimum every {CURRENT_EXPERIENCE_SET_DELAY_S} seconds",
+        )
+
     if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    await _controller.set_experience(body.id)
+    if not await _controller.set_experience(body.id):
+        raise HTTPException(
+            status_code=429,
+            detail="Can't set current experience while it is changing",
+        )
+
     return {"status": "ok"}
 
 
