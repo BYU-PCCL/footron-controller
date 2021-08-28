@@ -32,4 +32,4 @@ timer = Timer()
 
 while True:
     timer.advance_if_ready()
-    time.sleep(0.5)
+    time.sleep(1)
