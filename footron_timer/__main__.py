@@ -43,10 +43,13 @@ def should_advance(start_time):
 commercial_timer = dt.now()
 
 def advance():
-    if api.current != api.last():
-        return
-    if len(api.commercials) and (dt.now() - commercial_timer).seconds >= COMMERCIAL_TIMEOUT:
+    global commercial_timer
+    if (
+        len(api.commercials)
+        and (dt.now() - commercial_timer).seconds >= COMMERCIAL_TIMEOUT
+    ):
         next = api.commercials.pop()
+        commercial_timer = dt.now()
     else:
         next = api.experiences.pop()
     api.set_current(next)
