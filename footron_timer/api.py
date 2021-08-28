@@ -19,7 +19,8 @@ class TimerApi:
         self._current_endpoint = urllib.parse.urljoin(self._url, CURRENT_ENDPOINT)
         self._current = None
         self._last = None
-        self._current_start = None
+        self.experiences = None
+        self.commercials = None
         self.reload()
 
     def current(self):
@@ -72,12 +73,12 @@ class TimerApi:
         )
         self._last = self._current
         self._current = current
-        self._current_start = dt.now()
 
 
 class Playlist:
     def __init__(self, source) -> None:
         self._source = source
+        self._shuffled = None
         self.reload()
 
     def __len__(self):

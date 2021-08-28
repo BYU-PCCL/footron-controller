@@ -1,55 +1,35 @@
-from datetime import datetime as dt
+import argparse
+import logging
 import time
-from .api import TimerApi
-import os
+from .timer import Timer
 
 
-CONTROLLER_URL = (
-    os.environ["FT_CONTROLLER_URL"]
-    if "FT_CONTROLLER_URL" in os.environ
-    else "http://localhost:8000"
+def _log_level(arg):
+    level = getattr(logging, arg.upper(), None)
+    if level is None:
+        raise ValueError(f"Invalid log level '{arg}'")
+    return level
+
+
+parser = argparse.ArgumentParser()
+log_level_group = parser.add_mutually_exclusive_group()
+log_level_group.add_argument(
+    "--level",
+    help="set log level ('debug', 'info' (default), 'warning', 'error', 'critical')",
+    type=_log_level,
+)
+log_level_group.add_argument(
+    "-v",
+    help="set log level to verbose",
+    action="store_const",
+    const=logging.DEBUG,
 )
 
-COMMERCIAL_TIMEOUT = 15
+args = parser.parse_args()
+logging.basicConfig(level=args.v or args.level or logging.INFO)
 
-api = TimerApi(CONTROLLER_URL)
-last_commercial_time = dt.now()
+timer = Timer()
 
-
-def should_advance(start_time):
-    current_exp = api.current()
-
-    if not current_exp:
-        return True
-
-    if current_exp.lock:
-        return False
-
-    current_date = dt.now()
-    if current_exp.end_time:
-        if current_date < dt.fromtimestamp(current_exp.end_time):
-            return False
-    elif start_time and (current_date - start_time).seconds < current_exp.lifetime:
-        return False
-
-    return True
-
-
-def advance():
-    global last_commercial_time
-    if (
-        len(api.commercials)
-        and (dt.now() - last_commercial_time).seconds >= COMMERCIAL_TIMEOUT
-    ):
-        next = api.commercials.pop()
-        last_commercial_time = dt.now()
-    else:
-        next = api.experiences.pop()
-    api.set_current(next)
-
-# print(commercial_base)
-# TODO be able to display what's up next
 while True:
-    if should_advance(api._current_start):
-        advance()
-    time.sleep(1)
+    timer.advance_if_ready()
+    time.sleep(0.5)
