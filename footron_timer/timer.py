@@ -53,5 +53,8 @@ class Timer:
         self._current_start = dt.now()
 
     def advance_if_ready(self):
+        # Note that when we add support for an "up next" notification, we should ignore
+        # commercials and just tell users the next experience from _api.experiences
+        # we'll show
         if self._should_advance():
             self.advance()
