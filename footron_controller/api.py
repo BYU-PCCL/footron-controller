@@ -137,9 +137,13 @@ async def set_current_experience(body: SetCurrentExperienceBody):
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    await _controller.set_experience(body.id)
-    return {"status": "ok"}
+    if not await _controller.set_experience(body.id):
+        raise HTTPException(
+            status_code=429,
+            detail="Can't set current experience while it is changing",
+        )
 
+    return {"status": "ok"}
 
 @fastapi_app.patch("/current")
 def update_current_experience(body: UpdateCurrentExperienceBody):

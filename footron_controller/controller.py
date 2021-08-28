@@ -60,8 +60,11 @@ class Controller:
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
 
     async def set_experience(self, id: Optional[str]):
-        async with self._experience_modify_lock:
-            await self._set_experience_impl(id)
+        if self._experience_modify_lock.locked():
+            return False
+
+        await self._set_experience_impl(id)
+        return True
 
     async def _set_experience_impl(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
