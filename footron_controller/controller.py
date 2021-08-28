@@ -77,8 +77,8 @@ class Controller:
         await self._update_experience_display(experience)
 
         try:
+            await self.wm.clear_viewport()
             if self.current_experience:
-                await self.wm.clear_viewport()
                 await self.current_experience.stop()
         finally:
             try:
