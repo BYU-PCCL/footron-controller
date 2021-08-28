@@ -13,6 +13,7 @@ CONTROLLER_URL = (
 COMMERCIAL_TIMEOUT = 15
 
 api = TimerApi(CONTROLLER_URL)
+last_commercial_time = dt.now()
 
 
 def should_advance(start_time):
@@ -34,17 +35,14 @@ def should_advance(start_time):
     return True
 
 
-commercial_timer = dt.now()
-
-
 def advance():
-    global commercial_timer
+    global last_commercial_time
     if (
         len(api.commercials)
-        and (dt.now() - commercial_timer).seconds >= COMMERCIAL_TIMEOUT
+        and (dt.now() - last_commercial_time).seconds >= COMMERCIAL_TIMEOUT
     ):
         next = api.commercials.pop()
-        commercial_timer = dt.now()
+        last_commercial_time = dt.now()
     else:
         next = api.experiences.pop()
     api.set_current(next)
