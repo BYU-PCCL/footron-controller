@@ -20,11 +20,6 @@ def should_advance(start_time):
 
     if not current_exp:
         return True
-    # print("current time", flush=True)
-    # print(dt.now())
-    # print("endtime")
-    # if current_exp.end_time: 
-    #     print(dt.fromtimestamp(current_exp.end_time), flush=True)
 
     if current_exp.lock:
         return False
@@ -35,11 +30,6 @@ def should_advance(start_time):
             return False
     elif start_time and (current_date - start_time).seconds < current_exp.lifetime:
         return False
-    # print("current_date - start_time")
-    # print(current_date.timestamp() - start_time)
-    # print(str.format(current_date - start_time))
-
-    # print("should advance returned True")
 
     return True
 
