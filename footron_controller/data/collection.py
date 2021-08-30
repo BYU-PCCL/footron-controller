@@ -8,9 +8,7 @@ from ..constants import BASE_DATA_PATH
 @dataclass
 class Collection:
     id: str
-    title: str
-    description: Optional[str] = None
-    artist: Optional[str] = None
+    experiences: list
 
 
 def load_collections_from_fs(path=BASE_DATA_PATH) -> List[Collection]:

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
+from .data.tags import Tag
 from .controller import Controller
 
 fastapi_app = FastAPI()
@@ -57,6 +58,9 @@ def experience_response(experience: BaseExperience):
 def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
 
+def tag_response(tag: Tag):
+    return dataclasses.asdict(tag)
+
 
 # Route for reloading data
 @fastapi_app.get("/reload")
@@ -91,11 +95,26 @@ def collections():
 
 
 @fastapi_app.get("/collections/<id>")
-def collection(id):
-    if id not in _controller.collections:
+def tag(id):
+    if id not in _controller.tags:
         return {}
 
-    return collection_response(_controller.collections[id])
+    return tag_response(_controller.tags[id])
+
+@fastapi_app.get("/tags")
+def tags():
+    return {
+        id: tag_response(tag)
+        for id, tag in _controller.tags.items()
+    }
+
+
+@fastapi_app.get("/tags/<id>")
+def tag(id):
+    if id not in _controller.tag:
+        return {}
+
+    return tag_response(_controller.tags[id])
 
 
 @fastapi_app.get("/current")

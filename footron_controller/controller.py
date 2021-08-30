@@ -11,6 +11,7 @@ from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.collection import load_collections_from_fs, Collection
+from .data.tags import load_tags_from_fs, Tag
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 class Controller:
     experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
+    tags: Dict[str, Tag] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
@@ -42,6 +44,7 @@ class Controller:
     def load_from_fs(self):
         self.load_experiences()
         self.load_collections()
+        self.load_tags()
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
@@ -52,6 +55,11 @@ class Controller:
     def load_collections(self):
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
+        }
+
+    def load_tags(self):
+        self.tags = {
+            tag.id: tag for tag in load_tags_from_fs()
         }
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
