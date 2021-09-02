@@ -125,6 +125,7 @@ class Controller:
 
     async def stability_loop(self):
         while True:
+            logging.debug("Checking system stability...")
             if not self.stability.check_stable():
                 rollbar.report_message("System is unstable, rebooting")
                 logging.error("System is unstable, rebooting")
