@@ -39,6 +39,7 @@ class Controller:
 
         self.placard = PlacardApi()
         self.wm = WmApi()
+        self.stability = StabilityManager()
 
         self.load_from_fs()
         asyncio.get_event_loop().create_task(self._update_experience_display(None))
