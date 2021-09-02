@@ -57,14 +57,3 @@ class StabilityManager:
 
     def check_stable(self):
         return self._is_torch_stable()
-
-
-_stability_manager: Optional[StabilityManager] = None
-
-
-def get_stability_manager():
-    global _stability_manager
-    if _stability_manager is None:
-        _stability_manager = StabilityManager()
-
-    return _stability_manager
