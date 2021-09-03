@@ -93,6 +93,7 @@ def collections():
         for id, collection in _controller.collections.items()
     }
 
+
 @fastapi_app.get("/collections/<id>")
 def collection(id):
     if id not in _controller.collections:
@@ -100,12 +101,6 @@ def collection(id):
 
     return collection_response(_controller.collections[id])
 
-@fastapi_app.get("/tags/<id>")
-def tag(id):
-    if id not in _controller.tags:
-        return {}
-
-    return tag_response(_controller.tags[id])
 
 @fastapi_app.get("/tags")
 def tags():
@@ -117,7 +112,7 @@ def tags():
 
 @fastapi_app.get("/tags/<id>")
 def tag(id):
-    if id not in _controller.tag:
+    if id not in _controller.tags:
         return {}
 
     return tag_response(_controller.tags[id])
