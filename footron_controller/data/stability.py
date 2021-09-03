@@ -3,7 +3,7 @@ import logging
 import os
 from typing import List, Tuple, Optional
 
-import torch.cuda
+import torch
 
 
 # Store previous Torch CUDA is_available attempts within this duration--note that we
@@ -36,17 +36,22 @@ class StabilityManager:
 
             self._torch_attempts.pop()
 
-    def _torch_cuda_attempt(self):
-        attempt = torch.cuda.is_available()
-        if not attempt:
+    @staticmethod
+    def _torch_cuda_attempt() -> bool:
+        try:
+            torch.Tensor([1]).to("cuda")
+            return True
+        except RuntimeError:
             logger.warning(
                 "PyTorch could not find a CUDA device, system may be unstable"
             )
-        self._torch_attempts.insert(0, (datetime.datetime.now(), attempt))
+            return False
 
     def _is_torch_stable(self) -> bool:
         self._cull_torch_attempts()
-        self._torch_cuda_attempt()
+        self._torch_attempts.insert(
+            0, (datetime.datetime.now(), self._torch_cuda_attempt())
+        )
 
         total = len(self._torch_attempts)
         if total < _TORCH_FAILS_MIN_ELEMENTS:
