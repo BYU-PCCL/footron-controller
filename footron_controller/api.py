@@ -2,6 +2,7 @@ import asyncio
 import atexit
 import dataclasses
 import datetime
+import logging
 from typing import Optional, Union
 
 import rollbar
@@ -224,3 +225,22 @@ def on_shutdown():
             loop.run_until_complete(stop_task)
         else:
             _controller.current_experience.stop()
+
+
+# See https://github.com/encode/starlette/issues/864#issuecomment-653076434
+class PolledEndpointsFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno > logging.INFO:
+            return True
+
+        # TODO: Use `re` here instead
+        if record.getMessage().find("PATCH /current") > -1:
+            return False
+        if record.getMessage().find("GET /current") > -1:
+            return False
+
+        return True
+
+
+# Filter out especially verbose endpoints
+logging.getLogger("uvicorn.access").addFilter(PolledEndpointsFilter())
