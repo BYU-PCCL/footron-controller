@@ -11,7 +11,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .constants import ROLLBAR_TOKEN, CURRENT_EXPERIENCE_SET_DELAY_S
+from .constants import (
+    ROLLBAR_TOKEN,
+    CURRENT_EXPERIENCE_SET_DELAY_S,
+    LOG_IGNORE_PATTERNS,
+)
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
@@ -233,10 +237,9 @@ class PolledEndpointsFilter(logging.Filter):
         if record.levelno > logging.INFO:
             return True
 
-        # TODO: Use `re` here instead
-        if record.getMessage().find("PATCH /current") > -1:
-            return False
-        if record.getMessage().find("GET /current") > -1:
+        message = record.getMessage()
+
+        if any(filter(lambda a: a.search(message), LOG_IGNORE_PATTERNS)):
             return False
 
         return True
