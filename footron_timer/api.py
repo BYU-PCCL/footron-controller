@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime as dt
 from .models import Experience, CurrentExperience
 import random
 import requests
