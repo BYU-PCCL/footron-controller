@@ -13,7 +13,6 @@ from pydantic import BaseModel
 
 from .constants import (
     ROLLBAR_TOKEN,
-    CURRENT_EXPERIENCE_SET_DELAY_S,
     LOG_IGNORE_PATTERNS,
 )
 from .data.placard import PlacardExperienceData, PlacardUrlData

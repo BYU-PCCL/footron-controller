@@ -1,7 +1,6 @@
 import datetime
 import logging
-import os
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import torch
 

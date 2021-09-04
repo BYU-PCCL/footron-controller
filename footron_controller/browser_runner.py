@@ -44,7 +44,7 @@ class BrowserRunner:
         if not CHROME_PROFILE_PATH.exists():
             CHROME_PROFILE_PATH.mkdir(parents=True)
 
-        # Remove existing Chrome profile directory because it appears to fixkk
+        # Remove existing Chrome profile directory because it appears to fix GPU bug
         if self._profile_path.exists():
             shutil.rmtree(self._profile_path)
 
