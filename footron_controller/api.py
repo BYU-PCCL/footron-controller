@@ -127,21 +127,23 @@ def current_experience():
 
 
 @fastapi_app.put("/current")
-async def set_current_experience(body: SetCurrentExperienceBody):
+async def set_current_experience(
+    body: SetCurrentExperienceBody, throttle: Optional[int] = None
+):
     delta_last_experience = (
         (datetime.datetime.now() - _controller.current_experience_start)
-        if _controller.current_experience_start
+        if throttle and _controller.current_experience_start
         else None
     )
 
     if (
         delta_last_experience
-        and delta_last_experience.seconds < CURRENT_EXPERIENCE_SET_DELAY_S
+        and delta_last_experience.seconds < throttle
         and delta_last_experience.days == 0
     ):
         raise HTTPException(
             status_code=429,
-            detail=f"Current experience can only be set at minimum every {CURRENT_EXPERIENCE_SET_DELAY_S} seconds",
+            detail=f"Current experience can only be set at minimum every {throttle} seconds",
         )
 
     if body.id is not None and body.id not in _controller.experiences:

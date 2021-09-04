@@ -7,8 +7,10 @@ from typing import List
 import urllib.parse
 
 
+CURRENT_EXPERIENCE_SET_DELAY_S = 10
+
 EXPERIENCES_ENDPOINT = "experiences"
-CURRENT_ENDPOINT = "current"
+CURRENT_ENDPOINT = f"current?throttle={CURRENT_EXPERIENCE_SET_DELAY_S}"
 
 logger = logging.getLogger(__name__)
 
