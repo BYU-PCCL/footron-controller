@@ -42,7 +42,7 @@ class Controller:
         self.stability = StabilityManager()
 
         self.load_from_fs()
-        asyncio.get_event_loop().create_task(self._update_experience_display(None))
+        asyncio.get_event_loop().create_task(self.set_experience(None))
 
     def load_from_fs(self):
         self.load_experiences()
