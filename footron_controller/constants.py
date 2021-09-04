@@ -46,7 +46,7 @@ CURRENT_EXPERIENCE_SET_DELAY_S = 5
 LOG_IGNORE_PATTERNS: List[Pattern] = list(
     map(
         re.compile,
-        [r"(GET|PATCH) /current.*200 OK", r"(GET|PATCH) /placard/url.*200 OK"],
+        [r"(GET|PATCH) /current.*200", r"(GET|PATCH) /placard/url.*200"],
     )
 )
 
