@@ -132,7 +132,9 @@ async def set_current_experience(
 ):
     delta_last_experience = (
         (datetime.datetime.now() - _controller.current_experience_start)
-        if throttle and _controller.current_experience_start
+        if throttle
+        and _controller.current_experience
+        and _controller.current_experience_start
         else None
     )
 
