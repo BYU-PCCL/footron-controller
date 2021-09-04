@@ -214,6 +214,8 @@ def on_startup():
     global _controller
     _controller = Controller()
     asyncio.get_event_loop().create_task(_controller.stability_loop())
+    # Filter out especially verbose endpoints
+    logging.getLogger("uvicorn.access").addFilter(PolledEndpointsFilter())
 
 
 @atexit.register
@@ -243,7 +245,3 @@ class PolledEndpointsFilter(logging.Filter):
             return False
 
         return True
-
-
-# Filter out especially verbose endpoints
-logging.getLogger("uvicorn.access").addFilter(PolledEndpointsFilter())
