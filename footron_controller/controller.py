@@ -135,5 +135,6 @@ class Controller:
                     # work from Python
                     os.system("sudo reboot")
             except Exception as e:
+                rollbar.report_exc_info(e)
                 logger.exception(e)
             await asyncio.sleep(15)
