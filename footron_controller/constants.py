@@ -11,6 +11,7 @@ from .data.placard import PlacardExperienceData
 PACKAGE_PATH = Path(module_path).parent
 
 PACKAGE_STATIC_PATH = PACKAGE_PATH / "static"
+PACKAGE_SCRIPTS_PATH = PACKAGE_PATH / "scripts"
 
 BASE_DATA_PATH = (
     Path(os.environ["FT_DATA_PATH"])

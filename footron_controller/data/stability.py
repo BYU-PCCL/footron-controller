@@ -2,11 +2,13 @@ import datetime
 import logging
 from typing import List, Tuple
 
-import torch
+from ..constants import PACKAGE_SCRIPTS_PATH
+import subprocess
 
 
 # Store previous Torch CUDA is_available attempts within this duration--note that we
 # don't control the frequency of invocations within StabilityManager
+
 _TORCH_FAILS_STACK_DURATION = datetime.timedelta(minutes=2)
 # The proportion of failed CUDA is_available attempts within the stored attempts after
 # which we decide the system is unstable
@@ -37,16 +39,17 @@ class StabilityManager:
 
     @staticmethod
     def _torch_cuda_attempt() -> bool:
-        try:
-            torch.Tensor([1]).to("cuda")
-            return True
-        except RuntimeError:
+        response = subprocess.run([PACKAGE_SCRIPTS_PATH / "gpu-stable.py"])
+
+        if response.returncode != 0:
             logger.warning(
-                "PyTorch could not find a CUDA device, system may be unstable"
+                "CUDA stability check failed with non-zero exit code, system may be unstable"
             )
             return False
 
-    def _is_torch_stable(self) -> bool:
+        return True
+
+def _is_torch_stable(self) -> bool:
         self._cull_torch_attempts()
         self._torch_attempts.insert(
             0, (datetime.datetime.now(), self._torch_cuda_attempt())
