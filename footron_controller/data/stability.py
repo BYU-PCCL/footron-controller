@@ -49,7 +49,7 @@ class StabilityManager:
 
         return True
 
-def _is_torch_stable(self) -> bool:
+    def _is_torch_stable(self) -> bool:
         self._cull_torch_attempts()
         self._torch_attempts.insert(
             0, (datetime.datetime.now(), self._torch_cuda_attempt())
