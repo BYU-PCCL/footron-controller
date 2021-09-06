@@ -126,10 +126,14 @@ class Controller:
     async def stability_loop(self):
         while True:
             logging.debug("Checking system stability...")
-            if not self.stability.check_stable():
-                rollbar.report_message("System is unstable, rebooting")
-                logging.error("System is unstable, rebooting")
-                # Note that the current user has to have NOPASSWD set up in /etc/sudoers
-                # for /sbin/reboot on Ubuntu systems for this to work from Python
-                os.system("sudo reboot")
+            try:
+                if not self.stability.check_stable():
+                    rollbar.report_message("System is unstable, rebooting")
+                    logging.error("System is unstable, rebooting")
+                    # Note that the current user has to have NOPASSWD set up in
+                    # /etc/sudoers for /sbin/reboot on Ubuntu systems for this to
+                    # work from Python
+                    os.system("sudo reboot")
+            except Exception as e:
+                logger.exception(e)
             await asyncio.sleep(15)
