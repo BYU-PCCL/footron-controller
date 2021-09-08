@@ -62,6 +62,7 @@ def experience_response(experience: BaseExperience):
         "lifetime": experience.lifetime,
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
+        "queueable": experience.queueable,
     }
 
     if experience.collection:
