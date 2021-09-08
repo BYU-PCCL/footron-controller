@@ -49,6 +49,9 @@ class TimerApi:
         exp_base = []
         collection_base = {}
         for exp in explist:
+            if not exp.queueable:
+                continue
+
             if exp.collection:
                 collection = exp.collection
                 if collection == "commercials":
@@ -58,8 +61,6 @@ class TimerApi:
                         collection_base[collection] = []
                     collection_base[collection].append(exp)
             else:
-                if exp.unlisted:
-                    continue
                 exp_base.append(exp)
 
         for collection in collection_base.values():

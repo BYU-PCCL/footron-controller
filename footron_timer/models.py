@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class Experience(BaseModel):
     id: str
     unlisted: bool
+    queueable: bool
     collection: Optional[str]
     lifetime: int
     title: str
