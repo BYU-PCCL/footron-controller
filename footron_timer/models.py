@@ -1,10 +1,11 @@
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel
 
 
 class Experience(BaseModel):
     id: str
     unlisted: bool
+    queueable: bool
     collection: Optional[str]
     lifetime: int
     title: str
@@ -14,8 +15,5 @@ class Experience(BaseModel):
 
 class CurrentExperience(Experience):
     end_time: Optional[int]
-    lock: bool
+    lock: Union[bool, int]
     last_update: int
-    
-
-    

@@ -1,19 +1,37 @@
 import asyncio
 import atexit
 import dataclasses
+import datetime
+import logging
 from typing import Optional, Union
 
+import rollbar
+from rollbar.contrib.fastapi import add_to as rollbar_add_to
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from .constants import (
+    ROLLBAR_TOKEN,
+    LOG_IGNORE_PATTERNS,
+)
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
 from .data.tags import Tag
 from .controller import Controller
 
+
 fastapi_app = FastAPI()
+
+if ROLLBAR_TOKEN:
+    rollbar.init(
+        ROLLBAR_TOKEN,
+        environment="production",
+        handler="async",
+        include_request_body=True,
+    )
+    rollbar_add_to(fastapi_app)
 
 fastapi_app.add_middleware(
     CORSMiddleware,
@@ -45,6 +63,7 @@ def experience_response(experience: BaseExperience):
         "lifetime": experience.lifetime,
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
+        "queueable": experience.queueable,
     }
 
     if experience.collection:
@@ -133,13 +152,38 @@ def current_experience():
 
 
 @fastapi_app.put("/current")
-async def set_current_experience(body: SetCurrentExperienceBody):
+async def set_current_experience(
+    body: SetCurrentExperienceBody, throttle: Optional[int] = None
+):
+    delta_last_experience = (
+        (datetime.datetime.now() - _controller.current_experience_start)
+        if throttle
+        and _controller.current_experience
+        and _controller.current_experience_start
+        else None
+    )
+
+    if (
+        delta_last_experience
+        and delta_last_experience.seconds < throttle
+        and delta_last_experience.days == 0
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Current experience can only be set at minimum every {throttle} seconds",
+        )
+
     if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    await _controller.set_experience(body.id)
+    if not await _controller.set_experience(body.id):
+        raise HTTPException(
+            status_code=429,
+            detail="Can't set current experience while it is changing",
+        )
+
     return {"status": "ok"}
 
 
@@ -189,6 +233,7 @@ async def update_placard_url(body: PlacardUrlData):
 def on_startup():
     global _controller
     _controller = Controller()
+    asyncio.get_event_loop().create_task(_controller.stability_loop())
 
 
 @atexit.register
@@ -204,3 +249,21 @@ def on_shutdown():
             loop.run_until_complete(stop_task)
         else:
             _controller.current_experience.stop()
+
+
+# See https://github.com/encode/starlette/issues/864#issuecomment-653076434
+class PolledEndpointsFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno > logging.INFO:
+            return True
+
+        message = record.getMessage()
+
+        if any(filter(lambda a: a.search(message), LOG_IGNORE_PATTERNS)):
+            return False
+
+        return True
+
+
+# Filter out especially verbose endpoints
+logging.getLogger("uvicorn.access").addFilter(PolledEndpointsFilter())

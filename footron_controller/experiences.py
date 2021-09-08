@@ -36,6 +36,7 @@ class BaseExperience(BaseModel, abc.ABC):
     lifetime: int = _DEFAULT_LIFETIME
     fullscreen: bool = False
     unlisted: bool = False
+    queueable: bool = True
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 

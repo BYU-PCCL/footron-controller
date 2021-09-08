@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class WmApi:
     def __init__(self):
         self._context = zmq.asyncio.Context()
+        # noinspection PyUnresolvedReferences
         self._socket = self._context.socket(zmq.PAIR)
         self._socket.connect("tcp://localhost:5557")
 

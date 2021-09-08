@@ -64,7 +64,7 @@ class VideoEnvironment(BaseEnvironment):
 
         if not self._static_path.exists():
             raise EnvironmentInitializationError(
-                f"Couldn't load static path for video {self.id}"
+                f"Couldn't load static path for video {id}"
                 f" at path {self._static_path.absolute()}"
             )
 

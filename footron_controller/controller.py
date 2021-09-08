@@ -1,11 +1,14 @@
 import asyncio
 import datetime
 import logging
+import os
 from typing import Dict, Optional
 
 import aiohttp.client_exceptions
 import footron_protocol as protocol
+import rollbar
 
+from .data.stability import StabilityManager
 from .constants import EMPTY_EXPERIENCE_DATA
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
@@ -26,6 +29,7 @@ class Controller:
     lock: protocol.Lock
     last_update: datetime.datetime
     placard: PlacardApi
+    stability: StabilityManager
     _experience_modify_lock: asyncio.Lock
 
     def __init__(self):
@@ -37,9 +41,10 @@ class Controller:
 
         self.placard = PlacardApi()
         self.wm = WmApi()
+        self.stability = StabilityManager()
 
         self.load_from_fs()
-        asyncio.get_event_loop().create_task(self._update_experience_display(None))
+        asyncio.get_event_loop().create_task(self.set_experience(None))
 
     def load_from_fs(self):
         self.load_experiences()
@@ -68,12 +73,16 @@ class Controller:
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
 
     async def set_experience(self, id: Optional[str]):
-        async with self._experience_modify_lock:
-            await self._set_experience_impl(id)
+        if self._experience_modify_lock.locked():
+            return False
+
+        await self._set_experience_impl(id)
+        return True
 
     async def _set_experience_impl(self, id: Optional[str]):
         if self.current_experience and self.current_experience.id == id:
             return
+        self.current_experience_start = datetime.datetime.now()
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
@@ -81,8 +90,8 @@ class Controller:
         await self._update_experience_display(experience)
 
         try:
+            await self.wm.clear_viewport()
             if self.current_experience:
-                await self.wm.clear_viewport()
                 await self.current_experience.stop()
         finally:
             try:
@@ -121,3 +130,19 @@ class Controller:
             # Wait for a second and try again
             await asyncio.sleep(1)
             await self._update_placard(experience)
+
+    async def stability_loop(self):
+        while True:
+            logging.debug("Checking system stability...")
+            try:
+                if not self.stability.check_stable():
+                    rollbar.report_message("System is unstable, rebooting")
+                    logging.error("System is unstable, rebooting")
+                    # Note that the current user has to have NOPASSWD set up in
+                    # /etc/sudoers for /sbin/reboot on Ubuntu systems for this to
+                    # work from Python
+                    os.system("sudo reboot")
+            except Exception as e:
+                rollbar.report_exc_info(e)
+                logger.exception(e)
+            await asyncio.sleep(15)

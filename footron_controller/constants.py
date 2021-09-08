@@ -1,6 +1,7 @@
 import os
+import re
 from pathlib import Path
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, List, Pattern
 
 from xdg import xdg_config_home, xdg_data_home
 
@@ -10,6 +11,7 @@ from .data.placard import PlacardExperienceData
 PACKAGE_PATH = Path(module_path).parent
 
 PACKAGE_STATIC_PATH = PACKAGE_PATH / "static"
+PACKAGE_SCRIPTS_PATH = PACKAGE_PATH / "scripts"
 
 BASE_DATA_PATH = (
     Path(os.environ["FT_DATA_PATH"])
@@ -29,12 +31,24 @@ BASE_MESSAGING_URL = (
     else "ws://localhost:8088/messaging/out/"
 )
 
+ROLLBAR_TOKEN = os.environ["FT_ROLLBAR"] if "FT_ROLLBAR" in os.environ else None
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
     title="Footron",
     artist="Vin Howe, Chris Luangrath, Matt Powley",
     description="Built with <pre style='display:inline;'>&lt;3</pre> by BYU students",
+)
+
+CURRENT_EXPERIENCE_SET_DELAY_S = 5
+
+# noinspection PyTypeChecker
+LOG_IGNORE_PATTERNS: List[Pattern] = list(
+    map(
+        re.compile,
+        [r"(GET|PATCH) /current.*200", r"(GET|PATCH) /placard/url.*200"],
+    )
 )
 
 JsonDict = Dict[str, Union[Any, Any]]
