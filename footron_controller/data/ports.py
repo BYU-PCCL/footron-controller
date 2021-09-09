@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import logging
 from typing import Optional
-
-# TODO: Determine if this is a bad port to start with
 import rollbar
 
-START_PORT = 8080
+from ..util import find_free_port
 
 _port_manager: Optional[PortManager] = None
 
@@ -17,10 +15,7 @@ class PortManager:
     _bound_ports = []
 
     def reserve_port(self):
-        if not len(self._bound_ports):
-            port = START_PORT
-        else:
-            port = self._bound_ports[-1] + 1
+        port = find_free_port()
 
         self._bound_ports.append(port)
         return port
