@@ -37,6 +37,7 @@ class BaseExperience(BaseModel, abc.ABC):
     fullscreen: bool = False
     unlisted: bool = False
     queueable: bool = True
+    load_time: Optional[int] = None
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 

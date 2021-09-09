@@ -9,11 +9,12 @@ import footron_protocol as protocol
 import rollbar
 
 from .data.stability import StabilityManager
-from .constants import EMPTY_EXPERIENCE_DATA
+from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.collection import load_collections_from_fs, Collection
+from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class Controller:
     last_update: datetime.datetime
     placard: PlacardApi
     stability: StabilityManager
+    loader: LoaderManager
     _experience_modify_lock: asyncio.Lock
 
     def __init__(self):
@@ -40,6 +42,7 @@ class Controller:
         self.placard = PlacardApi()
         self.wm = WmApi()
         self.stability = StabilityManager()
+        self.loader = LoaderManager()
 
         self.load_from_fs()
         asyncio.get_event_loop().create_task(self.set_experience(None))
@@ -63,6 +66,11 @@ class Controller:
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
+        if experience.load_time:
+            # Don't wait for loader to complete, just fire and go
+            asyncio.get_event_loop().create_task(
+                self.loader.start_with_timeout(experience.load_time)
+            )
 
     async def set_experience(self, id: Optional[str]):
         if self._experience_modify_lock.locked():
