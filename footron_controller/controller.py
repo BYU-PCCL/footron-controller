@@ -8,11 +8,11 @@ import aiohttp.client_exceptions
 import footron_protocol as protocol
 import rollbar
 
-from .data.stability import StabilityManager
 from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
+from .data.stability import StabilityManager
 from .data.collection import load_collections_from_fs, Collection
 from .data.loader import LoaderManager
 
