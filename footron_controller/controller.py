@@ -72,11 +72,7 @@ class Controller:
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
-        if experience.load_time:
-            # Don't wait for loader to complete, just fire and go
-            asyncio.get_event_loop().create_task(
-                self.loader.start_with_timeout(experience.load_time)
-            )
+        asyncio.get_event_loop().create_task(self._try_launch_loader(experience))
 
     async def set_experience(self, id: Optional[str]):
         if self._experience_modify_lock.locked():
@@ -113,6 +109,12 @@ class Controller:
                 self.end_time = None
                 self.lock = False
                 self.current_experience = experience
+
+    async def _try_launch_loader(self, experience: BaseExperience):
+        if not experience or not experience.load_time:
+            return
+
+        await self.loader.start_with_timeout(experience.load_time)
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
