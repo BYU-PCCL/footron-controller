@@ -69,6 +69,9 @@ class DockerExperience(BaseExperience):
     def create_environment(self) -> DockerEnvironment:
         return DockerEnvironment(self.id, self.image_id)
 
+    async def attempt_cleanup(self):
+        await self._environment.shutdown_by_tag()
+
 
 class WebExperience(BaseExperience):
     type = ExperienceType.WEB

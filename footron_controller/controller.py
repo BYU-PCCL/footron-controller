@@ -9,7 +9,7 @@ import footron_protocol as protocol
 import rollbar
 
 from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
-from .experiences import load_experiences_fs, BaseExperience
+from .experiences import load_experiences_fs, BaseExperience, DockerExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
@@ -144,10 +144,19 @@ class Controller:
             await asyncio.sleep(1)
             await self._update_placard(experience)
 
+    async def _cleanup_rogue_docker_containers(self):
+        for experience in self.experiences.values():
+            if not isinstance(experience, DockerExperience):
+                continue
+            await experience.attempt_cleanup()
+
     async def stability_loop(self):
         while True:
             logging.debug("Checking system stability...")
             try:
+                asyncio.get_event_loop().create_task(
+                    self._cleanup_rogue_docker_containers()
+                )
                 if not self.stability.check_stable():
                     rollbar.report_message("System is unstable, rebooting")
                     logging.error("System is unstable, rebooting")
