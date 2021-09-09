@@ -42,7 +42,7 @@ class Controller:
         self.placard = PlacardApi()
         self.wm = WmApi()
         self.stability = StabilityManager()
-        self.loader = LoaderManager()
+        self.loader = LoaderManager(self.wm)
 
         self._create_paths()
         self.load_from_fs()
