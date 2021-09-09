@@ -99,7 +99,6 @@ class Controller:
             try:
                 # Hang around to wait for windows to close without closing current
                 # window
-                await asyncio.sleep(1)
                 if experience:
                     await experience.start()
             finally:
