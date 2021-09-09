@@ -97,9 +97,11 @@ class Controller:
                 asyncio.get_event_loop().create_task(self.current_experience.stop())
         finally:
             try:
-                # Hang around to wait for windows to close without closing current
-                # window
                 if experience:
+                    if experience.load_time:
+                        # Wait for loading screen to kick in (we need a better solution
+                        # here)
+                        await asyncio.sleep(1)
                     await experience.start()
             finally:
                 # Environment start() and stop() methods should have their own error
