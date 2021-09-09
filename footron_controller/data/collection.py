@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+import types
 from typing import List, Optional
 
 from ..constants import BASE_DATA_PATH
@@ -21,7 +22,7 @@ def load_collections_from_fs(path=BASE_DATA_PATH) -> List[Collection]:
     with open(collections_file_path) as collections_file:
         collection_data = json.load(collections_file)
 
-    for item in collection_data:
-        collections.append(Collection(**item))
-
+    for key, value in collection_data.items():
+        collections.append(Collection(id=key, **value))
+    
     return collections

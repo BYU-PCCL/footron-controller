@@ -23,7 +23,7 @@ def load_tags_from_fs(path=BASE_DATA_PATH) -> List[Tag]:
     with open(tags_file_path) as tags_file:
         tag_data = json.load(tags_file)
 
-    for item in tag_data:
-        tags.append(Tag(**item))
+    for key, value in tag_data.items():
+        tags.append(Tag(id=key, **value))
 
     return tags
