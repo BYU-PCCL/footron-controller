@@ -78,7 +78,8 @@ class Controller:
         if self._experience_modify_lock.locked():
             return False
 
-        await self._set_experience_impl(id)
+        async with self._experience_modify_lock:
+            await self._set_experience_impl(id)
         return True
 
     async def _set_experience_impl(self, id: Optional[str]):
