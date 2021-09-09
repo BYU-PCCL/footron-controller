@@ -44,6 +44,7 @@ class Controller:
         self.stability = StabilityManager()
         self.loader = LoaderManager()
 
+        self._create_paths()
         self.load_from_fs()
         asyncio.get_event_loop().create_task(self.set_experience(None))
 
@@ -61,6 +62,11 @@ class Controller:
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
         }
+
+    @staticmethod
+    def _create_paths():
+        EXPERIENCES_PATH.mkdir(parents=True)
+        BASE_BIN_PATH.mkdir(parents=True)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
         # We don't actually want to wait for this to complete

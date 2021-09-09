@@ -133,7 +133,4 @@ def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
 
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
-    if not path.exists():
-        path.mkdir(parents=True)
-
     return list(map(_load_experience_at_path, path.iterdir()))
