@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 # TODO: Determine if this is a bad port to start with
+import rollbar
+
 START_PORT = 8080
 
 _port_manager: Optional[PortManager] = None
+
+logger = logging.getLogger(__name__)
 
 
 class PortManager:
@@ -21,7 +26,12 @@ class PortManager:
         return port
 
     def release_port(self, port):
-        self._bound_ports.remove(port)
+        try:
+            self._bound_ports.remove(port)
+        except ValueError:
+            message = f"Attempted to release unregistered port {port}"
+            logger.warning(message)
+            rollbar.report_message(message)
 
 
 def get_port_manager():
