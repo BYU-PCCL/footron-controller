@@ -20,9 +20,8 @@ class LoaderManager:
         self._loader_process = None
         self._process_operation_lock = asyncio.Lock()
 
-    async def start_with_timeout(self, seconds: int):
-        await self.start()
-        await asyncio.sleep(seconds)
+    async def stop_after_timeout(self, timeout: int):
+        await asyncio.sleep(timeout)
         await self.stop()
 
     async def start(self):

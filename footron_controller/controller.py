@@ -69,10 +69,10 @@ class Controller:
         BASE_BIN_PATH.mkdir(parents=True, exist_ok=True)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
+        await self._try_launch_loader(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
-        asyncio.get_event_loop().create_task(self._try_launch_loader(experience))
 
     async def set_experience(self, id: Optional[str]):
         if self._experience_modify_lock.locked():
@@ -113,7 +113,10 @@ class Controller:
         if not experience or not experience.load_time:
             return
 
-        await self.loader.start_with_timeout(experience.load_time)
+        await self.loader.start()
+        asyncio.get_event_loop().create_task(
+            self.loader.stop_after_timeout(experience.load_time)
+        )
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
