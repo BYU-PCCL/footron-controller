@@ -8,12 +8,13 @@ import aiohttp.client_exceptions
 import footron_protocol as protocol
 import rollbar
 
-from .constants import EMPTY_EXPERIENCE_DATA
+from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
 from .experiences import load_experiences_fs, BaseExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
 from .data.collection import load_collections_from_fs, Collection
+from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class Controller:
     last_update: datetime.datetime
     placard: PlacardApi
     stability: StabilityManager
+    loader: LoaderManager
     _experience_modify_lock: asyncio.Lock
 
     def __init__(self):
@@ -40,7 +42,9 @@ class Controller:
         self.placard = PlacardApi()
         self.wm = WmApi()
         self.stability = StabilityManager()
+        self.loader = LoaderManager()
 
+        self._create_paths()
         self.load_from_fs()
         asyncio.get_event_loop().create_task(self.set_experience(None))
 
@@ -59,7 +63,13 @@ class Controller:
             collection.id: collection for collection in load_collections_from_fs()
         }
 
+    @staticmethod
+    def _create_paths():
+        EXPERIENCES_PATH.mkdir(parents=True, exist_ok=True)
+        BASE_BIN_PATH.mkdir(parents=True, exist_ok=True)
+
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
+        await self._try_launch_loader(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
         await self.wm.set_fullscreen(experience.fullscreen if experience else False)
@@ -84,12 +94,11 @@ class Controller:
         try:
             await self.wm.clear_viewport()
             if self.current_experience:
-                await self.current_experience.stop()
+                asyncio.get_event_loop().create_task(self.current_experience.stop())
         finally:
             try:
                 # Hang around to wait for windows to close without closing current
                 # window
-                await asyncio.sleep(1)
                 if experience:
                     await experience.start()
             finally:
@@ -99,6 +108,15 @@ class Controller:
                 self.end_time = None
                 self.lock = False
                 self.current_experience = experience
+
+    async def _try_launch_loader(self, experience: BaseExperience):
+        if not experience or not experience.load_time:
+            return
+
+        await self.loader.start()
+        asyncio.get_event_loop().create_task(
+            self.loader.stop_after_timeout(experience.load_time)
+        )
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
