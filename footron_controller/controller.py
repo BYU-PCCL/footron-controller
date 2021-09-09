@@ -94,7 +94,7 @@ class Controller:
         try:
             await self.wm.clear_viewport()
             if self.current_experience:
-                await self.current_experience.stop()
+                asyncio.get_event_loop().create_task(self.current_experience.stop())
         finally:
             try:
                 # Hang around to wait for windows to close without closing current
