@@ -21,3 +21,9 @@ FT_ROLLBAR=<rollbar token>
     ```
 5. Remove everything except `Default/`, `'Local State'`, and `'Webstore Downloads'`
 6. Copy to `/home/footron/.local/share/footron/base-chrome-profile` on the host machine
+
+## Adding loading window
+
+Build footron-loader using `yarn dist` and copy the AppImage output to a file at
+`~/.local/share/footron/bin/footron-loader` on the target machine. You may have to create
+parent directories if you haven't run the controller yet.
