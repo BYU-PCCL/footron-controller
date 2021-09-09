@@ -65,8 +65,8 @@ class Controller:
 
     @staticmethod
     def _create_paths():
-        EXPERIENCES_PATH.mkdir(parents=True)
-        BASE_BIN_PATH.mkdir(parents=True)
+        EXPERIENCES_PATH.mkdir(parents=True, exist_ok=True)
+        BASE_BIN_PATH.mkdir(parents=True, exist_ok=True)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
         # We don't actually want to wait for this to complete
