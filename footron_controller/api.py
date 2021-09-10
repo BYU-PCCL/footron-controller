@@ -64,11 +64,11 @@ def experience_response(experience: BaseExperience):
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
-        "tags": _controller.tag_dictionary[experience.id]
+        "tags": _controller.tag_dictionary[experience.id],
     }
 
-    if experience.id in _controller.collection_dictionary.keys():
-        data["collection"] = _controller.collection_dictionary[experience.id]
+    if experience.id in _controller.experience_collection_map.keys():
+        data["collection"] = _controller.experience_collection_map[experience.id]
 
     # TODO: Handle scrubbing and other type-specific fields in some clean way
 
@@ -77,6 +77,7 @@ def experience_response(experience: BaseExperience):
 
 def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
+
 
 def tag_response(tag: Tag):
     return dataclasses.asdict(tag)
@@ -124,10 +125,7 @@ def collection(id):
 
 @fastapi_app.get("/tags")
 def tags():
-    return {
-        id: tag_response(tag)
-        for id, tag in _controller.tags.items()
-    }
+    return {id: tag_response(tag) for id, tag in _controller.tags.items()}
 
 
 @fastapi_app.get("/tags/<id>")

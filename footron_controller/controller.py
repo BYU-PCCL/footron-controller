@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aiohttp.client_exceptions
 import footron_protocol as protocol
@@ -24,8 +24,8 @@ class Controller:
     experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
     tags: Dict[str, Tag] = {}
-    collection_dictionary : Dict[str, str] = {}
-    tag_dictionary : Dict[str, list] = {}
+    experience_collection_map: Dict[str, str] = {}
+    experience_tags_map: Dict[str, List] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
@@ -56,8 +56,6 @@ class Controller:
         self.load_experiences()
         self.load_collections()
         self.load_tags()
-        self.fill_collection_dictionary()
-        self.fill_tag_dictionary()
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
@@ -69,27 +67,26 @@ class Controller:
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
         }
-        print(self.collections)
+        self._fill_experience_collection_map()
 
     def load_tags(self):
-        self.tags = {
-            tag.id: tag for tag in load_tags_from_fs()
-        }
+        self.tags = {tag.id: tag for tag in load_tags_from_fs()}
+        self._fill_experience_tag_map()
 
-    def fill_collection_dictionary(self):
-        self.collection_dictionary = {}
+    def _fill_experience_collection_map(self):
+        self.experience_collection_map = {}
         for collection in self.collections.values():
             for experience in collection.experiences:
-                self.collection_dictionary[experience] = collection.id
+                self.experience_collection_map[experience] = collection.id
 
-    def fill_tag_dictionary(self):
+    def _fill_experience_tag_map(self):
         self.tag_dictionary = {}
         for experience in self.experiences:
             self.tag_dictionary[experience] = []
         for tag in self.tags.values():
             for experience in tag.experiences:
                 if experience not in self.tag_dictionary:
-                    self.tag_dictionary[experience] = [] 
+                    self.tag_dictionary[experience] = []
 
                 self.tag_dictionary[experience].append(tag.id)
 
