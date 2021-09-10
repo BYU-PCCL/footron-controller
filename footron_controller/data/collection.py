@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List
 
 from ..constants import BASE_DATA_PATH
 
@@ -8,22 +8,18 @@ from ..constants import BASE_DATA_PATH
 @dataclass
 class Collection:
     id: str
-    title: str
-    description: Optional[str] = None
-    artist: Optional[str] = None
+    experiences: List[str]
 
 
-def load_collections_from_fs(path=BASE_DATA_PATH) -> List[Collection]:
+def load_collections_from_fs(path=BASE_DATA_PATH) -> Dict[str, Collection]:
     collections_file_path = path.joinpath("collections.json")
 
     if not collections_file_path.exists():
-        return []
+        return {}
 
-    collections = []
     with open(collections_file_path) as collections_file:
         collection_data = json.load(collections_file)
 
-    for item in collection_data:
-        collections.append(Collection(**item))
-
-    return collections
+    return {
+        id: Collection(id=id, **value) for id, value in collection_data.items()
+    }
