@@ -80,15 +80,15 @@ class Controller:
                 self.experience_collection_map[experience] = collection.id
 
     def _fill_experience_tag_map(self):
-        self.tag_dictionary = {}
+        self.experience_tag_map = {}
         for experience in self.experiences:
-            self.tag_dictionary[experience] = []
+            self.experience_tag_map[experience] = []
         for tag in self.tags.values():
             for experience in tag.experiences:
-                if experience not in self.tag_dictionary:
-                    self.tag_dictionary[experience] = []
+                if experience not in self.experience_tag_map:
+                    self.experience_tag_map[experience] = []
 
-                self.tag_dictionary[experience].append(tag.id)
+                self.experience_tag_map[experience].append(tag.id)
 
     @staticmethod
     def _create_paths():
