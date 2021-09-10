@@ -17,7 +17,13 @@ class WmApi:
         self._socket.connect("tcp://localhost:5557")
 
     async def set_fullscreen(self, fullscreen: bool):
-        await self._socket.send_json({"type": "fullscreen", "fullscreen": fullscreen})
+        await self._socket.send_json(
+            {
+                "type": "fullscreen",
+                "after": int(datetime.datetime.now().timestamp() * 1000),
+                "fullscreen": fullscreen,
+            }
+        )
 
     async def clear_viewport(self, include: Optional[List[str]] = None):
         data = {
