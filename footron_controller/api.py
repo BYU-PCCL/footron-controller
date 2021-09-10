@@ -64,10 +64,11 @@ def experience_response(experience: BaseExperience):
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
+        "tags": _controller.tag_dictionary[experience.id]
     }
 
-    if experience.collection:
-        data["collection"] = experience.collection
+    if experience.id in _controller.collection_dictionary.keys():
+        data["collection"] = _controller.collection_dictionary[experience.id]
 
     # TODO: Handle scrubbing and other type-specific fields in some clean way
 
@@ -233,7 +234,7 @@ async def update_placard_url(body: PlacardUrlData):
 def on_startup():
     global _controller
     _controller = Controller()
-    asyncio.get_event_loop().create_task(_controller.stability_loop())
+    # asyncio.get_event_loop().create_task(_controller.stability_loop())
 
 
 @atexit.register

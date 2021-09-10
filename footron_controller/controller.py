@@ -23,6 +23,8 @@ class Controller:
     experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
     tags: Dict[str, Tag] = {}
+    collection_dictionary : Dict[str, str] = {}
+    tag_dictionary : Dict[str, list] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
@@ -50,22 +52,52 @@ class Controller:
         self.load_experiences()
         self.load_collections()
         self.load_tags()
+        self.fill_collection_dictionary()
+        self.fill_tag_dictionary()
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
         self.experiences = {
             experience.id: experience for experience in load_experiences_fs()
         }
+        # for experience in self.experiences:
+        #     for id, collection in self.collections.items():
+        #         if experience in collection.experiences:
+        #             experience.collection = collection.id
+        #             break
+            
+        #     for tag in self.tags:
+        #         if experience in tag.experiences:
+        #             experience.tags.append(tag.id)
+
 
     def load_collections(self):
         self.collections = {
             collection.id: collection for collection in load_collections_from_fs()
         }
+        print(self.collections)
 
     def load_tags(self):
         self.tags = {
             tag.id: tag for tag in load_tags_from_fs()
         }
+
+    def fill_collection_dictionary(self):
+        self.collection_dictionary = {}
+        for collection in self.collections.values():
+            for experience in collection.experiences:
+                self.collection_dictionary[experience] = collection.id
+
+    def fill_tag_dictionary(self):
+        self.tag_dictionary = {}
+        for experience in self.experiences:
+            self.tag_dictionary[experience] = []
+        for tag in self.tags.values():
+            for experience in tag.experiences:
+                if experience not in self.tag_dictionary:
+                    self.tag_dictionary[experience] = [] 
+
+                self.tag_dictionary[experience].append(tag.id)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
         # We don't actually want to wait for this to complete
