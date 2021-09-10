@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Optional, List
 
 import zmq
 import zmq.asyncio
@@ -18,10 +19,13 @@ class WmApi:
     async def set_fullscreen(self, fullscreen: bool):
         await self._socket.send_json({"type": "fullscreen", "fullscreen": fullscreen})
 
-    async def clear_viewport(self):
-        await self._socket.send_json(
-            {
-                "type": "clear_viewport",
-                "before": int(datetime.datetime.now().timestamp() * 1000),
-            }
-        )
+    async def clear_viewport(self, include: Optional[List[str]] = None):
+        data = {
+            "type": "clear_viewport",
+            "before": int(datetime.datetime.now().timestamp() * 1000),
+        }
+
+        if include is not None:
+            data["include"] = include
+
+        await self._socket.send_json(data)
