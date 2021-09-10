@@ -146,6 +146,9 @@ class DockerEnvironment(BaseEnvironment):
             logger.exception(e)
 
     async def shutdown_by_tag(self):
+        if self._container is None:
+            return
+
         matching_containers = docker_client.containers.list(
             filters={"ancestor": self._image_id, "status": "running"}
         )
@@ -160,6 +163,7 @@ class DockerEnvironment(BaseEnvironment):
     async def stop(self):
         self._kill_container_checked(self._container)
         await self.shutdown_by_tag()
+        self._container = None
 
         self._ports.release_port(self._http_port)
         self._ports.release_port(self._zmq_port)
