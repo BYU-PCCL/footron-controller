@@ -64,16 +64,6 @@ class Controller:
         self.experiences = {
             experience.id: experience for experience in load_experiences_fs()
         }
-        # for experience in self.experiences:
-        #     for id, collection in self.collections.items():
-        #         if experience in collection.experiences:
-        #             experience.collection = collection.id
-        #             break
-            
-        #     for tag in self.tags:
-        #         if experience in tag.experiences:
-        #             experience.tags.append(tag.id)
-
 
     def load_collections(self):
         self.collections = {
