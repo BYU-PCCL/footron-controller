@@ -32,8 +32,6 @@ class BaseExperience(BaseModel, abc.ABC):
     title: str
     description: str
     artist: Optional[str]
-    collection: Optional[str]
-    tags: list = []
     lifetime: int = _DEFAULT_LIFETIME
     fullscreen: bool = False
     unlisted: bool = False
