@@ -27,3 +27,4 @@ def load_tags_from_fs(path=BASE_DATA_PATH) -> List[Tag]:
         tags.append(Tag(id=key, **value))
 
     return tags
+    
