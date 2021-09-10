@@ -18,6 +18,7 @@ from .constants import (
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
+from .data.tag import Tag
 from .controller import Controller
 
 
@@ -63,10 +64,11 @@ def experience_response(experience: BaseExperience):
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
+        "tags": _controller.experience_tag_map[experience.id],
     }
 
-    if experience.collection:
-        data["collection"] = experience.collection
+    if experience.id in _controller.experience_collection_map.keys():
+        data["collection"] = _controller.experience_collection_map[experience.id]
 
     # TODO: Handle scrubbing and other type-specific fields in some clean way
 
@@ -75,6 +77,10 @@ def experience_response(experience: BaseExperience):
 
 def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
+
+
+def tag_response(tag: Tag):
+    return dataclasses.asdict(tag)
 
 
 # Route for reloading data
@@ -115,6 +121,19 @@ def collection(id):
         return {}
 
     return collection_response(_controller.collections[id])
+
+
+@fastapi_app.get("/tags")
+def tags():
+    return {id: tag_response(tag) for id, tag in _controller.tags.items()}
+
+
+@fastapi_app.get("/tags/<id>")
+def tag(id):
+    if id not in _controller.tags:
+        return {}
+
+    return tag_response(_controller.tags[id])
 
 
 @fastapi_app.get("/current")

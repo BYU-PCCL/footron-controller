@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aiohttp.client_exceptions
 import footron_protocol as protocol
@@ -14,6 +14,7 @@ from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
 from .data.collection import load_collections_from_fs, Collection
+from .data.tag import load_tags_from_fs, Tag
 from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,9 @@ logger = logging.getLogger(__name__)
 class Controller:
     experiences: Dict[str, BaseExperience] = {}
     collections: Dict[str, Collection] = {}
+    tags: Dict[str, Tag] = {}
+    experience_collection_map: Dict[str, str] = {}
+    experience_tags_map: Dict[str, List[str]] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
@@ -51,6 +55,7 @@ class Controller:
     def load_from_fs(self):
         self.load_experiences()
         self.load_collections()
+        self.load_tags()
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
@@ -59,9 +64,29 @@ class Controller:
         }
 
     def load_collections(self):
-        self.collections = {
-            collection.id: collection for collection in load_collections_from_fs()
-        }
+        self.collections = load_collections_from_fs()
+        self._fill_experience_collection_map()
+
+    def load_tags(self):
+        self.tags = load_tags_from_fs()
+        self._fill_experience_tag_map()
+
+    def _fill_experience_collection_map(self):
+        self.experience_collection_map = {}
+        for collection in self.collections.values():
+            for experience in collection.experiences:
+                self.experience_collection_map[experience] = collection.id
+
+    def _fill_experience_tag_map(self):
+        self.experience_tag_map = {}
+        for experience in self.experiences:
+            self.experience_tag_map[experience] = []
+        for tag in self.tags.values():
+            for experience in tag.experiences:
+                if experience not in self.experience_tag_map:
+                    continue    
+
+                self.experience_tag_map[experience].append(tag.id)
 
     @staticmethod
     def _create_paths():
