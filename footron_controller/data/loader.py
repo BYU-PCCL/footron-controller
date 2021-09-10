@@ -6,7 +6,6 @@ from typing import Optional, TYPE_CHECKING
 
 from ..util import mercilessly_kill_process
 from ..constants import BASE_BIN_PATH
-
 if TYPE_CHECKING:
     from .wm import WmApi
 
