@@ -234,7 +234,7 @@ async def update_placard_url(body: PlacardUrlData):
 def on_startup():
     global _controller
     _controller = Controller()
-    # asyncio.get_event_loop().create_task(_controller.stability_loop())
+    asyncio.get_event_loop().create_task(_controller.stability_loop())
 
 
 @atexit.register
