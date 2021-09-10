@@ -8,7 +8,7 @@ from ..constants import BASE_DATA_PATH
 @dataclass
 class Tag:
     id: str
-    experiences: List
+    experiences: List[str]
     title: str
     description: Optional[str]
 

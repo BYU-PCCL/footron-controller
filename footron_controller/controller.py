@@ -25,7 +25,7 @@ class Controller:
     collections: Dict[str, Collection] = {}
     tags: Dict[str, Tag] = {}
     experience_collection_map: Dict[str, str] = {}
-    experience_tags_map: Dict[str, List] = {}
+    experience_tags_map: Dict[str, List[str]] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
     end_time: Optional[int]
