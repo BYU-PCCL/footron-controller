@@ -38,6 +38,7 @@ class BaseExperience(BaseModel, abc.ABC):
     fullscreen: bool = False
     unlisted: bool = False
     queueable: bool = True
+    load_time: Optional[int] = None
     path: Path
     _environment: BaseEnvironment = PrivateAttr()
 
@@ -133,7 +134,4 @@ def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
 
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
-    if not path.exists():
-        path.mkdir(parents=True)
-
     return list(map(_load_experience_at_path, path.iterdir()))
