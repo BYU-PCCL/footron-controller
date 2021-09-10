@@ -84,7 +84,7 @@ class Controller:
         for tag in self.tags.values():
             for experience in tag.experiences:
                 if experience not in self.experience_tag_map:
-                    continue    
+                    continue
 
                 self.experience_tag_map[experience].append(tag.id)
 

@@ -20,6 +20,4 @@ def load_collections_from_fs(path=BASE_DATA_PATH) -> Dict[str, Collection]:
     with open(collections_file_path) as collections_file:
         collection_data = json.load(collections_file)
 
-    return {
-        id: Collection(id=id, **value) for id, value in collection_data.items()
-    }
+    return {id: Collection(id=id, **value) for id, value in collection_data.items()}
