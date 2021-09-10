@@ -18,7 +18,7 @@ from .constants import (
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
 from .data.collection import Collection
-from .data.tags import Tag
+from .data.tag import Tag
 from .controller import Controller
 
 

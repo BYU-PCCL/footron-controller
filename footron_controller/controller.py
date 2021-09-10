@@ -14,7 +14,7 @@ from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
 from .data.collection import load_collections_from_fs, Collection
-from .data.tags import load_tags_from_fs, Tag
+from .data.tag import load_tags_from_fs, Tag
 from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
@@ -64,13 +64,11 @@ class Controller:
         }
 
     def load_collections(self):
-        self.collections = {
-            collection.id: collection for collection in load_collections_from_fs()
-        }
+        self.collections = load_collections_from_fs()
         self._fill_experience_collection_map()
 
     def load_tags(self):
-        self.tags = {tag.id: tag for tag in load_tags_from_fs()}
+        self.tags = load_tags_from_fs()
         self._fill_experience_tag_map()
 
     def _fill_experience_collection_map(self):
@@ -86,7 +84,7 @@ class Controller:
         for tag in self.tags.values():
             for experience in tag.experiences:
                 if experience not in self.experience_tag_map:
-                    self.experience_tag_map[experience] = []
+                    continue    
 
                 self.experience_tag_map[experience].append(tag.id)
 
