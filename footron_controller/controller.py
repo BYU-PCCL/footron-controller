@@ -28,7 +28,7 @@ class Controller:
     experience_tags_map: Dict[str, List[str]] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
-    end_time: Optional[int]
+    current_experience_end: Optional[datetime.datetime]
     lock: protocol.Lock
     last_update: datetime.datetime
     placard: PlacardApi
@@ -39,7 +39,7 @@ class Controller:
     def __init__(self):
         self.current_experience = None
         self.current_experience_start = None
-        self.end_time = None
+        self.current_experience_end = None
         self.lock = False
         self._experience_modify_lock = asyncio.Lock()
 
@@ -133,7 +133,7 @@ class Controller:
                 # Environment start() and stop() methods should have their own error
                 # handling, but if something is unhandled we need keep our state
                 # maintained
-                self.end_time = None
+                self.current_experience_end = None
                 self.lock = False
                 self.current_experience = experience
 

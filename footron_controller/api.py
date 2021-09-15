@@ -143,8 +143,14 @@ def current_experience():
     current = _controller.current_experience
 
     response_data = experience_response(current)
-    if _controller.end_time is not None:
-        response_data["end_time"] = _controller.end_time
+    if _controller.current_experience_end is not None:
+        response_data["end_time"] = int(
+            _controller.current_experience_end.timestamp() * 1000
+        )
+    if _controller.current_experience_start is not None:
+        response_data["start_time"] = int(
+            _controller.current_experience_start.timestamp() * 1000
+        )
     response_data["lock"] = _controller.lock
 
     return response_data
@@ -201,7 +207,9 @@ def update_current_experience(body: UpdateCurrentExperienceBody):
         )
 
     if body.end_time:
-        _controller.end_time = body.end_time
+        _controller.current_experience_end = datetime.datetime.fromtimestamp(
+            body.end_time / 1000
+        )
     if body.lock is not None:
         _controller.lock = body.lock
 

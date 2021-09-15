@@ -15,7 +15,6 @@ class Timer:
     def __init__(self):
         self._api = TimerApi(CONTROLLER_URL)
         self._last_commercial_time = dt.now()
-        self._current_start = None
 
     def _should_advance(self):
         current_exp = self._api.current()
@@ -31,8 +30,9 @@ class Timer:
             return current_date > dt.fromtimestamp(current_exp.end_time)
 
         if (
-            self._current_start
-            and (current_date - self._current_start).seconds < current_exp.lifetime
+            current_exp.start_time is not None
+            and (current_date - dt.fromtimestamp(current_exp.start_time / 1000)).seconds
+            < current_exp.lifetime
         ):
             return False
 
@@ -50,7 +50,6 @@ class Timer:
 
     def advance(self):
         self._api.set_current(self._pop_next())
-        self._current_start = dt.now()
 
     def advance_if_ready(self):
         # Note that when we add support for an "up next" notification, we should ignore
