@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Type, Optional
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, PrivateAttr, validator
 
 from .environments import (
     BaseEnvironment,
@@ -30,7 +30,8 @@ class BaseExperience(BaseModel, abc.ABC):
     type: ExperienceType
     id: str
     title: str
-    description: str
+    description: Optional[str]
+    long_description: Optional[str]
     artist: Optional[str]
     lifetime: int = _DEFAULT_LIFETIME
     fullscreen: bool = False
@@ -43,6 +44,14 @@ class BaseExperience(BaseModel, abc.ABC):
     def __init__(self, **data):
         super().__init__(**data)
         self._environment = self.create_environment()
+
+    @validator("long_description")
+    def long_description_requires_description(cls, value, values):
+        if "description" not in values or values["description"] is None:
+            raise ValueError(
+                "'description' must be set for 'long_description' to be set"
+            )
+        return value
 
     async def start(self):
         if asyncio.iscoroutinefunction(self._environment.start):
