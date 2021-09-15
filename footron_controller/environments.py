@@ -93,7 +93,7 @@ class DockerEnvironment(BaseEnvironment):
     def __init__(
         self,
         id: str,
-        image_id,
+        image_id: str,
         host_network: bool,
     ):
         self._id = id
