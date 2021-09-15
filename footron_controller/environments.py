@@ -88,11 +88,13 @@ class DockerEnvironment(BaseEnvironment):
     _video_devices: VideoDeviceManager
     _http_port: Optional[int]
     _zmq_port: Optional[int]
+    _host_network: Optional[int]
 
     def __init__(
         self,
         id: str,
         image_id,
+        host_network: bool,
     ):
         self._id = id
         self._image_id = image_id
@@ -101,6 +103,7 @@ class DockerEnvironment(BaseEnvironment):
         self._video_devices = get_video_device_manager()
         self._http_port = None
         self._zmq_port = None
+        self._host_network = host_network
 
     def start(self):
         self._http_port = self._ports.reserve_port()
@@ -111,6 +114,7 @@ class DockerEnvironment(BaseEnvironment):
             f"{path}:/dev/video{name}:rw"
             for name, path in self._video_devices.devices.items()
         ]
+        network_config = {"network_device": "host"} if self._host_network else {}
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
@@ -131,6 +135,7 @@ class DockerEnvironment(BaseEnvironment):
             shm_size="1g",
             # TODO: Figure out how to expose ROS2 ports
             ports={"80": self._http_port, "5555": self._zmq_port},
+            **network_config,
         )
 
     def _kill_container_checked(self, container: Container):

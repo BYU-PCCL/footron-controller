@@ -73,9 +73,10 @@ class BaseExperience(BaseModel, abc.ABC):
 class DockerExperience(BaseExperience):
     type = ExperienceType.DOCKER
     image_id: str
+    host_network: bool = False
 
     def create_environment(self) -> DockerEnvironment:
-        return DockerEnvironment(self.id, self.image_id)
+        return DockerEnvironment(self.id, self.image_id, self.host_network)
 
     async def attempt_cleanup(self):
         await self._environment.shutdown_by_tag()
