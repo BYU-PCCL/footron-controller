@@ -86,8 +86,6 @@ class DockerEnvironment(BaseEnvironment):
     _container: Optional[Container]
     _ports: PortManager
     _video_devices: VideoDeviceManager
-    _http_port: Optional[int]
-    _zmq_port: Optional[int]
     _host_network: Optional[int]
 
     def __init__(
@@ -101,13 +99,9 @@ class DockerEnvironment(BaseEnvironment):
         self._container = None
         self._ports = get_port_manager()
         self._video_devices = get_video_device_manager()
-        self._http_port = None
-        self._zmq_port = None
         self._host_network = host_network
 
     def start(self):
-        self._http_port = self._ports.reserve_port()
-        self._zmq_port = self._ports.reserve_port()
         # For now, we will expose only a "center" video device, accessible as
         # /dev/videocenter within containers
         video_devices = [
@@ -133,8 +127,6 @@ class DockerEnvironment(BaseEnvironment):
             # Chromium needs these to work, per @wingated
             cap_add=["SYS_ADMIN"],
             shm_size="1g",
-            # TODO: Figure out how to expose ROS2 ports
-            ports={"80": self._http_port, "5555": self._zmq_port},
             **network_config,
         )
 
@@ -169,6 +161,3 @@ class DockerEnvironment(BaseEnvironment):
         self._kill_container_checked(self._container)
         await self.shutdown_by_tag()
         self._container = None
-
-        self._ports.release_port(self._http_port)
-        self._ports.release_port(self._zmq_port)
