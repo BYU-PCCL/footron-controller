@@ -114,7 +114,7 @@ class DockerEnvironment(BaseEnvironment):
             f"{path}:/dev/video{name}:rw"
             for name, path in self._video_devices.devices.items()
         ]
-        network_config = {"network_device": "host"} if self._host_network else {}
+        network_config = {"network_mode": "host"} if self._host_network else {}
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
