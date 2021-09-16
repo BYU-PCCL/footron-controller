@@ -8,8 +8,7 @@ from aiohttp import web
 from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
-from .util import mercilessly_kill_process
-from .data.ports import get_port_manager
+from .util import mercilessly_kill_process, find_free_port
 from .constants import BASE_MESSAGING_URL, BASE_BIN_PATH
 
 WEB_SHELL_PATH = BASE_BIN_PATH / "footron-web-shell"
@@ -25,7 +24,6 @@ class BrowserRunner:
     _browser_process: Optional[subprocess.Popen]
     _runner = Optional[AppRunner]
     _site = Optional[TCPSite]
-    _ports = get_port_manager()
 
     def __init__(self, id: str, routes: Dict[str, str], url: str = "/"):
         self._id = id
@@ -76,7 +74,7 @@ class BrowserRunner:
         return web.FileResponse(file_path)
 
     async def _start_static_server(self):
-        self._port = self._ports.reserve_port()
+        self._port = find_free_port()
         self._runner = AppRunner(
             self._app,
             handle_signals=True,
@@ -110,8 +108,6 @@ class BrowserRunner:
         except RuntimeError as e:
             logging.error("Error while stopping static server:")
             logging.exception(e)
-        # TODO: Figure out what we have to do to get aiohttp to let go of its ports
-        # self._ports.release_port(self._port)
 
     async def start(self):
         await self._start_static_server()

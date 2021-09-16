@@ -11,7 +11,6 @@ import urllib.parse
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
-from .data.ports import PortManager, get_port_manager
 from .browser_runner import BrowserRunner
 from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
@@ -84,7 +83,6 @@ class VideoEnvironment(BaseEnvironment):
 class DockerEnvironment(BaseEnvironment):
     _id: str
     _container: Optional[Container]
-    _ports: PortManager
     _video_devices: VideoDeviceManager
     _host_network: Optional[int]
 
@@ -97,7 +95,6 @@ class DockerEnvironment(BaseEnvironment):
         self._id = id
         self._image_id = image_id
         self._container = None
-        self._ports = get_port_manager()
         self._video_devices = get_video_device_manager()
         self._host_network = host_network
 
