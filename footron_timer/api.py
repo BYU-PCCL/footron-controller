@@ -25,21 +25,32 @@ class TimerApi:
         self._last = None
         self.experiences = None
         self.commercials = None
+        self.last_update = None
         self.reload()
 
     def current(self):
         exp_data = requests.get(self._current_endpoint).json()
+
         if not exp_data:
             self._current = None
             return self._current
         self._current = CurrentExperience.parse_obj(exp_data)
+
+        if (
+            self.last_update is not None
+            and self._current.last_update != self.last_update
+        ):
+            self.reload()
+        self.last_update = self._current.last_update
+
         return self._current
 
     def last(self):
         return self._last
 
     def reload(self):
-        explist: List[Experience] = list(
+        self._last = None
+        experiences: List[Experience] = list(
             map(
                 Experience.parse_obj,
                 requests.get(self._experiences_endpoint).json().values(),
@@ -48,7 +59,7 @@ class TimerApi:
         commercial_base = []
         exp_base = []
         collection_base = {}
-        for exp in explist:
+        for exp in experiences:
             if not exp.queueable:
                 continue
 

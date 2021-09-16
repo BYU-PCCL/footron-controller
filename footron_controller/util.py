@@ -3,7 +3,7 @@ import logging
 import subprocess
 import socket
 from contextlib import closing
-
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -25,3 +25,11 @@ def find_free_port():
         s.bind(("", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
+
+
+def datetime_to_timestamp(at: datetime):
+    return int(at.timestamp() * 1000)
+
+
+def timestamp_to_datetime(timestamp: int):
+    return datetime.fromtimestamp(timestamp / 1000)

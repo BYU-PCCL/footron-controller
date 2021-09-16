@@ -1,16 +1,18 @@
 import asyncio
 import atexit
 import dataclasses
-import datetime
+from datetime import datetime
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 import rollbar
 from rollbar.contrib.fastapi import add_to as rollbar_add_to
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import footron_protocol as protocol
 
+from .util import datetime_to_timestamp, timestamp_to_datetime
 from .constants import (
     ROLLBAR_TOKEN,
     LOG_IGNORE_PATTERNS,
@@ -51,9 +53,11 @@ class SetCurrentExperienceBody(BaseModel):
 class UpdateCurrentExperienceBody(BaseModel):
     id: Optional[str]
     end_time: Optional[int]
-    lock: Optional[Union[int, bool]]
+    last_interaction: Optional[int]
+    lock: Optional[protocol.Lock]
 
 
+# TODO: Find a cleaner way to do this
 def experience_response(experience: BaseExperience):
     data = {
         "id": experience.id,
@@ -61,7 +65,7 @@ def experience_response(experience: BaseExperience):
         "artist": experience.artist,
         "description": experience.description,
         "lifetime": experience.lifetime,
-        "last_update": int(_controller.last_update.timestamp()),
+        "last_update": datetime_to_timestamp(_controller.last_update),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
         "tags": _controller.experience_tag_map[experience.id],
@@ -138,21 +142,25 @@ def tag(id):
 
 
 @fastapi_app.get("/current")
-def current_experience():
-    if not _controller.current_experience:
+async def current_experience():
+    if not _controller.current:
         return {}
-    current = _controller.current_experience
+    current = _controller.current
 
-    response_data = experience_response(current)
-    if _controller.current_experience_end is not None:
-        response_data["end_time"] = int(
-            _controller.current_experience_end.timestamp() * 1000
+    response_data = experience_response(current.experience)
+    if current.end_time is not None:
+        response_data["end_time"] = datetime_to_timestamp(current.end_time)
+    if current.start_time is not None:
+        response_data["start_time"] = datetime_to_timestamp(current.start_time)
+    if _controller.lock.last_update is not None:
+        response_data["start_time"] = datetime_to_timestamp(
+            _controller.lock.last_update
         )
-    if _controller.current_experience_start is not None:
-        response_data["start_time"] = int(
-            _controller.current_experience_start.timestamp() * 1000
+    if current.last_interaction is not None:
+        response_data["last_interaction"] = datetime_to_timestamp(
+            current.last_interaction
         )
-    response_data["lock"] = _controller.lock
+    response_data["lock"] = _controller.lock.status
 
     return response_data
 
@@ -162,10 +170,8 @@ async def set_current_experience(
     body: SetCurrentExperienceBody, throttle: Optional[int] = None
 ):
     delta_last_experience = (
-        (datetime.datetime.now() - _controller.current_experience_start)
-        if throttle
-        and _controller.current_experience
-        and _controller.current_experience_start
+        (datetime.now() - _controller.current.start_time)
+        if throttle and _controller.current and _controller.current.start_time
         else None
     )
 
@@ -195,21 +201,23 @@ async def set_current_experience(
 
 @fastapi_app.patch("/current")
 def update_current_experience(body: UpdateCurrentExperienceBody):
-    if not _controller.current_experience:
+    if not _controller.current:
         raise HTTPException(status_code=400, detail="No current experience exists")
 
     # Requiring an ID is a little bit of a hacky way to prevent an experience that
     # is transitioning out from setting properties on the incoming experience. This
     # of course assumes no foul play on the part of the experience, which shouldn't
     # be a concern for now because all experiences are manually reviewed.
-    if body.id and body.id != _controller.current_experience.id:
+    if body.id and body.id != _controller.current.id:
         raise HTTPException(
             status_code=400, detail="`id` specified is not current experience"
         )
 
     if body.end_time:
-        _controller.current_experience_end = datetime.datetime.fromtimestamp(
-            body.end_time / 1000
+        _controller.current.end_time = timestamp_to_datetime(body.end_time)
+    if body.last_interaction:
+        _controller.current.last_interaction = timestamp_to_datetime(
+            body.last_interaction
         )
     if body.lock is not None:
         _controller.lock = body.lock
@@ -250,13 +258,13 @@ def on_shutdown():
     #  experiences in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    if _controller.current_experience is not None:
-        if asyncio.iscoroutinefunction(_controller.current_experience.stop):
+    if _controller.current is not None:
+        if asyncio.iscoroutinefunction(_controller.current.stop):
             loop = asyncio.get_event_loop()
-            stop_task = loop.create_task(_controller.current_experience.stop())
+            stop_task = loop.create_task(_controller.current.stop())
             loop.run_until_complete(stop_task)
         else:
-            _controller.current_experience.stop()
+            _controller.current.stop()
 
 
 # See https://github.com/encode/starlette/issues/864#issuecomment-653076434

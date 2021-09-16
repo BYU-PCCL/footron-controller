@@ -15,6 +15,8 @@ class Experience(BaseModel):
 
 class CurrentExperience(Experience):
     end_time: Optional[int]
-    start_time: Optional[int]
-    lock: Union[bool, int]
+    last_interaction: Optional[int]
+    start_time: int
     last_update: int
+    lock: Union[bool, int]
+    last_lock_update: Optional[int]

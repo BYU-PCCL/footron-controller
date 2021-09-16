@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from datetime import timedelta
 from .api import TimerApi
 import os
 
@@ -8,7 +9,8 @@ CONTROLLER_URL = (
     else "http://localhost:8000"
 )
 
-COMMERCIAL_TIMEOUT = 5 * 60
+COMMERCIAL_INTERVAL_S = 5 * 60
+INTERACTION_TIMEOUT_S = 30
 
 
 class Timer:
@@ -25,14 +27,27 @@ class Timer:
         if current_exp.lock:
             return False
 
+        # Lock has been released, we need to immediately advance
+        if not current_exp.lock and current_exp.last_lock_update:
+            return True
+
         current_date = dt.now()
+
+        # End time is manual timing control by app, we give it highest timing precedence
         if current_exp.end_time:
             return current_date > dt.fromtimestamp(current_exp.end_time / 1000)
 
+        # Last interaction is set by messaging router
+        if current_exp.last_interaction:
+            return current_date > (
+                dt.fromtimestamp(current_exp.last_interaction / 1000)
+                + timedelta(seconds=INTERACTION_TIMEOUT_S)
+            )
+
         if (
             current_exp.start_time is not None
-            and (current_date - dt.fromtimestamp(current_exp.start_time / 1000)).seconds
-            < current_exp.lifetime
+            and current_exp.lifetime
+            > (current_date - dt.fromtimestamp(current_exp.start_time / 1000)).seconds
         ):
             return False
 
@@ -41,7 +56,7 @@ class Timer:
     def _pop_next(self):
         if (
             self._api.commercials
-            and (dt.now() - self._last_commercial_time).seconds >= COMMERCIAL_TIMEOUT
+            and (dt.now() - self._last_commercial_time).seconds >= COMMERCIAL_INTERVAL_S
         ):
             self._last_commercial_time = dt.now()
             return self._api.commercials.pop()
