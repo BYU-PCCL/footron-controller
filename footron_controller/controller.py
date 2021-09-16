@@ -7,7 +7,12 @@ from typing import Dict, List, Optional
 import aiohttp.client_exceptions
 import rollbar
 
-from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
+from .constants import (
+    EMPTY_EXPERIENCE_DATA,
+    EXPERIENCES_PATH,
+    BASE_BIN_PATH,
+    STABILITY_CHECK,
+)
 from .experiences import (
     load_experiences_fs,
     BaseExperience,
@@ -212,7 +217,7 @@ class Controller:
                 asyncio.get_event_loop().create_task(
                     self._cleanup_rogue_docker_containers()
                 )
-                if not self.stability.check_stable():
+                if STABILITY_CHECK and not self._stability.check_stable():
                     rollbar.report_message("System is unstable, rebooting")
                     logging.error("System is unstable, rebooting")
                     # Note that the current user has to have NOPASSWD set up in

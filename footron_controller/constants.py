@@ -35,6 +35,12 @@ BASE_BIN_PATH = BASE_DATA_PATH / "bin"
 
 ROLLBAR_TOKEN = os.environ["FT_ROLLBAR"] if "FT_ROLLBAR" in os.environ else None
 
+STABILITY_CHECK = (
+    bool(int(os.environ["FT_CHECK_STABILITY"]))
+    if "FT_CHECK_STABILITY" in os.environ
+    else False
+)
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
