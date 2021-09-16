@@ -27,7 +27,7 @@ class Timer:
 
         current_date = dt.now()
         if current_exp.end_time:
-            return current_date > dt.fromtimestamp(current_exp.end_time)
+            return current_date > dt.fromtimestamp(current_exp.end_time / 1000)
 
         if (
             current_exp.start_time is not None

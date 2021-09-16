@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({"id": videoId, "end_time": Math.floor(endTime)}),
+            body: JSON.stringify({"id": videoId, "end_time": Math.floor(endTime * 1000)}),
         })
     }, 500)
 });
