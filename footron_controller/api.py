@@ -16,7 +16,7 @@ from .constants import (
     LOG_IGNORE_PATTERNS,
 )
 from .data.placard import PlacardExperienceData, PlacardUrlData
-from .experiences import BaseExperience
+from .experiences import BaseExperience, VideoExperience
 from .data.collection import Collection
 from .data.tag import Tag
 from .controller import Controller
@@ -70,7 +70,8 @@ def experience_response(experience: BaseExperience):
     if experience.id in _controller.experience_collection_map.keys():
         data["collection"] = _controller.experience_collection_map[experience.id]
 
-    # TODO: Handle scrubbing and other type-specific fields in some clean way
+    if isinstance(experience, VideoExperience):
+        data["scrubbing"] = experience.scrubbing
 
     return data
 
