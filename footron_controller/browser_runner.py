@@ -55,7 +55,7 @@ class BrowserRunner:
 
     # Based on https://github.com/aio-libs/aiohttp/issues/1220#issuecomment-546572413
     @web.middleware
-    async def static_serve(self, request, handler):
+    async def static_serve(self, request, **kwargs):
         matching_route, root_path = next(
             (route, Path(path))
             for route, path in self._routes.items()
