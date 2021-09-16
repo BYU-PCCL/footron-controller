@@ -46,7 +46,7 @@ EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
     title="Footron",
     artist="Vin Howe, Chris Luangrath, Matt Powley",
-    description="Built with <pre style='display:inline;'>&lt;3</pre> by BYU students",
+    description="Built with 💙 by BYU students",
 )
 
 CURRENT_EXPERIENCE_SET_DELAY_S = 5
