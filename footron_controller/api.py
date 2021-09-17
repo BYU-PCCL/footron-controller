@@ -200,7 +200,7 @@ async def set_current_experience(
 
 
 @fastapi_app.patch("/current")
-def update_current_experience(body: UpdateCurrentExperienceBody):
+async def update_current_experience(body: UpdateCurrentExperienceBody):
     if not _controller.current:
         raise HTTPException(status_code=400, detail="No current experience exists")
 
