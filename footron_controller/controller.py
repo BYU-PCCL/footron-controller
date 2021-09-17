@@ -19,7 +19,7 @@ from .experiences import (
     DockerExperience,
     CurrentExperience,
 )
-from .data.wm import WmApi
+from .data.wm import WmApi, DisplayLayout
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
 from .data.collection import load_collections_from_fs, Collection
@@ -129,7 +129,9 @@ class Controller:
         await self._try_launch_loader(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
-        await self._wm.set_fullscreen(experience.fullscreen if experience else False)
+        await self._wm.set_layout(
+            experience.layout if experience else DisplayLayout.Wide
+        )
 
     async def set_experience(self, id: Optional[str]):
         if self._modify_lock.locked():
@@ -193,8 +195,10 @@ class Controller:
                 if experience
                 else EMPTY_EXPERIENCE_DATA
             )
-            await self._placard.set_visibility(
-                not experience.fullscreen if experience else True
+            await self._placard.set_layout(
+                PlacardApi.placard_layout_from_display_layout(
+                    experience.layout if experience else DisplayLayout.Wide
+                )
             )
         except aiohttp.client_exceptions.ClientError:
             logger.warning(

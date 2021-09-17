@@ -10,6 +10,7 @@ from typing import Dict, Type, Optional
 from pydantic import BaseModel, PrivateAttr, validator
 import footron_protocol as protocol
 
+from .data.wm import DisplayLayout
 from .environments import (
     BaseEnvironment,
     DockerEnvironment,
@@ -23,9 +24,9 @@ _FIELD_TYPE = "type"
 
 
 class ExperienceType(str, Enum):
-    DOCKER = "docker"
-    WEB = "web"
-    VIDEO = "video"
+    Docker = "docker"
+    Web = "web"
+    Video = "video"
 
 
 class BaseExperience(BaseModel, abc.ABC):
@@ -36,7 +37,7 @@ class BaseExperience(BaseModel, abc.ABC):
     long_description: Optional[str]
     artist: Optional[str]
     lifetime: int = _DEFAULT_LIFETIME
-    fullscreen: bool = False
+    layout: DisplayLayout = DisplayLayout.Wide
     unlisted: bool = False
     queueable: bool = True
     load_time: Optional[int] = None
@@ -75,9 +76,10 @@ class BaseExperience(BaseModel, abc.ABC):
 
 
 class DockerExperience(BaseExperience):
-    type = ExperienceType.DOCKER
+    type = ExperienceType.Docker
     image_id: str
     host_network: bool = False
+    layout = DisplayLayout.Wide
 
     def create_environment(self) -> DockerEnvironment:
         return DockerEnvironment(self.id, self.image_id, self.host_network)
@@ -87,15 +89,17 @@ class DockerExperience(BaseExperience):
 
 
 class WebExperience(BaseExperience):
-    type = ExperienceType.WEB
+    type = ExperienceType.Web
     url: Optional[str]
+    layout = DisplayLayout.Wide
 
     def create_environment(self) -> WebEnvironment:
         return WebEnvironment(self.id, self.path / "static", self.url)
 
 
 class VideoExperience(BaseExperience):
-    type = ExperienceType.VIDEO
+    type = ExperienceType.Video
+    layout = DisplayLayout.Hd
     filename: str
     scrubbing: bool = False
 
@@ -160,9 +164,9 @@ class CurrentExperience:
 
 
 experience_type_map: Dict[ExperienceType, Type[BaseExperience]] = {
-    ExperienceType.DOCKER: DockerExperience,
-    ExperienceType.WEB: WebExperience,
-    ExperienceType.VIDEO: VideoExperience,
+    ExperienceType.Docker: DockerExperience,
+    ExperienceType.Web: WebExperience,
+    ExperienceType.Video: VideoExperience,
 }
 
 
