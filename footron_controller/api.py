@@ -153,7 +153,7 @@ async def current_experience():
     if current.start_time is not None:
         response_data["start_time"] = datetime_to_timestamp(current.start_time)
     if _controller.lock.last_update is not None:
-        response_data["start_time"] = datetime_to_timestamp(
+        response_data["last_lock_update"] = datetime_to_timestamp(
             _controller.lock.last_update
         )
     if current.last_interaction is not None:
