@@ -38,6 +38,7 @@ class Controller:
     experience_collection_map: Dict[str, str]
     experience_tags_map: Dict[str, List[str]]
     last_update: datetime
+    last_started_setting_experience: Optional[datetime]
     _wm: WmApi
     _placard: PlacardApi
     _stability: StabilityManager
@@ -53,6 +54,7 @@ class Controller:
         self.tags = {}
         self.experience_collection_map = {}
         self.experience_tags_map = {}
+        self.last_started_setting_experience = None
 
         self._wm = WmApi()
         self._placard = PlacardApi()
@@ -144,6 +146,8 @@ class Controller:
     async def _set_experience_impl(self, id: Optional[str]):
         if self._current and self._current.id == id:
             return
+
+        self.last_started_setting_experience = datetime.now()
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
