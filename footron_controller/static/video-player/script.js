@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
             client.sendMessage({type: "state", state});
         } else if (message.type === "scrub") {
             const newTime = videoElement.duration * message.progress;
-            if (Math.abs(videoElement.currentTime - newTime) > SEEK_EPSILON_S) {
+            if (message.precise || Math.abs(videoElement.currentTime - newTime) > SEEK_EPSILON_S) {
                 videoElement.currentTime = newTime;
             }
         } else if (message.type === "jump") {
