@@ -2,7 +2,7 @@
 const videoElement = document.querySelector("#video")
 const stateIconContainer = document.querySelector("#state-icon-container")
 
-const SEEK_EPSILON_S = 5;
+const SEEK_EPSILON_S = 7;
 
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
