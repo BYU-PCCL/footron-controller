@@ -5,6 +5,7 @@
 Create a file in `~/.config/footron/env`:
 ```ini
 FT_ROLLBAR=<rollbar token>
+FT_MSG_URL=wss://<messaging server>/messaging/out/
 ```
 
 ## Adding web shell
