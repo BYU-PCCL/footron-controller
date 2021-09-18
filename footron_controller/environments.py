@@ -99,8 +99,8 @@ class DockerEnvironment(BaseEnvironment):
         self._host_network = host_network
 
     def start(self):
-        # For now, we will expose only a "center" video device, accessible as
-        # /dev/videocenter within containers
+        # For now, we will expose only our center webcam as /dev/video0 within
+        # containers
         video_devices = [
             f"{path}:/dev/video{name}:rw"
             for name, path in self._video_devices.devices.items()
