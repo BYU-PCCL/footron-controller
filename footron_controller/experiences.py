@@ -150,6 +150,16 @@ class CurrentExperience:
     def lock(self, value: protocol.Lock):
         if type(value) != int and type(value) != bool:
             raise ValueError("lock value must be of type int or bool")
+
+        # Setting the value to what it was before doesn't represent
+        # an "update," and we don't want to store a new last update
+        # time. This is especially true because we use a non-null value
+        # in that field as "breaking the seal" on a lock—any time we
+        # set and unset a lock, we want to immediately cycle to the next
+        # experience.
+        if self._lock.status == value:
+            return
+
         self._lock.status = value
         self._lock.last_update = datetime.now()
 
