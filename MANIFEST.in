@@ -1,4 +1,5 @@
 recursive-include footron_controller *.html
 recursive-include footron_controller *.js
 recursive-include footron_controller *.css
+recursive-include footron_controller *.svg
 recursive-include footron_controller *.py
