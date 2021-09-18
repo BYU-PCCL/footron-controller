@@ -61,9 +61,9 @@ class BrowserRunner:
             for route, path in self._routes.items()
             if request.path.startswith(route)
         )
-        relative_file_path = Path(request.path.replace(matching_route, "")).relative_to(
-            "/"
-        )
+        relative_file_path = Path(
+            request.path.replace(matching_route, "", 1)
+        ).relative_to("/")
         file_path = root_path / relative_file_path
         if not file_path.exists():
             return web.HTTPNotFound()
