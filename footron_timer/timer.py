@@ -38,11 +38,11 @@ class Timer:
             return current_date > dt.fromtimestamp(current_exp.end_time / 1000)
 
         # Last interaction is set by messaging router
-        if current_exp.last_interaction:
-            return current_date > (
-                dt.fromtimestamp(current_exp.last_interaction / 1000)
-                + timedelta(seconds=INTERACTION_TIMEOUT_S)
-            )
+        if current_exp.last_interaction and current_date <= (
+            dt.fromtimestamp(current_exp.last_interaction / 1000)
+            + timedelta(seconds=INTERACTION_TIMEOUT_S)
+        ):
+            return False
 
         if (
             current_exp.start_time is not None
