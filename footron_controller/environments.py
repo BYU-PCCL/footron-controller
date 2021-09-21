@@ -75,12 +75,12 @@ class _BaseWebEnvironmentMixin:
 
 class WebEnvironment(_BaseWebEnvironmentMixin, BaseEnvironment):
     def __init__(self, id: str, path: Union[str, Path], url: Optional[str] = "/"):
-        super(_BaseWebEnvironmentMixin).__init__(id, path, {"/": path}, url)
+        super().__init__(id, path, {"/": path}, url)
 
 
 class VideoEnvironment(_BaseWebEnvironmentMixin, BaseEnvironment):
     def __init__(self, id: str, path: Union[str, Path], video_filename: str):
-        super(_BaseWebEnvironmentMixin).__init__(
+        super().__init__(
             id,
             path,
             {"/video": path, "/": PACKAGE_STATIC_PATH / "video-player"},
