@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import json
+import operator
 import sys
 from datetime import datetime
 from enum import Enum
@@ -46,7 +47,11 @@ class BaseExperience(BaseModel, abc.ABC):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._environment = self.create_environment()
+        self._environment = self._create_environment()
+
+    @property
+    def available(self) -> bool:
+        return self._environment.available
 
     @validator("long_description")
     def long_description_requires_description(cls, value, values):
@@ -71,7 +76,7 @@ class BaseExperience(BaseModel, abc.ABC):
             self._environment.stop()
 
     @abc.abstractmethod
-    def create_environment(self) -> BaseEnvironment:
+    def _create_environment(self) -> BaseEnvironment:
         ...
 
 
@@ -81,7 +86,7 @@ class DockerExperience(BaseExperience):
     host_network: bool = False
     layout = DisplayLayout.Wide
 
-    def create_environment(self) -> DockerEnvironment:
+    def _create_environment(self) -> DockerEnvironment:
         return DockerEnvironment(self.id, self.image_id, self.host_network)
 
     async def attempt_cleanup(self):
@@ -93,7 +98,7 @@ class WebExperience(BaseExperience):
     url: Optional[str]
     layout = DisplayLayout.Wide
 
-    def create_environment(self) -> WebEnvironment:
+    def _create_environment(self) -> WebEnvironment:
         return WebEnvironment(self.id, self.path / "static", self.url)
 
 
@@ -103,7 +108,7 @@ class VideoExperience(BaseExperience):
     filename: str
     scrubbing: bool = False
 
-    def create_environment(self) -> VideoEnvironment:
+    def _create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.path, self.filename)
 
 
@@ -219,4 +224,9 @@ def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
 
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
-    return list(map(_load_experience_at_path, path.iterdir()))
+    return list(
+        filter(
+            operator.attrgetter("available"),
+            map(_load_experience_at_path, path.iterdir()),
+        )
+    )
