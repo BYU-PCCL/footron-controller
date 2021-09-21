@@ -204,17 +204,20 @@ class Controller:
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
         try:
-            await self._placard.set_experience(
-                PlacardExperienceData(
-                    title=experience.title,
-                    description=experience.long_description
-                    if experience.long_description
-                    else experience.description,
-                    artist=experience.artist,
+            # We don't switch the name on a fullscreen experience because it makes an
+            # ugly flash
+            if experience.layout != DisplayLayout.Full:
+                await self._placard.set_experience(
+                    PlacardExperienceData(
+                        title=experience.title,
+                        description=experience.long_description
+                        if experience.long_description
+                        else experience.description,
+                        artist=experience.artist,
+                    )
+                    if experience
+                    else EMPTY_EXPERIENCE_DATA
                 )
-                if experience
-                else EMPTY_EXPERIENCE_DATA
-            )
             await self._placard.set_layout(
                 PlacardApi.placard_layout_from_display_layout(
                     experience.layout if experience else DisplayLayout.Wide
