@@ -206,7 +206,7 @@ class Controller:
         try:
             # We don't switch the name on a fullscreen experience because it makes an
             # ugly flash
-            if experience.layout != DisplayLayout.Full:
+            if not experience or experience.layout != DisplayLayout.Full:
                 await self._placard.set_experience(
                     PlacardExperienceData(
                         title=experience.title,
