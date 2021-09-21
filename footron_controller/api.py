@@ -169,31 +169,18 @@ async def current_experience():
 async def set_current_experience(
     body: SetCurrentExperienceBody, throttle: Optional[int] = None
 ):
-    delta_last_experience = (
-        (datetime.now() - _controller.last_started_setting_experience)
-        if throttle and _controller.current and _controller.last_started_setting_experience
-        else None
-    )
-
-    if (
-        delta_last_experience
-        and delta_last_experience.seconds < throttle
-        and delta_last_experience.days == 0
-    ):
-        raise HTTPException(
-            status_code=429,
-            detail=f"Current experience can only be set at minimum every {throttle} seconds",
-        )
-
     if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    if not await _controller.set_experience(body.id):
+    if not await _controller.set_experience(body.id, throttle=throttle):
+        throttle_scenario = "while it was changing"
+        if throttle:
+            throttle_scenario = f"either {throttle_scenario} or before timeout specified in 'throttle' parameter"
         raise HTTPException(
             status_code=429,
-            detail="Can't set current experience while it is changing",
+            detail=f"Tried to change current experience {throttle_scenario}",
         )
 
     return {"status": "ok"}

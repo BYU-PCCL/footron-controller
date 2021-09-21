@@ -64,7 +64,10 @@ class Controller:
 
         self._create_paths()
         self.load_from_fs()
-        asyncio.get_event_loop().create_task(self.set_experience(None))
+        # Clear the placard when starting up, but not if an experience has already been
+        # set within the last 5 seconds--this should fix our problem with placard races
+        # when starting up
+        asyncio.get_event_loop().create_task(self.set_experience(None, throttle=5))
 
     def load_from_fs(self):
         self.load_experiences()
@@ -135,7 +138,20 @@ class Controller:
             experience.layout if experience else DisplayLayout.Wide
         )
 
-    async def set_experience(self, id: Optional[str]):
+    async def set_experience(self, id: Optional[str], *, throttle: int = None) -> bool:
+        delta_last_experience = (
+            (datetime.now() - self.last_started_setting_experience)
+            if throttle and self._current and self.last_started_setting_experience
+            else None
+        )
+
+        if (
+            delta_last_experience
+            and delta_last_experience.seconds < throttle
+            and delta_last_experience.days == 0
+        ):
+            return False
+
         if self._modify_lock.locked():
             return False
 
