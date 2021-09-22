@@ -12,6 +12,7 @@ from .constants import (
     EXPERIENCES_PATH,
     BASE_BIN_PATH,
     STABILITY_CHECK,
+    EXPERIENCE_DATA_PATH,
 )
 from .experiences import (
     load_experiences_fs,
@@ -128,6 +129,7 @@ class Controller:
     @staticmethod
     def _create_paths():
         EXPERIENCES_PATH.mkdir(parents=True, exist_ok=True)
+        EXPERIENCE_DATA_PATH.mkdir(parents=True, exist_ok=True)
         BASE_BIN_PATH.mkdir(parents=True, exist_ok=True)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):

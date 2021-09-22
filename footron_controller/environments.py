@@ -12,7 +12,12 @@ from docker.models.containers import Container
 from docker.types import DeviceRequest
 
 from .browser_runner import BrowserRunner
-from .constants import PACKAGE_STATIC_PATH, BASE_MESSAGING_URL
+from .constants import (
+    PACKAGE_STATIC_PATH,
+    BASE_MESSAGING_URL,
+    BASE_DATA_PATH,
+    EXPERIENCE_DATA_PATH,
+)
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
 
 logger = logging.getLogger(__name__)
@@ -94,6 +99,7 @@ class DockerEnvironment(BaseEnvironment):
     _video_devices: VideoDeviceManager
     _host_network: Optional[int]
     _image_exists: Optional[bool]
+    _data_path: Optional[Path]
 
     def __init__(
         self,
@@ -107,6 +113,8 @@ class DockerEnvironment(BaseEnvironment):
         self._video_devices = get_video_device_manager()
         self._host_network = host_network
         self._image_exists = None
+        self._data_path = EXPERIENCE_DATA_PATH / id / image_id
+        self._data_path.mkdir(parents=True, exist_ok=True)
 
     def start(self):
         # For now, we will expose only our center webcam as /dev/video0 within
@@ -119,7 +127,10 @@ class DockerEnvironment(BaseEnvironment):
         self._container = docker_client.containers.run(
             self._image_id,
             detach=True,
-            volumes={"/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"}},
+            volumes={
+                "/tmp/.X11-unix": {"bind": "/tmp/.X11-unix", "mode": "rw"},
+                str(self._data_path): {"bind": "/localdata", "mode": "rw"},
+            },
             remove=True,
             stdout=False,
             environment=[
