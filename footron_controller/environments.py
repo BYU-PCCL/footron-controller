@@ -198,7 +198,7 @@ class DockerEnvironment(BaseEnvironment):
                 f"Couldn't find Docker image '{self._image_id}' locally, attempting to pull..."
             )
             try:
-                docker_client.images.pull(self._id)
+                docker_client.images.pull(self._image_id)
             except docker.errors.NotFound:
                 logger.warning(
                     f"Couldn't find Docker image '{self._image_id}', experience will be disabled"
