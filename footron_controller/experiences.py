@@ -1,5 +1,6 @@
 import abc
 import asyncio
+from dataclasses import dataclass
 import json
 import sys
 from enum import Enum
@@ -14,7 +15,7 @@ from .environments import (
     WebEnvironment,
     VideoEnvironment,
 )
-from .constants import EXPERIENCES_PATH, JsonDict
+from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
 _DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"
@@ -136,3 +137,15 @@ def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
     return list(map(_load_experience_at_path, path.iterdir()))
+    
+
+def load_experience_grouping(type: dataclass, file_name:str, path=BASE_DATA_PATH):
+    file_path = path.joinpath(file_name)
+
+    if not file_path.exists():
+        return {}
+
+    with open(file_path) as file:
+        data = json.load(file)
+
+    return {id: type(id=id, **value) for id, value in data.items()}

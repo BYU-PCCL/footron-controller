@@ -9,12 +9,13 @@ import footron_protocol as protocol
 import rollbar
 
 from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
-from .experiences import load_experiences_fs, BaseExperience, DockerExperience
+from .experiences import load_experiences_fs, load_experience_grouping, BaseExperience, DockerExperience
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
-from .data.collection import load_collections_from_fs, Collection
-from .data.tag import load_tags_from_fs, Tag
+from .data.collection import Collection
+from .data.folder import Folder
+from .data.tag import Tag
 from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
@@ -22,9 +23,11 @@ logger = logging.getLogger(__name__)
 
 class Controller:
     experiences: Dict[str, BaseExperience] = {}
+    folders: Dict[str, Folder] = {}
     collections: Dict[str, Collection] = {}
     tags: Dict[str, Tag] = {}
     experience_collection_map: Dict[str, str] = {}
+    experience_folders_map: Dict[str, List[str]] = {}
     experience_tags_map: Dict[str, List[str]] = {}
     current_experience: Optional[BaseExperience]
     current_experience_start: Optional[datetime.datetime]
@@ -55,6 +58,7 @@ class Controller:
     def load_from_fs(self):
         self.load_experiences()
         self.load_collections()
+        self.load_folders()
         self.load_tags()
         self.last_update = datetime.datetime.now()
 
@@ -64,11 +68,15 @@ class Controller:
         }
 
     def load_collections(self):
-        self.collections = load_collections_from_fs()
+        self.collections = load_experience_grouping(Collection, "collections.json")
         self._fill_experience_collection_map()
 
+    def load_folders(self):
+        self.folders = load_experience_grouping(Folder, "folders.json")
+        self._fill_experience_folder_map()
+
     def load_tags(self):
-        self.tags = load_tags_from_fs()
+        self.tags = load_experience_grouping(Tag, "tags.json")
         self._fill_experience_tag_map()
 
     def _fill_experience_collection_map(self):
@@ -76,6 +84,17 @@ class Controller:
         for collection in self.collections.values():
             for experience in collection.experiences:
                 self.experience_collection_map[experience] = collection.id
+
+    def _fill_experience_folder_map(self):
+        self.experience_folder_map = {}
+        for experience in self.experiences:
+            self.experience_folder_map[experience] = []
+        for folder in self.folders.values():
+            for experience in folder.experiences:
+                if experience not in self.experience_tag_map:
+                    continue
+
+                self.experience_tag_map[experience].append(tag.id)
 
     def _fill_experience_tag_map(self):
         self.experience_tag_map = {}
