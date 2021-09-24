@@ -64,6 +64,7 @@ def experience_response(experience: BaseExperience):
         "last_update": int(_controller.last_update.timestamp()),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
+        "folders": _controller.experience_folders_map[experience.id],
         "tags": _controller.experience_tag_map[experience.id],
     }
 
