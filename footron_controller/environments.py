@@ -113,8 +113,8 @@ class DockerEnvironment(BaseEnvironment):
         self._video_devices = get_video_device_manager()
         self._host_network = host_network
         self._image_exists = None
-        self._data_path = (
-            EXPERIENCE_DATA_PATH / image_id.replace(":", "_").replace("/", "_")
+        self._data_path = EXPERIENCE_DATA_PATH / image_id.replace(":", "_").replace(
+            "/", "_"
         )
         self._data_path.mkdir(parents=True, exist_ok=True)
 

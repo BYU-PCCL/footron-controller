@@ -51,9 +51,7 @@ class StabilityManager:
 
     def _is_torch_stable(self) -> bool:
         self._cull_torch_attempts()
-        self._torch_attempts.insert(
-            0, (datetime.now(), self._torch_cuda_attempt())
-        )
+        self._torch_attempts.insert(0, (datetime.now(), self._torch_cuda_attempt()))
 
         total = len(self._torch_attempts)
         if total < _TORCH_FAILS_MIN_ELEMENTS:
