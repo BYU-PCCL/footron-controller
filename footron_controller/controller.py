@@ -35,7 +35,7 @@ class Controller:
     # TODO: Think up a cleaner way to do this...
     collections: Dict[str, Collection]
     tags: Dict[str, Tag]
-    folders: Dict[str, Folder] = {}
+    folders: Dict[str, Folder]
     # TODO: ...and this
     experience_collection_map: Dict[str, str]
     experience_tags_map: Dict[str, List[str]]
