@@ -232,9 +232,8 @@ def load_experiences_fs(path=EXPERIENCES_PATH):
         )
     )
 
-    
 
-def load_experience_grouping(type: dataclass, file_name:str, path=BASE_DATA_PATH):
+def load_experience_grouping(type: dataclass, file_name: str, path=BASE_DATA_PATH):
     file_path = path.joinpath(file_name)
 
     if not file_path.exists():
