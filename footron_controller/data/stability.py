@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import List, Tuple
 
@@ -9,7 +9,7 @@ import subprocess
 # Store previous Torch CUDA is_available attempts within this duration--note that we
 # don't control the frequency of invocations within StabilityManager
 
-_TORCH_FAILS_STACK_DURATION = datetime.timedelta(minutes=2)
+_TORCH_FAILS_STACK_DURATION = timedelta(minutes=2)
 # The proportion of failed CUDA is_available attempts within the stored attempts after
 # which we decide the system is unstable
 _TORCH_FAILS_THRESHOLD = 0.4
@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 class StabilityManager:
-    _torch_attempts: List[Tuple[datetime.datetime, bool]]
+    _torch_attempts: List[Tuple[datetime, bool]]
 
     def __init__(self):
         self._torch_attempts = []
 
     def _cull_torch_attempts(self):
-        cutoff = datetime.datetime.now() - _TORCH_FAILS_STACK_DURATION
+        cutoff = datetime.now() - _TORCH_FAILS_STACK_DURATION
         while True:
             if not self._torch_attempts:
                 break
@@ -51,9 +51,7 @@ class StabilityManager:
 
     def _is_torch_stable(self) -> bool:
         self._cull_torch_attempts()
-        self._torch_attempts.insert(
-            0, (datetime.datetime.now(), self._torch_cuda_attempt())
-        )
+        self._torch_attempts.insert(0, (datetime.now(), self._torch_cuda_attempt()))
 
         total = len(self._torch_attempts)
         if total < _TORCH_FAILS_MIN_ELEMENTS:

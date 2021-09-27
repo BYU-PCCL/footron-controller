@@ -1,16 +1,26 @@
 import asyncio
-import datetime
+from datetime import datetime
 import logging
 import os
 from typing import Dict, List, Optional
 
 import aiohttp.client_exceptions
-import footron_protocol as protocol
 import rollbar
 
-from .constants import EMPTY_EXPERIENCE_DATA, EXPERIENCES_PATH, BASE_BIN_PATH
-from .experiences import load_experiences_fs, load_experience_grouping, BaseExperience, DockerExperience
-from .data.wm import WmApi
+from .constants import (
+    EMPTY_EXPERIENCE_DATA,
+    EXPERIENCES_PATH,
+    BASE_BIN_PATH,
+    STABILITY_CHECK,
+    EXPERIENCE_DATA_PATH,
+)
+from .experiences import (
+    load_experiences_fs,
+    BaseExperience,
+    DockerExperience,
+    CurrentExperience,
+)
+from .data.wm import WmApi, DisplayLayout
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
 from .data.groupings import Collection, Folder, Tag
@@ -20,45 +30,52 @@ logger = logging.getLogger(__name__)
 
 
 class Controller:
-    experiences: Dict[str, BaseExperience] = {}
+    experiences: Dict[str, BaseExperience]
+    # TODO: Think up a cleaner way to do this...
+    collections: Dict[str, Collection]
+    tags: Dict[str, Tag]
     folders: Dict[str, Folder] = {}
-    collections: Dict[str, Collection] = {}
-    tags: Dict[str, Tag] = {}
-    experience_collection_map: Dict[str, str] = {}
-    experience_folders_map: Dict[str, List[str]] = {}
-    experience_tags_map: Dict[str, List[str]] = {}
-    current_experience: Optional[BaseExperience]
-    current_experience_start: Optional[datetime.datetime]
-    end_time: Optional[int]
-    lock: protocol.Lock
-    last_update: datetime.datetime
-    placard: PlacardApi
-    stability: StabilityManager
-    loader: LoaderManager
-    _experience_modify_lock: asyncio.Lock
+    # TODO: ...and this
+    experience_collection_map: Dict[str, str]
+    experience_tags_map: Dict[str, List[str]]
+    last_update: datetime
+    last_started_setting_experience: Optional[datetime]
+    _wm: WmApi
+    _placard: PlacardApi
+    _stability: StabilityManager
+    _loader: LoaderManager
+    _current: Optional[CurrentExperience]
+    _modify_lock: asyncio.Lock
 
     def __init__(self):
-        self.current_experience = None
-        self.current_experience_start = None
-        self.end_time = None
-        self.lock = False
-        self._experience_modify_lock = asyncio.Lock()
+        self._modify_lock = asyncio.Lock()
 
-        self.placard = PlacardApi()
-        self.wm = WmApi()
-        self.stability = StabilityManager()
-        self.loader = LoaderManager(self.wm)
+        self.experiences = {}
+        self.collections = {}
+        self.tags = {}
+        self.experience_collection_map = {}
+        self.experience_tags_map = {}
+        self.last_started_setting_experience = None
+
+        self._wm = WmApi()
+        self._placard = PlacardApi()
+        self._stability = StabilityManager()
+        self._loader = LoaderManager(self._wm)
+        self._current = None
 
         self._create_paths()
         self.load_from_fs()
-        asyncio.get_event_loop().create_task(self.set_experience(None))
+        # Clear the placard when starting up, but not if an experience has already been
+        # set within the last 5 seconds--this should fix our problem with placard races
+        # when starting up
+        asyncio.get_event_loop().create_task(self.set_experience(None, throttle=5))
 
     def load_from_fs(self):
         self.load_experiences()
         self.load_collections()
         self.load_tags()
         self.load_folders()
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     def load_experiences(self):
         self.experiences = {
@@ -76,6 +93,26 @@ class Controller:
     def load_tags(self):
         self.tags = load_experience_grouping(Tag, "tags.json")
         self._fill_experience_tag_map()
+
+    @property
+    def current(self) -> Optional[CurrentExperience]:
+        return self._current
+
+    @property
+    def placard(self):
+        return self._placard
+
+    @property
+    def lock(self):
+        return self._current.lock
+
+    @lock.setter
+    def lock(self, value):
+        asyncio.get_event_loop().create_task(self._set_lock_impl(value))
+
+    async def _set_lock_impl(self, value):
+        async with self._modify_lock:
+            self._current.lock = value
 
     def _fill_experience_collection_map(self):
         self.experience_collection_map = {}
@@ -109,26 +146,43 @@ class Controller:
     @staticmethod
     def _create_paths():
         EXPERIENCES_PATH.mkdir(parents=True, exist_ok=True)
+        EXPERIENCE_DATA_PATH.mkdir(parents=True, exist_ok=True)
         BASE_BIN_PATH.mkdir(parents=True, exist_ok=True)
 
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
         await self._try_launch_loader(experience)
         # We don't actually want to wait for this to complete
         asyncio.get_event_loop().create_task(self._update_placard(experience))
-        await self.wm.set_fullscreen(experience.fullscreen if experience else False)
+        await self._wm.set_layout(
+            experience.layout if experience else DisplayLayout.Wide
+        )
 
-    async def set_experience(self, id: Optional[str]):
-        if self._experience_modify_lock.locked():
+    async def set_experience(self, id: Optional[str], *, throttle: int = None) -> bool:
+        delta_last_experience = (
+            (datetime.now() - self.last_started_setting_experience)
+            if throttle and self._current and self.last_started_setting_experience
+            else None
+        )
+
+        if (
+            delta_last_experience
+            and delta_last_experience.seconds < throttle
+            and delta_last_experience.days == 0
+        ):
             return False
 
-        async with self._experience_modify_lock:
+        if self._modify_lock.locked():
+            return False
+
+        async with self._modify_lock:
             await self._set_experience_impl(id)
         return True
 
     async def _set_experience_impl(self, id: Optional[str]):
-        if self.current_experience and self.current_experience.id == id:
+        if self._current and self._current.id == id:
             return
-        self.current_experience_start = datetime.datetime.now()
+
+        self.last_started_setting_experience = datetime.now()
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
@@ -136,9 +190,9 @@ class Controller:
         await self._update_experience_display(experience)
 
         try:
-            await self.wm.clear_viewport()
-            if self.current_experience:
-                asyncio.get_event_loop().create_task(self.current_experience.stop())
+            await self._wm.clear_viewport()
+            if self._current:
+                asyncio.get_event_loop().create_task(self._current.stop())
         finally:
             try:
                 if experience:
@@ -151,33 +205,42 @@ class Controller:
                 # Environment start() and stop() methods should have their own error
                 # handling, but if something is unhandled we need keep our state
                 # maintained
-                self.end_time = None
-                self.lock = False
-                self.current_experience = experience
+                self._current = (
+                    CurrentExperience(experience, datetime.now())
+                    if experience
+                    else None
+                )
 
     async def _try_launch_loader(self, experience: BaseExperience):
         if not experience or not experience.load_time:
             return
 
-        await self.loader.start()
+        await self._loader.start()
         asyncio.get_event_loop().create_task(
-            self.loader.stop_after_timeout(experience.load_time)
+            self._loader.stop_after_timeout(experience.load_time)
         )
 
     async def _update_placard(self, experience: BaseExperience):
         # TODO: Validate this worked somehow
         try:
-            await self.placard.set_experience(
-                PlacardExperienceData(
-                    title=experience.title,
-                    description=experience.description,
-                    artist=experience.artist,
+            # We don't switch the name on a fullscreen experience because it makes an
+            # ugly flash
+            if not experience or experience.layout != DisplayLayout.Full:
+                await self._placard.set_experience(
+                    PlacardExperienceData(
+                        title=experience.title,
+                        description=experience.long_description
+                        if experience.long_description
+                        else experience.description,
+                        artist=experience.artist,
+                    )
+                    if experience
+                    else EMPTY_EXPERIENCE_DATA
                 )
-                if experience
-                else EMPTY_EXPERIENCE_DATA
-            )
-            await self.placard.set_visibility(
-                not experience.fullscreen if experience else True
+            await self._placard.set_layout(
+                PlacardApi.placard_layout_from_display_layout(
+                    experience.layout if experience else DisplayLayout.Wide
+                )
             )
         except aiohttp.client_exceptions.ClientError:
             logger.warning(
@@ -200,7 +263,7 @@ class Controller:
                 asyncio.get_event_loop().create_task(
                     self._cleanup_rogue_docker_containers()
                 )
-                if not self.stability.check_stable():
+                if STABILITY_CHECK and not self._stability.check_stable():
                     rollbar.report_message("System is unstable, rebooting")
                     logging.error("System is unstable, rebooting")
                     # Note that the current user has to have NOPASSWD set up in

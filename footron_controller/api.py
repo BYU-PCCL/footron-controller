@@ -1,22 +1,24 @@
 import asyncio
 import atexit
 import dataclasses
-import datetime
+from datetime import datetime
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 import rollbar
 from rollbar.contrib.fastapi import add_to as rollbar_add_to
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import footron_protocol as protocol
 
+from .util import datetime_to_timestamp, timestamp_to_datetime
 from .constants import (
     ROLLBAR_TOKEN,
     LOG_IGNORE_PATTERNS,
 )
 from .data.placard import PlacardExperienceData, PlacardUrlData
-from .experiences import BaseExperience
+from .experiences import BaseExperience, VideoExperience
 from .data.groupings import Collection, Folder, Tag
 from .controller import Controller
 
@@ -50,9 +52,11 @@ class SetCurrentExperienceBody(BaseModel):
 class UpdateCurrentExperienceBody(BaseModel):
     id: Optional[str]
     end_time: Optional[int]
-    lock: Optional[Union[int, bool]]
+    last_interaction: Optional[int]
+    lock: Optional[protocol.Lock]
 
 
+# TODO: Find a cleaner way to do this
 def experience_response(experience: BaseExperience):
     data = {
         "id": experience.id,
@@ -60,7 +64,7 @@ def experience_response(experience: BaseExperience):
         "artist": experience.artist,
         "description": experience.description,
         "lifetime": experience.lifetime,
-        "last_update": int(_controller.last_update.timestamp()),
+        "last_update": datetime_to_timestamp(_controller.last_update),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
         "folders": _controller.experience_folders_map[experience.id],
@@ -70,7 +74,8 @@ def experience_response(experience: BaseExperience):
     if experience.id in _controller.experience_collection_map.keys():
         data["collection"] = _controller.experience_collection_map[experience.id]
 
-    # TODO: Handle scrubbing and other type-specific fields in some clean way
+    if isinstance(experience, VideoExperience):
+        data["scrubbing"] = experience.scrubbing
 
     return data
 
@@ -154,15 +159,25 @@ def tag(id):
 
 
 @fastapi_app.get("/current")
-def current_experience():
-    if not _controller.current_experience:
+async def current_experience():
+    if not _controller.current:
         return {}
-    current = _controller.current_experience
+    current = _controller.current
 
-    response_data = experience_response(current)
-    if _controller.end_time is not None:
-        response_data["end_time"] = _controller.end_time
-    response_data["lock"] = _controller.lock
+    response_data = experience_response(current.experience)
+    if current.end_time is not None:
+        response_data["end_time"] = datetime_to_timestamp(current.end_time)
+    if current.start_time is not None:
+        response_data["start_time"] = datetime_to_timestamp(current.start_time)
+    if _controller.lock.last_update is not None:
+        response_data["last_lock_update"] = datetime_to_timestamp(
+            _controller.lock.last_update
+        )
+    if current.last_interaction is not None:
+        response_data["last_interaction"] = datetime_to_timestamp(
+            current.last_interaction
+        )
+    response_data["lock"] = _controller.lock.status
 
     return response_data
 
@@ -171,54 +186,43 @@ def current_experience():
 async def set_current_experience(
     body: SetCurrentExperienceBody, throttle: Optional[int] = None
 ):
-    delta_last_experience = (
-        (datetime.datetime.now() - _controller.current_experience_start)
-        if throttle
-        and _controller.current_experience
-        and _controller.current_experience_start
-        else None
-    )
-
-    if (
-        delta_last_experience
-        and delta_last_experience.seconds < throttle
-        and delta_last_experience.days == 0
-    ):
-        raise HTTPException(
-            status_code=429,
-            detail=f"Current experience can only be set at minimum every {throttle} seconds",
-        )
-
     if body.id is not None and body.id not in _controller.experiences:
         raise HTTPException(
             status_code=400, detail=f"Experience with id '{body.id}' not registered"
         )
 
-    if not await _controller.set_experience(body.id):
+    if not await _controller.set_experience(body.id, throttle=throttle):
+        throttle_scenario = "while it was changing"
+        if throttle:
+            throttle_scenario = f"either {throttle_scenario} or before timeout specified in 'throttle' parameter"
         raise HTTPException(
             status_code=429,
-            detail="Can't set current experience while it is changing",
+            detail=f"Tried to change current experience {throttle_scenario}",
         )
 
     return {"status": "ok"}
 
 
 @fastapi_app.patch("/current")
-def update_current_experience(body: UpdateCurrentExperienceBody):
-    if not _controller.current_experience:
+async def update_current_experience(body: UpdateCurrentExperienceBody):
+    if not _controller.current:
         raise HTTPException(status_code=400, detail="No current experience exists")
 
     # Requiring an ID is a little bit of a hacky way to prevent an experience that
     # is transitioning out from setting properties on the incoming experience. This
     # of course assumes no foul play on the part of the experience, which shouldn't
     # be a concern for now because all experiences are manually reviewed.
-    if body.id and body.id != _controller.current_experience.id:
+    if body.id and body.id != _controller.current.id:
         raise HTTPException(
             status_code=400, detail="`id` specified is not current experience"
         )
 
     if body.end_time:
-        _controller.end_time = body.end_time
+        _controller.current.end_time = timestamp_to_datetime(body.end_time)
+    if body.last_interaction:
+        _controller.current.last_interaction = timestamp_to_datetime(
+            body.last_interaction
+        )
     if body.lock is not None:
         _controller.lock = body.lock
 
@@ -258,13 +262,13 @@ def on_shutdown():
     #  experiences in a dict or something)
 
     # Docker containers won't clean themselves up for example
-    if _controller.current_experience is not None:
-        if asyncio.iscoroutinefunction(_controller.current_experience.stop):
+    if _controller.current is not None:
+        if asyncio.iscoroutinefunction(_controller.current.stop):
             loop = asyncio.get_event_loop()
-            stop_task = loop.create_task(_controller.current_experience.stop())
+            stop_task = loop.create_task(_controller.current.stop())
             loop.run_until_complete(stop_task)
         else:
-            _controller.current_experience.stop()
+            _controller.current.stop()
 
 
 # See https://github.com/encode/starlette/issues/864#issuecomment-653076434

@@ -1,5 +1,4 @@
 import logging
-import shutil
 import subprocess
 import urllib.parse
 from pathlib import Path
@@ -9,15 +8,10 @@ from aiohttp import web
 from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
-# Probably shouldn't do global state like this
-from .util import mercilessly_kill_process
-from .data.ports import get_port_manager
-from .constants import BASE_DATA_PATH, BASE_MESSAGING_URL
+from .util import mercilessly_kill_process, find_free_port
+from .constants import BASE_MESSAGING_URL, BASE_BIN_PATH
 
-_bound_http_ports = []
-
-BASE_CHROME_PROFILE_PATH = BASE_DATA_PATH / "base-chrome-profile"
-CHROME_PROFILE_PATH = BASE_DATA_PATH / "chrome-data"
+WEB_SHELL_PATH = BASE_BIN_PATH / "footron-web-shell"
 
 
 class BrowserRunner:
@@ -30,7 +24,6 @@ class BrowserRunner:
     _browser_process: Optional[subprocess.Popen]
     _runner = Optional[AppRunner]
     _site = Optional[TCPSite]
-    _ports = get_port_manager()
 
     def __init__(self, id: str, routes: Dict[str, str], url: str = "/"):
         self._id = id
@@ -38,18 +31,6 @@ class BrowserRunner:
         self._routes = {route.rstrip("/"): path for route, path in routes.items()}
         self._url = url
         self._browser_process = None
-        self._profile_path = CHROME_PROFILE_PATH / self._id
-
-    def _create_profile_path(self):
-        if not CHROME_PROFILE_PATH.exists():
-            CHROME_PROFILE_PATH.mkdir(parents=True)
-
-        # Remove existing Chrome profile directory because it appears to fix GPU bug
-        if self._profile_path.exists():
-            shutil.rmtree(self._profile_path)
-
-        if BASE_CHROME_PROFILE_PATH.exists():
-            shutil.copytree(BASE_CHROME_PROFILE_PATH, self._profile_path)
 
     def _create_url(self):
         base_url = urllib.parse.urljoin(f"http://localhost:{self._port}", self._url)
@@ -70,35 +51,19 @@ class BrowserRunner:
         )
 
     def _start_browser(self):
-        self._create_profile_path()
-        command = [
-            "google-chrome",
-            "--kiosk",
-            f"--user-data-dir={self._profile_path}",
-            # Prevent popup asking to make Chrome your default browser
-            "--no-first-run",
-            # Allow videos to play without user interaction
-            "--autoplay-policy=no-user-gesture-required",
-            # Allow cross-origin requests
-            "--disable-web-security",
-            # Try to avoid white flash with dark mode settings
-            "--force-dark-mode",
-            "--enable-features=WebUIDarkMode",
-            self._create_url(),
-        ]
-        self._browser_process = subprocess.Popen(command)
+        self._browser_process = subprocess.Popen([WEB_SHELL_PATH, self._create_url()])
 
     # Based on https://github.com/aio-libs/aiohttp/issues/1220#issuecomment-546572413
     @web.middleware
-    async def static_serve(self, request, handler):
+    async def static_serve(self, request, **kwargs):
         matching_route, root_path = next(
             (route, Path(path))
             for route, path in self._routes.items()
             if request.path.startswith(route)
         )
-        relative_file_path = Path(request.path.replace(matching_route, "")).relative_to(
-            "/"
-        )
+        relative_file_path = Path(
+            request.path.replace(matching_route, "", 1)
+        ).relative_to("/")
         file_path = root_path / relative_file_path
         if not file_path.exists():
             return web.HTTPNotFound()
@@ -109,7 +74,7 @@ class BrowserRunner:
         return web.FileResponse(file_path)
 
     async def _start_static_server(self):
-        self._port = self._ports.reserve_port()
+        self._port = find_free_port()
         self._runner = AppRunner(
             self._app,
             handle_signals=True,
@@ -143,8 +108,6 @@ class BrowserRunner:
         except RuntimeError as e:
             logging.error("Error while stopping static server:")
             logging.exception(e)
-        # TODO: Figure out what we have to do to get aiohttp to let go of its ports
-        # self._ports.release_port(self._port)
 
     async def start(self):
         await self._start_static_server()

@@ -1,10 +1,26 @@
 import os
+from enum import Enum
 from typing import Optional
 
 import aiohttp
 from pydantic import BaseModel
 
+from .wm import DisplayLayout
+
 _PLACARD_SOCKETS_PATH = os.path.join(os.environ["XDG_RUNTIME_DIR"], "placard", "socket")
+
+
+class PlacardLayout(str, Enum):
+    Full = "full"
+    Slim = "slim"
+    Hidden = "hidden"
+
+
+_DISPLAY_PLACARD_LAYOUT_MAP = {
+    DisplayLayout.Hd: PlacardLayout.Full,
+    DisplayLayout.Wide: PlacardLayout.Slim,
+    DisplayLayout.Full: PlacardLayout.Hidden,
+}
 
 
 class PlacardExperienceData(BaseModel):
@@ -18,7 +34,7 @@ class PlacardUrlData(BaseModel):
 
 
 class PlacardVisibilityData(BaseModel):
-    visible: bool
+    layout: PlacardLayout
 
 
 class PlacardApi:
@@ -26,6 +42,10 @@ class PlacardApi:
         self._aiohttp_session = aiohttp.ClientSession(
             connector=aiohttp.UnixConnector(path=_PLACARD_SOCKETS_PATH)
         )
+
+    @staticmethod
+    def placard_layout_from_display_layout(layout: DisplayLayout):
+        return _DISPLAY_PLACARD_LAYOUT_MAP[layout]
 
     async def set_experience(self, data: PlacardExperienceData):
         async with self._aiohttp_session.put(
@@ -48,13 +68,13 @@ class PlacardApi:
         async with self._aiohttp_session.get("http://localhost/url") as response:
             return await response.json()
 
-    async def set_visibility(self, visible: bool):
+    async def set_layout(self, layout: PlacardLayout):
         async with self._aiohttp_session.put(
-            "http://localhost/visibility",
-            json=PlacardVisibilityData(visible=visible).dict(exclude_none=True),
+            "http://localhost/layout",
+            json=PlacardVisibilityData(layout=layout).dict(exclude_none=True),
         ) as response:
             return await response.json()
 
-    async def visibility(self):
-        async with self._aiohttp_session.get("http://localhost/visibility") as response:
+    async def layout(self):
+        async with self._aiohttp_session.get("http://localhost/layout") as response:
             return await response.json()

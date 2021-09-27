@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width">
     <title>Video player</title>
 
-    <link rel="preload" href="style.css" as="style">
+    <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#000000">
 
-    <link rel="stylesheet" href="style.css">
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/@footron/messaging@0.1.0/dist/footron-messaging.development.js"
+    ></script>
 </head>
 
 <body style="background-color: #000000; margin: 0;">
     <video id="video" autoplay></video>
+    <div id="state-icon-container">
+        <img src="pause.svg" alt="" id="state-icon">
+    </div>
     <script src="script.js" type="module"></script>
 </body>
 </html>
