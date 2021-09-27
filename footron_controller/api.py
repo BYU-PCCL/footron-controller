@@ -17,8 +17,7 @@ from .constants import (
 )
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience
-from .data.collection import Collection
-from .data.tag import Tag
+from .data.groupings import Collection, Folder, Tag
 from .controller import Controller
 
 
@@ -80,6 +79,10 @@ def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
 
 
+def folder_response(folder: Folder):
+    return dataclasses.asdict(folder)
+
+
 def tag_response(tag: Tag):
     return dataclasses.asdict(tag)
 
@@ -122,6 +125,19 @@ def collection(id):
         return {}
 
     return collection_response(_controller.collections[id])
+
+
+@fastapi_app.get("/folders")
+def folders():
+    return {id: folder_response(folder) for id, folder in _controller.folders.items()}
+
+
+@fastapi_app.get("/folders/<id>")
+def folder(id):
+    if id not in _controller.folders:
+        return {}
+
+    return folder_response(_controller.folders[id])
 
 
 @fastapi_app.get("/tags")

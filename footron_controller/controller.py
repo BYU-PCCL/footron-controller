@@ -13,9 +13,7 @@ from .experiences import load_experiences_fs, load_experience_grouping, BaseExpe
 from .data.wm import WmApi
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
-from .data.collection import Collection
-from .data.folder import Folder
-from .data.tag import Tag
+from .data.groupings import Collection, Folder, Tag
 from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
@@ -58,8 +56,8 @@ class Controller:
     def load_from_fs(self):
         self.load_experiences()
         self.load_collections()
-        self.load_folders()
         self.load_tags()
+        self.load_folders()
         self.last_update = datetime.datetime.now()
 
     def load_experiences(self):
@@ -85,17 +83,6 @@ class Controller:
             for experience in collection.experiences:
                 self.experience_collection_map[experience] = collection.id
 
-    def _fill_experience_folder_map(self):
-        self.experience_folder_map = {}
-        for experience in self.experiences:
-            self.experience_folder_map[experience] = []
-        for folder in self.folders.values():
-            for experience in folder.experiences:
-                if experience not in self.experience_tag_map:
-                    continue
-
-                self.experience_tag_map[experience].append(tag.id)
-
     def _fill_experience_tag_map(self):
         self.experience_tag_map = {}
         for experience in self.experiences:
@@ -106,6 +93,18 @@ class Controller:
                     continue
 
                 self.experience_tag_map[experience].append(tag.id)
+
+    def _fill_experience_folder_map(self):
+        self.experience_folders_map = {}
+        for experience in self.experiences:
+            self.experience_folders_map[experience] = []
+
+        for folder in self.folders.values():
+            for tag in folder.tags:
+                for experience in self.tags[tag].experiences:
+                    if experience not in self.experiences:
+                        continue
+                    self.experience_folders_map[experience].append(folder.id)
 
     @staticmethod
     def _create_paths():
