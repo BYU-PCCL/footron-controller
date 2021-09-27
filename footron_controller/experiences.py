@@ -1,6 +1,5 @@
 import abc
 import asyncio
-from dataclasses import dataclass
 import json
 import operator
 import sys
@@ -233,7 +232,7 @@ def load_experiences_fs(path=EXPERIENCES_PATH):
     )
 
 
-def load_experience_grouping(type: dataclass, file_name: str, path=BASE_DATA_PATH):
+def load_experience_grouping(type: Type, file_name: str, path=BASE_DATA_PATH):
     file_path = path.joinpath(file_name)
 
     if not file_path.exists():
