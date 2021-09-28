@@ -19,8 +19,7 @@ from .constants import (
 )
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience, VideoExperience
-from .data.collection import Collection
-from .data.tag import Tag
+from .data.groupings import Collection, Folder, Tag
 from .controller import Controller
 
 
@@ -68,6 +67,7 @@ def experience_response(experience: BaseExperience):
         "last_update": datetime_to_timestamp(_controller.last_update),
         "unlisted": experience.unlisted,
         "queueable": experience.queueable,
+        "folders": _controller.experience_folders_map[experience.id],
         "tags": _controller.experience_tag_map[experience.id],
     }
 
@@ -82,6 +82,10 @@ def experience_response(experience: BaseExperience):
 
 def collection_response(collection: Collection):
     return dataclasses.asdict(collection)
+
+
+def folder_response(folder: Folder):
+    return dataclasses.asdict(folder)
 
 
 def tag_response(tag: Tag):
@@ -126,6 +130,19 @@ def collection(id):
         return {}
 
     return collection_response(_controller.collections[id])
+
+
+@fastapi_app.get("/folders")
+def folders():
+    return {id: folder_response(folder) for id, folder in _controller.folders.items()}
+
+
+@fastapi_app.get("/folders/<id>")
+def folder(id):
+    if id not in _controller.folders:
+        return {}
+
+    return folder_response(_controller.folders[id])
 
 
 @fastapi_app.get("/tags")
