@@ -21,4 +21,5 @@ class Folder:
     id: str
     tags: List[str]
     title: str
+    featured: str
     description: Optional[str]
