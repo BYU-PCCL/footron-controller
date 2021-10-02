@@ -14,5 +14,5 @@ def take_screenshot() -> Image:
 
 async def create_screenshot_bytes_generator():
     image_bytes = io.BytesIO()
-    take_screenshot().save(image_bytes, format="PNG")
+    take_screenshot().save(image_bytes, format="JPEG", quality=95)
     yield image_bytes.getvalue()

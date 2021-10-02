@@ -253,7 +253,7 @@ async def update_placard_url(body: PlacardUrlData):
 
 @fastapi_app.get("/screenshot")
 async def screenshot():
-    return StreamingResponse(create_screenshot_bytes_generator(), media_type="image/png")
+    return StreamingResponse(create_screenshot_bytes_generator(), media_type="image/jpeg")
 
 
 @fastapi_app.on_event("startup")
