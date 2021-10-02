@@ -1,7 +1,6 @@
 import asyncio
 import atexit
 import dataclasses
-from datetime import datetime
 import logging
 from typing import Optional
 
@@ -12,7 +11,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import footron_protocol as protocol
-
 from .util import datetime_to_timestamp, timestamp_to_datetime
 from .constants import (
     ROLLBAR_TOKEN,
