@@ -35,7 +35,7 @@ async def create_screenshot_bytes_generator(
     ratio = max(min(width / image_width, height / image_height, 1), 0)
 
     if ratio != 1 and ratio != 0:
-        image = image.resize((ratio * image_width, ratio * image_height))
+        image = image.resize((int(ratio * image_width), int(ratio * image_height)))
 
     format_params = {}
 
