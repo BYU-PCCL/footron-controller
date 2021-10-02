@@ -8,6 +8,7 @@ from typing import Optional
 import rollbar
 from rollbar.contrib.fastapi import add_to as rollbar_add_to
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import footron_protocol as protocol
@@ -20,6 +21,7 @@ from .constants import (
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience, VideoExperience
 from .data.groupings import Collection, Folder, Tag
+from .data.screenshot import create_screenshot_bytes_generator
 from .controller import Controller
 
 
@@ -247,6 +249,11 @@ async def placard_url():
 @fastapi_app.patch("/placard/url")
 async def update_placard_url(body: PlacardUrlData):
     return await _controller.placard.set_url(body.url)
+
+
+@fastapi_app.get("/screenshot")
+async def screenshot():
+    return StreamingResponse(create_screenshot_bytes_generator(), media_type="image/png")
 
 
 @fastapi_app.on_event("startup")
