@@ -21,7 +21,7 @@ from .constants import (
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience, VideoExperience
 from .data.groupings import Collection, Folder, Tag
-from .data.screenshot import create_screenshot_bytes_generator
+from .data.screenshot import create_screenshot_bytes_generator, SCREENSHOT_MIME_TYPES
 from .controller import Controller
 
 
@@ -252,8 +252,20 @@ async def update_placard_url(body: PlacardUrlData):
 
 
 @fastapi_app.get("/screenshot")
-async def screenshot():
-    return StreamingResponse(create_screenshot_bytes_generator(), media_type="image/jpeg")
+async def screenshot(
+    w: Optional[int] = None, h: Optional[int] = None, format: str = "jpeg", q: int = 95
+):
+    format = format.lower()
+    if format not in SCREENSHOT_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"'format' parameter has invalid value '{format}'",
+        )
+
+    return StreamingResponse(
+        create_screenshot_bytes_generator(width=w, height=h, quality=q, format=format),
+        media_type=SCREENSHOT_MIME_TYPES[format],
+    )
 
 
 @fastapi_app.on_event("startup")
