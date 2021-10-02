@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 SCREENSHOT_MIME_TYPES = {
     "jpeg": "image/jpeg",
-    "jpg": "image/jpeg",
     "png": "image/png",
 }
 
@@ -39,7 +38,7 @@ async def create_screenshot_bytes_generator(
 
     format_params = {}
 
-    if format in ["jpg", "jpeg"]:
+    if format == "jpeg":
         format_params = {"quality": quality}
 
     image.save(image_bytes, format=format, **format_params)
