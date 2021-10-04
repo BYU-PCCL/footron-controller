@@ -81,15 +81,15 @@ def experience_response(experience: BaseExperience):
 
 
 def collection_response(collection: Collection):
-    return dataclasses.asdict(collection)
+    return collection.dict()
 
 
 def folder_response(folder: Folder):
-    return dataclasses.asdict(folder)
+    return folder.dict()
 
 
 def tag_response(tag: Tag):
-    return dataclasses.asdict(tag)
+    return tag.dict()
 
 
 # Route for reloading data

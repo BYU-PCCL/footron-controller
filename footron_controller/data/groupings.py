@@ -1,23 +1,21 @@
-from dataclasses import dataclass
 from typing import List, Optional
 
+from pydantic import BaseModel
 
-@dataclass
-class Collection:
+
+class Collection(BaseModel):
     id: str
     experiences: List[str]
 
 
-@dataclass
-class Tag:
+class Tag(BaseModel):
     id: str
     experiences: List[str]
     title: str
     description: Optional[str]
 
 
-@dataclass
-class Folder:
+class Folder(BaseModel):
     id: str
     tags: List[str]
     title: str
