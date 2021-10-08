@@ -16,10 +16,10 @@ class VideoDeviceManager:
 
     def __init__(self):
         self._devices = {}
-        self.load_devices()
 
     @property
     def devices(self):
+        self.load_devices()
         return self._devices
 
     def load_devices(self):

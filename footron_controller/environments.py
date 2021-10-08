@@ -119,8 +119,6 @@ class DockerEnvironment(BaseEnvironment):
         self._data_path.mkdir(parents=True, exist_ok=True)
 
     def start(self):
-        # Reload devices every time
-        self._video_devices.load_devices()
         # For now, we will expose only our center webcam as /dev/video0 within
         # containers
         video_devices = [
