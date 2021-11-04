@@ -53,6 +53,12 @@ class BrowserRunner:
     def _start_browser(self):
         self._browser_process = subprocess.Popen([WEB_SHELL_PATH, self._create_url()])
 
+    async def _stop_browser(self):
+        if not self._browser_process:
+            return
+
+        await mercilessly_kill_process(self._browser_process)
+
     # Based on https://github.com/aio-libs/aiohttp/issues/1220#issuecomment-546572413
     @web.middleware
     async def static_serve(self, request, **kwargs):
@@ -91,12 +97,6 @@ class BrowserRunner:
         )
 
         await self._site.start()
-
-    async def _stop_browser(self):
-        if not self._browser_process:
-            return
-
-        await mercilessly_kill_process(self._browser_process)
 
     async def _stop_static_server(self):
         if not self._runner or not self._site:
