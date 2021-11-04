@@ -18,7 +18,6 @@ from .browser_runner import BrowserRunner
 from .constants import (
     PACKAGE_STATIC_PATH,
     BASE_MESSAGING_URL,
-    BASE_DATA_PATH,
     EXPERIENCE_DATA_PATH,
     BASE_BIN_PATH,
 )
@@ -40,9 +39,11 @@ class EnvironmentInitializationError(Exception):
 
 
 class BaseEnvironment(abc.ABC):
+    @abc.abstractmethod
     def start(self):
         ...
 
+    @abc.abstractmethod
     def stop(self):
         ...
 
