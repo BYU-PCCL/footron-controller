@@ -15,7 +15,6 @@ from .browser_runner import BrowserRunner
 from .constants import (
     PACKAGE_STATIC_PATH,
     BASE_MESSAGING_URL,
-    BASE_DATA_PATH,
     EXPERIENCE_DATA_PATH,
 )
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
