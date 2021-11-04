@@ -33,9 +33,11 @@ class EnvironmentInitializationError(Exception):
 
 
 class BaseEnvironment(abc.ABC):
+    @abc.abstractmethod
     def start(self):
         ...
 
+    @abc.abstractmethod
     def stop(self):
         ...
 
