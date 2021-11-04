@@ -2,6 +2,7 @@ import abc
 import asyncio
 import logging
 import os
+import subprocess
 from pathlib import Path
 from typing import Optional, Union
 import docker
@@ -11,14 +12,19 @@ import urllib.parse
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
+from .data.capture import CaptureApi, get_capture_api
+from .util import mercilessly_kill_process
 from .browser_runner import BrowserRunner
 from .constants import (
     PACKAGE_STATIC_PATH,
     BASE_MESSAGING_URL,
     BASE_DATA_PATH,
     EXPERIENCE_DATA_PATH,
+    BASE_BIN_PATH,
 )
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
+
+CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
 
 logger = logging.getLogger(__name__)
 
@@ -208,3 +214,41 @@ class DockerEnvironment(BaseEnvironment):
 
             self._image_exists = True
             return True
+
+
+class CaptureEnvironment(BaseEnvironment):
+    _id: str
+    _path: str
+    _capture_process: Optional[subprocess.Popen]
+    _api: CaptureApi
+
+    def __init__(
+        self,
+        id: str,
+        path: str,
+    ):
+        self._id = id
+        self._path = path
+        self._api = get_capture_api()
+
+    async def _start_capture_process(self):
+        await self._api.set_current_experience(self._id, self._path)
+        self._capture_process = subprocess.Popen([CAPTURE_SHELL_PATH])
+
+    async def _stop_capture_process(self):
+        if not self._capture_process:
+            return
+
+        await mercilessly_kill_process(self._capture_process)
+        await self._api.set_current_experience(None)
+
+    async def start(self):
+        await self._start_capture_process()
+
+    async def stop(self):
+        await self._stop_capture_process()
+
+    @property
+    def available(self) -> bool:
+        # TODO: Consider whether we need some availability signal for Windows apps
+        return True

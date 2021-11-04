@@ -17,6 +17,7 @@ from .environments import (
     DockerEnvironment,
     WebEnvironment,
     VideoEnvironment,
+    CaptureEnvironment,
 )
 from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
@@ -28,6 +29,7 @@ class ExperienceType(str, Enum):
     Docker = "docker"
     Web = "web"
     Video = "video"
+    Capture = "capture"
 
 
 class BaseExperience(BaseModel, abc.ABC):
@@ -42,7 +44,7 @@ class BaseExperience(BaseModel, abc.ABC):
     unlisted: bool = False
     queueable: bool = True
     load_time: Optional[int] = None
-    path: Path
+    experience_path: Path
     _environment: BaseEnvironment = PrivateAttr()
 
     def __init__(self, **data):
@@ -99,7 +101,7 @@ class WebExperience(BaseExperience):
     layout = DisplayLayout.Wide
 
     def _create_environment(self) -> WebEnvironment:
-        return WebEnvironment(self.id, self.path / "static", self.url)
+        return WebEnvironment(self.id, self.experience_path / "static", self.url)
 
 
 class VideoExperience(BaseExperience):
@@ -109,7 +111,16 @@ class VideoExperience(BaseExperience):
     scrubbing: bool = False
 
     def _create_environment(self) -> VideoEnvironment:
-        return VideoEnvironment(self.id, self.path, self.filename)
+        return VideoEnvironment(self.id, self.experience_path, self.filename)
+
+
+class CaptureExperience(BaseExperience):
+    type = ExperienceType.Capture
+    layout = DisplayLayout.Full
+    path: str
+
+    def _create_environment(self) -> CaptureEnvironment:
+        return CaptureEnvironment(self.id, self.path)
 
 
 class Lock:
@@ -182,6 +193,7 @@ experience_type_map: Dict[ExperienceType, Type[BaseExperience]] = {
     ExperienceType.Docker: DockerExperience,
     ExperienceType.Web: WebExperience,
     ExperienceType.Video: VideoExperience,
+    ExperienceType.Capture: CaptureExperience,
 }
 
 
@@ -194,7 +206,7 @@ def _serialize_experience(data: JsonDict, path: Path) -> BaseExperience:
 
     msg_type: ExperienceType = data[_FIELD_TYPE]
 
-    return experience_type_map[msg_type](**data, path=path)
+    return experience_type_map[msg_type](**data, experience_path=path)
 
 
 def _load_config_at_path(path: Path):
