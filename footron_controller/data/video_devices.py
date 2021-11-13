@@ -29,18 +29,21 @@ class VideoDeviceManager:
         # are multiple instances of the same product. For that we need probably need
         # pyudev to get a serial number.
         # See https://source.chromium.org/chromium/chromium/src/+/main:media/capture/video/linux/video_capture_device_factory_linux.cc
-        devices = [
-            (
-                ":".join(
-                    open(f"/sys/class/video4linux/{device_name}/device/../{id_file}")
-                    .read()
-                    .strip()
-                    for id_file in ["idVendor", "idProduct"]
-                ),
-                f"/dev/{device_name}",
-            )
-            for device_name in video_devs
-        ]
+        devices = []
+        for device_name in video_devs:
+            try:
+                device_info = (
+                    ":".join(
+                        open(f"/sys/class/video4linux/{device_name}/device/../{id_file}")
+                        .read()
+                        .strip()
+                        for id_file in ["idVendor", "idProduct"]
+                    ),
+                    f"/dev/{device_name}",
+                )
+            except FileNotFoundError:
+                continue
+            devices.append(device_info)
         env_keys = list(filter(_ENV_MATCH_PATTERN.match, os.environ))
         for env_key in env_keys:
             key = env_key[len(_VIDEO_DEVICE_ENV_PREFIX) :].lower()
