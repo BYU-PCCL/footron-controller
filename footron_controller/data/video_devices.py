@@ -34,7 +34,9 @@ class VideoDeviceManager:
             try:
                 device_info = (
                     ":".join(
-                        open(f"/sys/class/video4linux/{device_name}/device/../{id_file}")
+                        open(
+                            f"/sys/class/video4linux/{device_name}/device/../{id_file}"
+                        )
                         .read()
                         .strip()
                         for id_file in ["idVendor", "idProduct"]
