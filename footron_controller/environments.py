@@ -40,17 +40,16 @@ class EnvironmentInitializationError(Exception):
 
 class BaseEnvironment(abc.ABC):
     @abc.abstractmethod
-    def start(self):
+    def start(self, last_environment: Optional[BaseEnvironment] = None):
         ...
 
     @abc.abstractmethod
-    def stop(self):
+    def stop(self, next_environment: Optional[BaseEnvironment] = None):
         ...
 
     @property
-    @abc.abstractmethod
     def available(self) -> bool:
-        ...
+        return True
 
 
 class _BaseWebEnvironmentMixin:
@@ -65,10 +64,10 @@ class _BaseWebEnvironmentMixin:
         self._check_static_path()
         self._runner = BrowserRunner(id, routes, url)
 
-    async def start(self):
+    async def start(self, last_environment=None):
         await self._runner.start()
 
-    async def stop(self):
+    async def stop(self, next_environment=None):
         await self._runner.stop()
 
     def _check_static_path(self):
@@ -125,7 +124,7 @@ class DockerEnvironment(BaseEnvironment):
         )
         self._data_path.mkdir(parents=True, exist_ok=True)
 
-    def start(self):
+    def start(self, last_environment=None):
         # For now, we will expose only our center webcam as /dev/video0 within
         # containers
         video_devices = [
@@ -184,7 +183,7 @@ class DockerEnvironment(BaseEnvironment):
         await asyncio.sleep(1)
         map(self._kill_container_checked, matching_containers)
 
-    async def stop(self):
+    async def stop(self, next_environment=None):
         self._kill_container_checked(self._container)
         await self.shutdown_by_tag()
         self._container = None
@@ -232,8 +231,13 @@ class CaptureEnvironment(BaseEnvironment):
         self._path = path
         self._api = get_capture_api()
 
-    async def _start_capture_process(self):
+    async def _start_capture_api(self):
         await self._api.set_current_experience(self._id, self._path)
+
+    async def _stop_capture_api(self):
+        await self._api.set_current_experience(None)
+
+    async def _start_capture_process(self):
         self._capture_process = subprocess.Popen([CAPTURE_SHELL_PATH])
 
     async def _stop_capture_process(self):
@@ -241,13 +245,15 @@ class CaptureEnvironment(BaseEnvironment):
             return
 
         await mercilessly_kill_process(self._capture_process)
-        await self._api.set_current_experience(None)
 
-    async def start(self):
+    async def start(self, last_environment=None):
+        await self._start_capture_api()
         await self._start_capture_process()
 
-    async def stop(self):
+    async def stop(self, next_environment=None):
         await self._stop_capture_process()
+        if not next_environment or not isinstance(next_environment, CaptureEnvironment):
+            await self._stop_capture_api()
 
     @property
     def available(self) -> bool:

@@ -63,19 +63,25 @@ class BaseExperience(BaseModel, abc.ABC):
             )
         return value
 
-    async def start(self):
+    async def start(self, last_experience: Optional[BaseExperience] = None):
+        last_environment = last_experience._environment if last_experience else None
         if asyncio.iscoroutinefunction(self._environment.start):
-            await self._environment.start()
+            await self._environment.start(last_environment)
         else:
-            self._environment.start()
+            self._environment.start(last_environment)
 
-    async def stop(self, after: Optional[int] = None):
+    async def stop(
+        self,
+        next_experience: Optional[BaseExperience] = None,
+        after: Optional[int] = None,
+    ):
+        next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
         if asyncio.iscoroutinefunction(self._environment.stop):
-            await self._environment.stop()
+            await self._environment.stop(next_environment)
         else:
-            self._environment.stop()
+            self._environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
