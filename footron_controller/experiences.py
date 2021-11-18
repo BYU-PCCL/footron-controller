@@ -1,3 +1,4 @@
+from __future__ import annotations
 import abc
 import asyncio
 import json
@@ -17,6 +18,7 @@ from .environments import (
     DockerEnvironment,
     WebEnvironment,
     VideoEnvironment,
+    CaptureEnvironment,
 )
 from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
@@ -28,6 +30,7 @@ class ExperienceType(str, Enum):
     Docker = "docker"
     Web = "web"
     Video = "video"
+    Capture = "capture"
 
 
 class BaseExperience(BaseModel, abc.ABC):
@@ -42,7 +45,7 @@ class BaseExperience(BaseModel, abc.ABC):
     unlisted: bool = False
     queueable: bool = True
     load_time: Optional[int] = None
-    path: Path
+    experience_path: Path
     _environment: BaseEnvironment = PrivateAttr()
 
     def __init__(self, **data):
@@ -61,19 +64,25 @@ class BaseExperience(BaseModel, abc.ABC):
             )
         return value
 
-    async def start(self):
+    async def start(self, last_experience: Optional[BaseExperience] = None):
+        last_environment = last_experience._environment if last_experience else None
         if asyncio.iscoroutinefunction(self._environment.start):
-            await self._environment.start()
+            await self._environment.start(last_environment)
         else:
-            self._environment.start()
+            self._environment.start(last_environment)
 
-    async def stop(self, after: Optional[int] = None):
+    async def stop(
+        self,
+        next_experience: Optional[BaseExperience] = None,
+        after: Optional[int] = None,
+    ):
+        next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
         if asyncio.iscoroutinefunction(self._environment.stop):
-            await self._environment.stop()
+            await self._environment.stop(next_environment)
         else:
-            self._environment.stop()
+            self._environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
@@ -99,7 +108,7 @@ class WebExperience(BaseExperience):
     layout = DisplayLayout.Wide
 
     def _create_environment(self) -> WebEnvironment:
-        return WebEnvironment(self.id, self.path / "static", self.url)
+        return WebEnvironment(self.id, self.experience_path / "static", self.url)
 
 
 class VideoExperience(BaseExperience):
@@ -109,7 +118,16 @@ class VideoExperience(BaseExperience):
     scrubbing: bool = False
 
     def _create_environment(self) -> VideoEnvironment:
-        return VideoEnvironment(self.id, self.path, self.filename)
+        return VideoEnvironment(self.id, self.experience_path, self.filename)
+
+
+class CaptureExperience(BaseExperience):
+    type = ExperienceType.Capture
+    layout = DisplayLayout.Full
+    path: str
+
+    def _create_environment(self) -> CaptureEnvironment:
+        return CaptureEnvironment(self.id, self.path)
 
 
 class Lock:
@@ -182,6 +200,7 @@ experience_type_map: Dict[ExperienceType, Type[BaseExperience]] = {
     ExperienceType.Docker: DockerExperience,
     ExperienceType.Web: WebExperience,
     ExperienceType.Video: VideoExperience,
+    ExperienceType.Capture: CaptureExperience,
 }
 
 
@@ -194,7 +213,7 @@ def _serialize_experience(data: JsonDict, path: Path) -> BaseExperience:
 
     msg_type: ExperienceType = data[_FIELD_TYPE]
 
-    return experience_type_map[msg_type](**data, path=path)
+    return experience_type_map[msg_type](**data, experience_path=path)
 
 
 def _load_config_at_path(path: Path):

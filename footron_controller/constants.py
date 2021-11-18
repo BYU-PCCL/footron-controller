@@ -41,6 +41,12 @@ STABILITY_CHECK = (
     else False
 )
 
+CAPTURE_API_URL = (
+    os.environ["FT_CAPTURE_API_URL"]
+    if "FT_CAPTURE_API_URL" in os.environ
+    else "http://localhost:8090/"
+)
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EXPERIENCE_DATA_PATH = Path(BASE_DATA_PATH, "experience-data")

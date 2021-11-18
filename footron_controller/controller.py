@@ -193,7 +193,7 @@ class Controller:
         try:
             await self._wm.clear_viewport()
             if self._current:
-                asyncio.get_event_loop().create_task(self._current.stop())
+                asyncio.get_event_loop().create_task(self._current.stop(experience))
         finally:
             try:
                 if experience:
@@ -201,7 +201,9 @@ class Controller:
                         # Wait for loading screen to kick in (we need a better solution
                         # here)
                         await asyncio.sleep(1)
-                    await experience.start()
+                    await experience.start(
+                        self._current.experience if self._current else None
+                    )
             finally:
                 # Environment start() and stop() methods should have their own error
                 # handling, but if something is unhandled we need keep our state
