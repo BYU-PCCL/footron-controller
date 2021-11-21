@@ -269,6 +269,7 @@ class Controller:
                 asyncio.get_event_loop().create_task(
                     self._cleanup_rogue_docker_containers()
                 )
+
                 if STABILITY_CHECK and not self._stability.check_stable():
                     rollbar.report_message("System is unstable, rebooting")
                     logging.error("System is unstable, rebooting")
