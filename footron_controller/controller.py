@@ -14,6 +14,7 @@ from .constants import (
     STABILITY_CHECK,
     EXPERIENCE_DATA_PATH,
 )
+from .environments import EnvironmentState
 from .experiences import (
     load_experiences_fs,
     load_experience_grouping,
@@ -204,10 +205,10 @@ class Controller:
                     await experience.start(
                         self._current.experience if self._current else None
                     )
-            finally:
-                # Environment start() and stop() methods should have their own error
-                # handling, but if something is unhandled we need keep our state
-                # maintained
+            except Exception:
+                self._current = None
+                raise
+            else:
                 self._current = (
                     CurrentExperience(experience, datetime.now())
                     if experience
@@ -258,6 +259,20 @@ class Controller:
             if not isinstance(experience, DockerExperience):
                 continue
             await experience.attempt_cleanup()
+
+    async def handle_experience_exit_loop(self):
+        while True:
+            if (
+                not self.current
+                or self.current.environment.state != EnvironmentState.FAILED
+            ):
+                continue
+            try:
+                await self.set_experience(None, throttle=5)
+            except Exception as e:
+                rollbar.report_exc_info(e)
+                logger.exception(e)
+            await asyncio.sleep(1)
 
     async def stability_loop(self):
         while True:

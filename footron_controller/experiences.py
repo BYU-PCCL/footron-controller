@@ -46,15 +46,15 @@ class BaseExperience(BaseModel, abc.ABC):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    _environment: BaseEnvironment = PrivateAttr()
+    environment: BaseEnvironment = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._environment = self._create_environment()
+        self.environment = self._create_environment()
 
     @property
     def available(self) -> bool:
-        return self._environment.available
+        return self.environment.available
 
     @validator("long_description")
     def long_description_requires_description(cls, value, values):
@@ -65,18 +65,18 @@ class BaseExperience(BaseModel, abc.ABC):
         return value
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
-        last_environment = last_experience._environment if last_experience else None
-        await self._environment.start(last_environment)
+        last_environment = last_experience.environment if last_experience else None
+        await self.environment.start(last_environment)
 
     async def stop(
         self,
         next_experience: Optional[BaseExperience] = None,
         after: Optional[int] = None,
     ):
-        next_environment = next_experience._environment if next_experience else None
+        next_environment = next_experience.environment if next_experience else None
         if after:
             await asyncio.sleep(after)
-        await self._environment.stop(next_environment)
+        await self.environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
@@ -93,7 +93,7 @@ class DockerExperience(BaseExperience):
         return DockerEnvironment(self.id, self.image_id, self.host_network)
 
     async def attempt_cleanup(self):
-        await self._environment.shutdown_by_tag()
+        await self.environment.shutdown_by_tag()
 
 
 class WebExperience(BaseExperience):
@@ -154,6 +154,10 @@ class CurrentExperience:
     @property
     def experience(self):
         return self._experience
+
+    @property
+    def environment(self):
+        return self._experience.environment if self._experience else None
 
     @property
     def start_time(self):
