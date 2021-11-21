@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, Generic, TypeVar
 
 from pydantic import BaseModel, PrivateAttr, validator
 import footron_protocol as protocol
@@ -33,7 +33,10 @@ class ExperienceType(str, Enum):
     Capture = "capture"
 
 
-class BaseExperience(BaseModel, abc.ABC):
+EnvironmentType = TypeVar("EnvironmentType", bound=BaseEnvironment)
+
+
+class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     type: ExperienceType
     id: str
     title: str
@@ -46,7 +49,7 @@ class BaseExperience(BaseModel, abc.ABC):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    _environment: BaseEnvironment = PrivateAttr()
+    _environment: EnvironmentType = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -79,17 +82,14 @@ class BaseExperience(BaseModel, abc.ABC):
         next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
-        if asyncio.iscoroutinefunction(self._environment.stop):
-            await self._environment.stop(next_environment)
-        else:
-            self._environment.stop(next_environment)
+        await self._environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
         ...
 
 
-class DockerExperience(BaseExperience):
+class DockerExperience(BaseExperience[DockerEnvironment]):
     type = ExperienceType.Docker
     image_id: str
     host_network: bool = False
@@ -102,7 +102,7 @@ class DockerExperience(BaseExperience):
         await self._environment.shutdown_by_tag()
 
 
-class WebExperience(BaseExperience):
+class WebExperience(BaseExperience[WebEnvironment]):
     type = ExperienceType.Web
     url: Optional[str]
     layout = DisplayLayout.Wide
@@ -111,7 +111,7 @@ class WebExperience(BaseExperience):
         return WebEnvironment(self.id, self.experience_path / "static", self.url)
 
 
-class VideoExperience(BaseExperience):
+class VideoExperience(BaseExperience[VideoEnvironment]):
     type = ExperienceType.Video
     layout = DisplayLayout.Hd
     filename: str
@@ -121,7 +121,7 @@ class VideoExperience(BaseExperience):
         return VideoEnvironment(self.id, self.experience_path, self.filename)
 
 
-class CaptureExperience(BaseExperience):
+class CaptureExperience(BaseExperience[CaptureEnvironment]):
     type = ExperienceType.Capture
     layout = DisplayLayout.Full
     path: str
