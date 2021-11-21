@@ -172,6 +172,8 @@ class Controller:
         ):
             return False
 
+        # We just return here instead of waiting for a lock because we don't want
+        # experience changes to queue up and lock up the display.
         if self._modify_lock.locked():
             return False
 
