@@ -76,10 +76,7 @@ class BaseExperience(BaseModel, abc.ABC):
         next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
-        if asyncio.iscoroutinefunction(self._environment.stop):
-            await self._environment.stop(next_environment)
-        else:
-            self._environment.stop(next_environment)
+        await self._environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
