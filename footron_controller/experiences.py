@@ -49,7 +49,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    environment: BaseEnvironment = PrivateAttr()
+    environment: EnvironmentType = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
