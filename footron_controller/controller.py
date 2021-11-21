@@ -173,6 +173,8 @@ class Controller:
         ):
             return False
 
+        # We just return here instead of waiting for a lock because we don't want
+        # experience changes to queue up and lock up the display.
         if self._modify_lock.locked():
             return False
 
@@ -275,12 +277,14 @@ class Controller:
             await asyncio.sleep(1)
 
     async def stability_loop(self):
+        # TODO: Break this method up
         while True:
             logging.debug("Checking system stability...")
             try:
                 asyncio.get_event_loop().create_task(
                     self._cleanup_rogue_docker_containers()
                 )
+
                 if STABILITY_CHECK and not self._stability.check_stable():
                     rollbar.report_message("System is unstable, rebooting")
                     logging.error("System is unstable, rebooting")

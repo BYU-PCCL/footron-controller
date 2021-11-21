@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, Generic, TypeVar
 
 from pydantic import BaseModel, PrivateAttr, validator
 import footron_protocol as protocol
@@ -33,7 +33,10 @@ class ExperienceType(str, Enum):
     Capture = "capture"
 
 
-class BaseExperience(BaseModel, abc.ABC):
+EnvironmentType = TypeVar("EnvironmentType", bound=BaseEnvironment)
+
+
+class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     type: ExperienceType
     id: str
     title: str
@@ -83,7 +86,7 @@ class BaseExperience(BaseModel, abc.ABC):
         ...
 
 
-class DockerExperience(BaseExperience):
+class DockerExperience(BaseExperience[DockerEnvironment]):
     type = ExperienceType.Docker
     image_id: str
     host_network: bool = False
@@ -96,7 +99,7 @@ class DockerExperience(BaseExperience):
         await self.environment.shutdown_by_tag()
 
 
-class WebExperience(BaseExperience):
+class WebExperience(BaseExperience[WebEnvironment]):
     type = ExperienceType.Web
     url: Optional[str]
     layout = DisplayLayout.Wide
@@ -105,7 +108,7 @@ class WebExperience(BaseExperience):
         return WebEnvironment(self.id, self.experience_path / "static", self.url)
 
 
-class VideoExperience(BaseExperience):
+class VideoExperience(BaseExperience[VideoEnvironment]):
     type = ExperienceType.Video
     layout = DisplayLayout.Hd
     filename: str
@@ -115,7 +118,7 @@ class VideoExperience(BaseExperience):
         return VideoEnvironment(self.id, self.experience_path, self.filename)
 
 
-class CaptureExperience(BaseExperience):
+class CaptureExperience(BaseExperience[CaptureEnvironment]):
     type = ExperienceType.Capture
     layout = DisplayLayout.Full
     path: str
