@@ -66,10 +66,7 @@ class BaseExperience(BaseModel, abc.ABC):
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
         last_environment = last_experience._environment if last_experience else None
-        if asyncio.iscoroutinefunction(self._environment.start):
-            await self._environment.start(last_environment)
-        else:
-            self._environment.start(last_environment)
+        await self._environment.start(last_environment)
 
     async def stop(
         self,

@@ -1,11 +1,12 @@
 from __future__ import annotations
 import abc
 import asyncio
+import enum
 import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Callable, Awaitable
 import docker
 import docker.errors
 import urllib.parse
@@ -39,13 +40,93 @@ class EnvironmentInitializationError(Exception):
     pass
 
 
-class BaseEnvironment(abc.ABC):
+class EnvironmentStateTransitionError(Exception):
+    from_state: EnvironmentState
+    to_state: EnvironmentState
+
+    def __init__(self, from_state: EnvironmentState, to_state: EnvironmentState):
+        self.from_state = from_state
+        self.to_state = to_state
+        super().__init__(
+            f"Invalid environment state transition from '{from_state.name}' to '{to_state.name}'"
+        )
+
+
+class EnvironmentState(enum.Enum):
+    """
+    Valid state transitions:
+
+    idle → starting → running → stopping → stopped
+              ↓          ↓         ↓          ↓
+              ╰─┬────────┴─────────┴──────────╯
+                ↓
+              failed
+
+    """
+
+    IDLE = enum.auto()
+    STARTING = enum.auto()
+    RUNNING = enum.auto()
+    STOPPING = enum.auto()
+    STOPPED = enum.auto()
+    FAILED = enum.auto()
+
+
+class BaseEnvironment(
+    abc.ABC,
+):
+    _state: EnvironmentState
+    _transition_lock: asyncio.Lock
+
+    def __init__(self):
+        self._state = EnvironmentState.IDLE
+        self._transition_lock = asyncio.Lock()
+
+    async def _attempt_state_transition(
+        self,
+        from_state: EnvironmentState,
+        transition_state: EnvironmentState,
+        settled_state: EnvironmentState,
+        fn: Callable[[], Awaitable[None]],
+    ):
+        async with self._transition_lock:
+            if self.state != from_state:
+                raise EnvironmentStateTransitionError(self.state, transition_state)
+            self._state = transition_state
+            try:
+                await fn()
+            except Exception:
+                self._state = EnvironmentState.FAILED
+                raise
+            self._state = settled_state
+
+    async def start(self, last_environment: Optional[BaseEnvironment] = None):
+        await self._attempt_state_transition(
+            EnvironmentState.IDLE,
+            EnvironmentState.STARTING,
+            EnvironmentState.RUNNING,
+            lambda: self._start(last_environment),
+        )
+
+    async def stop(self, next_environment: Optional[BaseEnvironment] = None):
+        await self._attempt_state_transition(
+            EnvironmentState.RUNNING,
+            EnvironmentState.STOPPING,
+            EnvironmentState.STOPPED,
+            lambda: self._start(next_environment),
+        )
+
     @abc.abstractmethod
-    def start(self, last_environment: Optional[BaseEnvironment] = None):
+    async def _start(self, last_environment: Optional[BaseEnvironment] = None):
         ...
 
     @abc.abstractmethod
-    def stop(self, next_environment: Optional[BaseEnvironment] = None):
+    async def _stop(self, next_environment: Optional[BaseEnvironment] = None):
+        ...
+
+    @property
+    @abc.abstractmethod
+    def state(self) -> EnvironmentState:
         ...
 
     @property
@@ -53,22 +134,23 @@ class BaseEnvironment(abc.ABC):
         return True
 
 
-class _BaseWebEnvironmentMixin:
+class _BaseWebEnvironment(BaseEnvironment):
     _runner: BrowserRunner
     _static_path: Path
     _available: bool
     _id: str
 
     def __init__(self, id, path, routes, url):
+        super().__init__()
         self._available = True
         self._static_path = Path(path) if not isinstance(path, Path) else path
         self._check_static_path()
         self._runner = BrowserRunner(id, routes, url)
 
-    async def start(self, last_environment=None):
+    async def _start(self, last_environment=None):
         await self._runner.start()
 
-    async def stop(self, next_environment=None):
+    async def _stop(self, next_environment=None):
         await self._runner.stop()
 
     def _check_static_path(self):
@@ -81,16 +163,27 @@ class _BaseWebEnvironmentMixin:
         )
 
     @property
+    def state(self) -> EnvironmentState:
+        if self._state != EnvironmentState.RUNNING:
+            return self._state
+
+        return (
+            EnvironmentState.RUNNING
+            if self._runner.check_running()
+            else EnvironmentState.FAILED
+        )
+
+    @property
     def available(self):
         return self._available
 
 
-class WebEnvironment(_BaseWebEnvironmentMixin, BaseEnvironment):
+class WebEnvironment(_BaseWebEnvironment):
     def __init__(self, id: str, path: Union[str, Path], url: Optional[str] = "/"):
         super().__init__(id, path, {"/": path}, url)
 
 
-class VideoEnvironment(_BaseWebEnvironmentMixin, BaseEnvironment):
+class VideoEnvironment(_BaseWebEnvironment):
     def __init__(self, id: str, path: Union[str, Path], video_filename: str):
         super().__init__(
             id,
@@ -114,6 +207,7 @@ class DockerEnvironment(BaseEnvironment):
         image_id: str,
         host_network: bool,
     ):
+        super().__init__()
         self._id = id
         self._image_id = image_id
         self._container = None
@@ -125,7 +219,7 @@ class DockerEnvironment(BaseEnvironment):
         )
         self._data_path.mkdir(parents=True, exist_ok=True)
 
-    def start(self, last_environment=None):
+    async def _start(self, last_environment=None):
         # For now, we will expose only our center webcam as /dev/video0 within
         # containers
         video_devices = [
@@ -184,10 +278,25 @@ class DockerEnvironment(BaseEnvironment):
         await asyncio.sleep(1)
         map(self._kill_container_checked, matching_containers)
 
-    async def stop(self, next_environment=None):
+    async def _stop(self, next_environment=None):
         self._kill_container_checked(self._container)
         await self.shutdown_by_tag()
         self._container = None
+
+    @property
+    def state(self) -> EnvironmentState:
+        if self._state != EnvironmentState.RUNNING:
+            return self._state
+
+        container_status = self._container.status
+
+        if container_status == "running":
+            return EnvironmentState.RUNNING
+
+        if container_status == "created":
+            return EnvironmentState.STARTING
+
+        return EnvironmentState.FAILED
 
     @property
     def available(self) -> bool:
@@ -228,6 +337,7 @@ class CaptureEnvironment(BaseEnvironment):
         id: str,
         path: str,
     ):
+        super().__init__()
         self._id = id
         self._path = path
         self._api = get_capture_api()
@@ -247,14 +357,22 @@ class CaptureEnvironment(BaseEnvironment):
 
         await mercilessly_kill_process(self._capture_process)
 
-    async def start(self, last_environment=None):
+    async def _start(self, last_environment=None):
         await self._start_capture_api()
         await self._start_capture_process()
 
-    async def stop(self, next_environment=None):
+    async def _stop(self, next_environment=None):
         await self._stop_capture_process()
         if not next_environment or not isinstance(next_environment, CaptureEnvironment):
             await self._stop_capture_api()
+
+    @property
+    def state(self) -> EnvironmentState:
+        if self._state != EnvironmentState.RUNNING:
+            return self._state
+
+        # TODO: Implement a running check on Windows
+        return EnvironmentState.RUNNING
 
     @property
     def available(self) -> bool:
