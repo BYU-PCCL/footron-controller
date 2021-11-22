@@ -265,15 +265,14 @@ class Controller:
     async def handle_experience_exit_loop(self):
         while True:
             if (
-                not self.current
-                or self.current.environment.state != EnvironmentState.FAILED
+                self.current
+                and self.current.environment.state == EnvironmentState.FAILED
             ):
-                continue
-            try:
-                await self.set_experience(None, throttle=5)
-            except Exception as e:
-                rollbar.report_exc_info(e)
-                logger.exception(e)
+                try:
+                    await self.set_experience(None, throttle=5)
+                except Exception as e:
+                    rollbar.report_exc_info(e)
+                    logger.exception(e)
             await asyncio.sleep(1)
 
     async def stability_loop(self):
