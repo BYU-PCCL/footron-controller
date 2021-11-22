@@ -49,15 +49,19 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    environment: EnvironmentType = PrivateAttr()
+    _environment: EnvironmentType = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
-        self.environment = self._create_environment()
+        self._environment = self._create_environment()
 
     @property
     def available(self) -> bool:
-        return self.environment.available
+        return self._environment.available
+
+    @property
+    def environment(self) -> BaseEnvironment:
+        return self._environment
 
     @validator("long_description")
     def long_description_requires_description(cls, value, values):
@@ -68,18 +72,18 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         return value
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
-        last_environment = last_experience.environment if last_experience else None
-        await self.environment.start(last_environment)
+        last_environment = last_experience._environment if last_experience else None
+        await self._environment.start(last_environment)
 
     async def stop(
         self,
         next_experience: Optional[BaseExperience] = None,
         after: Optional[int] = None,
     ):
-        next_environment = next_experience.environment if next_experience else None
+        next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
-        await self.environment.stop(next_environment)
+        await self._environment.stop(next_environment)
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
@@ -96,7 +100,7 @@ class DockerExperience(BaseExperience[DockerEnvironment]):
         return DockerEnvironment(self.id, self.image_id, self.host_network)
 
     async def attempt_cleanup(self):
-        await self.environment.shutdown_by_tag()
+        await self._environment.shutdown_by_tag()
 
 
 class WebExperience(BaseExperience[WebEnvironment]):
