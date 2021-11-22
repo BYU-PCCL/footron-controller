@@ -113,7 +113,7 @@ class BaseEnvironment(
             EnvironmentState.RUNNING,
             EnvironmentState.STOPPING,
             EnvironmentState.STOPPED,
-            lambda: self._start(next_environment),
+            lambda: self._stop(next_environment),
         )
 
     @abc.abstractmethod
