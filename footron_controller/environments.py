@@ -102,7 +102,11 @@ class BaseEnvironment(
 
     async def start(self, last_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
-            [EnvironmentState.IDLE, EnvironmentState.STOPPING, EnvironmentState.STOPPED],
+            [
+                EnvironmentState.IDLE,
+                EnvironmentState.STOPPING,
+                EnvironmentState.STOPPED,
+            ],
             EnvironmentState.STARTING,
             EnvironmentState.RUNNING,
             lambda: self._start(last_environment),
@@ -111,7 +115,11 @@ class BaseEnvironment(
     async def stop(self, next_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
             # Not sure if this is okay
-            [EnvironmentState.RUNNING, EnvironmentState.STARTING, EnvironmentState.FAILED],
+            [
+                EnvironmentState.RUNNING,
+                EnvironmentState.STARTING,
+                EnvironmentState.FAILED,
+            ],
             EnvironmentState.STOPPING,
             EnvironmentState.STOPPED,
             lambda: self._stop(next_environment),
@@ -260,7 +268,9 @@ class DockerEnvironment(BaseEnvironment):
         try:
             container.kill()
         except docker.errors.APIError as e:
-            logger.exception(f"Docker errored while trying to kill container for app ID {self._id}:")
+            logger.exception(
+                f"Docker errored while trying to kill container for app ID {self._id}:"
+            )
 
     async def shutdown_by_tag(self):
         matching_containers = docker_client.containers.list(
@@ -288,7 +298,9 @@ class DockerEnvironment(BaseEnvironment):
             self._container.reload()
             container_status = self._container.status
         except docker.errors.NotFound as e:
-            logger.exception(f"Docker errored while trying to get state of container for app ID {self._id}")
+            logger.exception(
+                f"Docker errored while trying to get state of container for app ID {self._id}"
+            )
             return EnvironmentState.FAILED
 
         if container_status in ["running", "created"]:

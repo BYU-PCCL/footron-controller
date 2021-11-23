@@ -258,7 +258,9 @@ class Controller:
 
     async def _cleanup_rogue_docker_containers(self):
         for experience in self.experiences.values():
-            if not isinstance(experience, DockerExperience) or (self._current and experience.id == self._current.id):
+            if not isinstance(experience, DockerExperience) or (
+                self._current and experience.id == self._current.id
+            ):
                 continue
             await experience.attempt_cleanup()
 
@@ -270,7 +272,9 @@ class Controller:
                     self._current
                     and self._current.environment.state == EnvironmentState.FAILED
                 ):
-                    logger.error("Environment failed, attempting to set current experience to empty...")
+                    logger.error(
+                        "Environment failed, attempting to set current experience to empty..."
+                    )
                     await self.set_experience(None, throttle=5)
             except Exception as e:
                 rollbar.report_exc_info(e)
