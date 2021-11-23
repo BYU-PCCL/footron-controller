@@ -14,6 +14,7 @@ from .constants import (
     STABILITY_CHECK,
     EXPERIENCE_DATA_PATH,
 )
+from .environments import EnvironmentState
 from .experiences import (
     load_experiences_fs,
     load_experience_grouping,
@@ -206,10 +207,10 @@ class Controller:
                     await experience.start(
                         self._current.experience if self._current else None
                     )
-            finally:
-                # Environment start() and stop() methods should have their own error
-                # handling, but if something is unhandled we need keep our state
-                # maintained
+            except Exception:
+                self._current = None
+                raise
+            else:
                 self._current = (
                     CurrentExperience(experience, datetime.now())
                     if experience
@@ -257,9 +258,24 @@ class Controller:
 
     async def _cleanup_rogue_docker_containers(self):
         for experience in self.experiences.values():
-            if not isinstance(experience, DockerExperience):
+            if not isinstance(experience, DockerExperience) or (self._current and experience.id == self._current.id):
                 continue
             await experience.attempt_cleanup()
+
+    async def handle_experience_exit_loop(self):
+        while True:
+            logger.debug("Checking current experience state for exit...")
+            try:
+                if (
+                    self._current
+                    and self._current.environment.state == EnvironmentState.FAILED
+                ):
+                    logger.error("Environment failed, attempting to set current experience to empty...")
+                    await self.set_experience(None, throttle=5)
+            except Exception as e:
+                rollbar.report_exc_info(e)
+                logger.exception("Error while handling experience exit loop")
+            await asyncio.sleep(1)
 
     async def stability_loop(self):
         # TODO: Break this method up
@@ -279,5 +295,5 @@ class Controller:
                     os.system("sudo reboot")
             except Exception as e:
                 rollbar.report_exc_info(e)
-                logger.exception(e)
+                logger.exception("Error while checking stability")
             await asyncio.sleep(15)

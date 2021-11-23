@@ -59,6 +59,13 @@ class BrowserRunner:
 
         await mercilessly_kill_process(self._browser_process)
 
+    def check_running(self):
+        if self._browser_process.poll() is not None:
+            return False
+        # TODO: Figure out how to check whether our static server is running, though
+        #  maybe we just handle exceptions?
+        return True
+
     # Based on https://github.com/aio-libs/aiohttp/issues/1220#issuecomment-546572413
     @web.middleware
     async def static_serve(self, request, **kwargs):

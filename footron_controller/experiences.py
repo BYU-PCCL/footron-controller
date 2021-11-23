@@ -59,6 +59,10 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     def available(self) -> bool:
         return self._environment.available
 
+    @property
+    def environment(self) -> BaseEnvironment:
+        return self._environment
+
     @validator("long_description")
     def long_description_requires_description(cls, value, values):
         if "description" not in values or values["description"] is None:
@@ -69,10 +73,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
         last_environment = last_experience._environment if last_experience else None
-        if asyncio.iscoroutinefunction(self._environment.start):
-            await self._environment.start(last_environment)
-        else:
-            self._environment.start(last_environment)
+        await self._environment.start(last_environment)
 
     async def stop(
         self,
@@ -160,6 +161,10 @@ class CurrentExperience:
     @property
     def experience(self):
         return self._experience
+
+    @property
+    def environment(self):
+        return self._experience.environment if self._experience else None
 
     @property
     def start_time(self):

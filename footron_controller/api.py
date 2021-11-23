@@ -271,6 +271,7 @@ def on_startup():
     global _controller
     _controller = Controller()
     asyncio.get_event_loop().create_task(_controller.stability_loop())
+    asyncio.get_event_loop().create_task(_controller.handle_experience_exit_loop())
 
 
 @atexit.register
