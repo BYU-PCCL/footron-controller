@@ -102,7 +102,7 @@ class BaseEnvironment(
 
     async def start(self, last_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
-            [EnvironmentState.IDLE, EnvironmentState.STOPPING],
+            [EnvironmentState.IDLE, EnvironmentState.STOPPING, EnvironmentState.STOPPED],
             EnvironmentState.STARTING,
             EnvironmentState.RUNNING,
             lambda: self._start(last_environment),
