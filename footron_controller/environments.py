@@ -6,7 +6,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Union, Callable, Awaitable
+from typing import Optional, Union, Callable, Awaitable, List
 import docker
 import docker.errors
 import urllib.parse
@@ -84,13 +84,13 @@ class BaseEnvironment(
 
     async def _attempt_state_transition(
         self,
-        from_state: EnvironmentState,
+        from_states: List[EnvironmentState],
         transition_state: EnvironmentState,
         settled_state: EnvironmentState,
         fn: Callable[[], Awaitable[None]],
     ):
         async with self._transition_lock:
-            if self.state != from_state:
+            if self.state not in from_states:
                 raise EnvironmentStateTransitionError(self.state, transition_state)
             self._state = transition_state
             try:
@@ -102,7 +102,7 @@ class BaseEnvironment(
 
     async def start(self, last_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
-            EnvironmentState.IDLE,
+            [EnvironmentState.IDLE, EnvironmentState.STOPPING],
             EnvironmentState.STARTING,
             EnvironmentState.RUNNING,
             lambda: self._start(last_environment),
@@ -110,7 +110,8 @@ class BaseEnvironment(
 
     async def stop(self, next_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
-            EnvironmentState.RUNNING,
+            # Not sure if this is okay
+            [EnvironmentState.RUNNING, EnvironmentState.STARTING, EnvironmentState.FAILED],
             EnvironmentState.STOPPING,
             EnvironmentState.STOPPED,
             lambda: self._stop(next_environment),
@@ -252,21 +253,16 @@ class DockerEnvironment(BaseEnvironment):
         )
 
     def _kill_container_checked(self, container: Container):
-        if container.status not in ["running", "created"]:
+        container.reload()
+        if container.status != "running":
             return
 
         try:
-            self._container.kill()
+            container.kill()
         except docker.errors.APIError as e:
-            logger.error(
-                f"Docker errored while trying to kill container for app ID {self._id}:"
-            )
-            logger.exception(e)
+            logger.exception(f"Docker errored while trying to kill container for app ID {self._id}:")
 
     async def shutdown_by_tag(self):
-        if self._container is None:
-            return
-
         matching_containers = docker_client.containers.list(
             filters={"ancestor": self._image_id, "status": "running"}
         )
@@ -276,7 +272,7 @@ class DockerEnvironment(BaseEnvironment):
             f"Found live containers with image ID {self._image_id}, attempting to kill in 1s"
         )
         await asyncio.sleep(1)
-        map(self._kill_container_checked, matching_containers)
+        list(map(self._kill_container_checked, matching_containers))
 
     async def _stop(self, next_environment=None):
         self._kill_container_checked(self._container)
@@ -288,13 +284,15 @@ class DockerEnvironment(BaseEnvironment):
         if self._state != EnvironmentState.RUNNING:
             return self._state
 
-        container_status = self._container.status
+        try:
+            self._container.reload()
+            container_status = self._container.status
+        except docker.errors.NotFound as e:
+            logger.exception(f"Docker errored while trying to get state of container for app ID {self._id}")
+            return EnvironmentState.FAILED
 
-        if container_status == "running":
+        if container_status in ["running", "created"]:
             return EnvironmentState.RUNNING
-
-        if container_status == "created":
-            return EnvironmentState.STARTING
 
         return EnvironmentState.FAILED
 
