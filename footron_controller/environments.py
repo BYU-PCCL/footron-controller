@@ -76,11 +76,9 @@ class BaseEnvironment(
     abc.ABC,
 ):
     _state: EnvironmentState
-    _transition_lock: asyncio.Lock
 
     def __init__(self):
         self._state = EnvironmentState.IDLE
-        self._transition_lock = asyncio.Lock()
 
     async def _attempt_state_transition(
         self,
@@ -89,16 +87,15 @@ class BaseEnvironment(
         settled_state: EnvironmentState,
         fn: Callable[[], Awaitable[None]],
     ):
-        async with self._transition_lock:
-            if self.state not in from_states:
-                raise EnvironmentStateTransitionError(self.state, transition_state)
-            self._state = transition_state
-            try:
-                await fn()
-            except Exception:
-                self._state = EnvironmentState.FAILED
-                raise
-            self._state = settled_state
+        if self.state not in from_states:
+            raise EnvironmentStateTransitionError(self.state, transition_state)
+        self._state = transition_state
+        try:
+            await fn()
+        except Exception:
+            self._state = EnvironmentState.FAILED
+            raise
+        self._state = settled_state
 
     async def start(self, last_environment: Optional[BaseEnvironment] = None):
         await self._attempt_state_transition(
