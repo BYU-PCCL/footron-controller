@@ -270,7 +270,8 @@ class Controller:
             try:
                 if (
                     self._current
-                    and self._current.environment.state == EnvironmentState.FAILED
+                    and (await self._current.environment.state())
+                    == EnvironmentState.FAILED
                 ):
                     logger.error(
                         "Environment failed, attempting to set current experience to empty..."
