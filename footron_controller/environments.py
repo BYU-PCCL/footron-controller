@@ -351,7 +351,7 @@ class CaptureEnvironment(BaseEnvironment):
         super().__init__()
         self._id = id
         self._path = path
-        self._load_time = None
+        self._load_time = load_time
 
         self._api = get_capture_api()
         self._start_time = None
@@ -387,13 +387,18 @@ class CaptureEnvironment(BaseEnvironment):
             return self._state
 
         capture_experience_response = await self._api.current_experience()
+        capture_timeout = (
+            max(self._load_time, CAPTURE_FAILED_TIMEOUT_S)
+            if self._load_time
+            else CAPTURE_FAILED_TIMEOUT_S
+        )
         if not self._start_time or (
             (
                 capture_experience_response.id is None
                 or not capture_experience_response.processes
             )
             and (datetime.now() - self._start_time).seconds
-            > max(self._load_time, CAPTURE_FAILED_TIMEOUT_S)
+            > capture_timeout
         ):
             return EnvironmentState.FAILED
 
