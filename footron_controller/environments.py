@@ -10,6 +10,7 @@ from typing import Optional, Union, Callable, Awaitable, List
 import docker
 import docker.errors
 import urllib.parse
+from datetime import datetime
 
 from docker.models.containers import Container
 from docker.types import DeviceRequest
@@ -26,6 +27,8 @@ from .constants import (
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
 
 CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
+
+CAPTURE_FAILED_TIMEOUT_S = 10
 
 logger = logging.getLogger(__name__)
 
@@ -338,24 +341,28 @@ class DockerEnvironment(BaseEnvironment):
 class CaptureEnvironment(BaseEnvironment):
     _id: str
     _path: str
+    _load_time: Optional[int]
+
     _capture_process: Optional[subprocess.Popen]
     _api: CaptureApi
+    _start_time: Optional[datetime]
 
-    def __init__(
-        self,
-        id: str,
-        path: str,
-    ):
+    def __init__(self, id: str, path: str, load_time: Optional[int] = None):
         super().__init__()
         self._id = id
         self._path = path
+        self._load_time = None
+
         self._api = get_capture_api()
+        self._start_time = None
 
     async def _start_capture_api(self):
         await self._api.set_current_experience(self._id, self._path)
+        self._start_time = datetime.now()
 
     async def _stop_capture_api(self):
         await self._api.set_current_experience(None)
+        self._start_time = None
 
     async def _start_capture_process(self):
         self._capture_process = subprocess.Popen([CAPTURE_SHELL_PATH])
@@ -380,9 +387,13 @@ class CaptureEnvironment(BaseEnvironment):
             return self._state
 
         capture_experience_response = await self._api.current_experience()
-        if (
-            capture_experience_response.id is None
-            or not capture_experience_response.processes
+        if not self._start_time or (
+            (
+                capture_experience_response.id is None
+                or not capture_experience_response.processes
+            )
+            and (datetime.now() - self._start_time).seconds
+            > max(self._load_time, CAPTURE_FAILED_TIMEOUT_S)
         ):
             return EnvironmentState.FAILED
 

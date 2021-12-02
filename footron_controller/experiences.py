@@ -128,7 +128,7 @@ class CaptureExperience(BaseExperience[CaptureEnvironment]):
     path: str
 
     def _create_environment(self) -> CaptureEnvironment:
-        return CaptureEnvironment(self.id, self.path)
+        return CaptureEnvironment(self.id, self.path, self.load_time)
 
 
 class Lock:
