@@ -135,6 +135,10 @@ class BaseEnvironment(
     def state(self) -> EnvironmentState:
         ...
 
+    # TODO: Make this a regular function, not a property getter
+    #  See https://python.org/dev/peps/pep-0008/#designing-for-inheritance:
+    #  > Avoid using properties for computationally expensive operations; the attribute notation makes the caller
+    #  believe that access is (relatively) cheap.
     @property
     def available(self) -> bool:
         return True
