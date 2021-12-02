@@ -87,8 +87,9 @@ class BaseEnvironment(
         settled_state: EnvironmentState,
         fn: Callable[[], Awaitable[None]],
     ):
-        if self.state not in from_states:
-            raise EnvironmentStateTransitionError(self.state, transition_state)
+        state = await self.state()
+        if state not in from_states:
+            raise EnvironmentStateTransitionError(state, transition_state)
         self._state = transition_state
         try:
             await fn()
@@ -130,9 +131,8 @@ class BaseEnvironment(
     async def _stop(self, next_environment: Optional[BaseEnvironment] = None):
         ...
 
-    @property
     @abc.abstractmethod
-    def state(self) -> EnvironmentState:
+    async def state(self) -> EnvironmentState:
         ...
 
     # TODO: Make this a regular function, not a property getter
@@ -172,8 +172,7 @@ class _BaseWebEnvironment(BaseEnvironment):
             f" at path {self._static_path.absolute()}"
         )
 
-    @property
-    def state(self) -> EnvironmentState:
+    async def state(self) -> EnvironmentState:
         if self._state != EnvironmentState.RUNNING:
             return self._state
 
@@ -290,8 +289,7 @@ class DockerEnvironment(BaseEnvironment):
         await self.shutdown_by_tag()
         self._container = None
 
-    @property
-    def state(self) -> EnvironmentState:
+    async def state(self) -> EnvironmentState:
         if self._state != EnvironmentState.RUNNING:
             return self._state
 
@@ -377,12 +375,17 @@ class CaptureEnvironment(BaseEnvironment):
         if not next_environment or not isinstance(next_environment, CaptureEnvironment):
             await self._stop_capture_api()
 
-    @property
-    def state(self) -> EnvironmentState:
+    async def state(self) -> EnvironmentState:
         if self._state != EnvironmentState.RUNNING:
             return self._state
 
-        # TODO: Implement a running check on Windows
+        capture_experience_response = await self._api.current_experience()
+        if (
+            capture_experience_response.id is None
+            or not capture_experience_response.processes
+        ):
+            return EnvironmentState.FAILED
+
         return EnvironmentState.RUNNING
 
     @property
