@@ -248,6 +248,7 @@ class Controller:
                     experience.layout if experience else DisplayLayout.Wide
                 )
             )
+            await self._placard.show_effect(experience.id in ["stylegan", "style-transfer"])
         except aiohttp.client_exceptions.ClientError:
             logger.warning(
                 "Updating placard failed with client exception, retrying in 1s"

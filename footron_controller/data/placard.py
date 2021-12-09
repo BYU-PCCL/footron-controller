@@ -37,6 +37,10 @@ class PlacardVisibilityData(BaseModel):
     layout: PlacardLayout
 
 
+class EffectVisibilityData(BaseModel):
+    show: bool
+
+
 class PlacardApi:
     def __init__(self):
         self._aiohttp_session = aiohttp.ClientSession(
@@ -72,6 +76,13 @@ class PlacardApi:
         async with self._aiohttp_session.put(
             "http://localhost/layout",
             json=PlacardVisibilityData(layout=layout).dict(exclude_none=True),
+        ) as response:
+            return await response.json()
+
+    async def show_effect(self, show: bool):
+        async with self._aiohttp_session.put(
+            "http://localhost/showEffect",
+            json=EffectVisibilityData(show=show).dict(exclude_none=True),
         ) as response:
             return await response.json()
 
