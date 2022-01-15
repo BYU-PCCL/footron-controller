@@ -1,6 +1,6 @@
 # footron-controller
 
-## Setting up Rollbar
+## Setting up env
 
 Create a file in `~/.config/footron/env`:
 ```ini
