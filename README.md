@@ -6,6 +6,7 @@ Create a file in `~/.config/footron/env`:
 ```ini
 FT_ROLLBAR=<rollbar token>
 FT_MSG_URL=wss://<messaging server>/messaging/out/
+FT_CAPTURE_API_URL="http://<capture server (windows machine)>"
 ```
 
 ## Adding web shell
