@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 class LoaderManager:
     _loader_process: Optional[subprocess.Popen]
     _process_operation_lock: asyncio.Lock
-    _wm: WmApi
+    _wm: Optional[WmApi]
 
-    def __init__(self, wm: WmApi):
+    def __init__(self, wm: Optional[WmApi] = None):
         self._loader_process = None
         self._process_operation_lock = asyncio.Lock()
         self._wm = wm
@@ -42,6 +42,7 @@ class LoaderManager:
             if not self._loader_process:
                 return
 
-            await self._wm.clear_viewport(include=["loader"])
+            if self._wm:
+                await self._wm.clear_viewport(include=["loader"])
             await mercilessly_kill_process(self._loader_process)
             self._loader_process = None

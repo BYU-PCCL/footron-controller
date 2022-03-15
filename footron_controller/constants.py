@@ -47,6 +47,18 @@ CAPTURE_API_URL = (
     else "http://localhost:8090/"
 )
 
+DISABLE_WM = (
+    bool(int(os.environ["FT_DISABLE_WM"]))
+    if "FT_DISABLE_WM" in os.environ
+    else False
+)
+
+DISABLE_PLACARD = (
+    bool(int(os.environ["FT_DISABLE_PLACARD"]))
+    if "FT_DISABLE_PLACARD" in os.environ
+    else False
+)
+
 EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EXPERIENCE_DATA_PATH = Path(BASE_DATA_PATH, "experience-data")

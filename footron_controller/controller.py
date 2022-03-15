@@ -8,6 +8,8 @@ import aiohttp.client_exceptions
 import rollbar
 
 from .constants import (
+    DISABLE_WM,
+    DISABLE_PLACARD,
     EMPTY_EXPERIENCE_DATA,
     EXPERIENCES_PATH,
     BASE_BIN_PATH,
@@ -42,8 +44,8 @@ class Controller:
     experience_tags_map: Dict[str, List[str]]
     last_update: datetime
     last_started_setting_experience: Optional[datetime]
-    _wm: WmApi
-    _placard: PlacardApi
+    _wm: Optional[WmApi]
+    _placard: Optional[PlacardApi]
     _stability: StabilityManager
     _loader: LoaderManager
     _current: Optional[CurrentExperience]
@@ -59,8 +61,8 @@ class Controller:
         self.experience_tags_map = {}
         self.last_started_setting_experience = None
 
-        self._wm = WmApi()
-        self._placard = PlacardApi()
+        self._wm = WmApi() if not DISABLE_WM else None
+        self._placard = PlacardApi() if not DISABLE_PLACARD else None
         self._stability = StabilityManager()
         self._loader = LoaderManager(self._wm)
         self._current = None
@@ -154,10 +156,12 @@ class Controller:
     async def _update_experience_display(self, experience: Optional[BaseExperience]):
         await self._try_launch_loader(experience)
         # We don't actually want to wait for this to complete
-        asyncio.get_event_loop().create_task(self._update_placard(experience))
-        await self._wm.set_layout(
-            experience.layout if experience else DisplayLayout.Wide
-        )
+        if self._placard:
+            asyncio.get_event_loop().create_task(self._update_placard(experience))
+        if self._wm:
+            await self._wm.set_layout(
+                experience.layout if experience else DisplayLayout.Wide
+            )
 
     async def set_experience(self, id: Optional[str], *, throttle: int = None) -> bool:
         delta_last_experience = (
@@ -194,7 +198,8 @@ class Controller:
         await self._update_experience_display(experience)
 
         try:
-            await self._wm.clear_viewport()
+            if self._wm:
+                await self._wm.clear_viewport()
             if self._current:
                 asyncio.get_event_loop().create_task(self._current.stop(experience))
         finally:
