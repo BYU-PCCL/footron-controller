@@ -1,6 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Type
 
+import tomli
 from pydantic import BaseModel
+
+from ..constants import BASE_CONFIG_PATH
 
 
 class Collection(BaseModel):
@@ -22,3 +25,15 @@ class Folder(BaseModel):
     featured: str
     description: Optional[str]
     visible: bool = True
+
+
+def load_experience_grouping(type: Type, file_name: str, path=BASE_CONFIG_PATH):
+    file_path = path.joinpath(file_name)
+
+    if not file_path.exists():
+        return {}
+
+    with open(file_path, "rb") as file:
+        data = tomli.load(file)
+
+    return {id: type(id=id, **value) for id, value in data.items()}

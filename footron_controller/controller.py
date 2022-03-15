@@ -19,7 +19,6 @@ from .constants import (
 from .environments import EnvironmentState
 from .experiences import (
     load_experiences_fs,
-    load_experience_grouping,
     BaseExperience,
     DockerExperience,
     CurrentExperience,
@@ -27,7 +26,7 @@ from .experiences import (
 from .data.wm import WmApi, DisplayLayout
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
-from .data.groupings import Collection, Folder, Tag
+from .data.groupings import Collection, Folder, Tag, load_experience_grouping
 from .data.loader import LoaderManager
 
 logger = logging.getLogger(__name__)
@@ -87,15 +86,15 @@ class Controller:
         }
 
     def load_collections(self):
-        self.collections = load_experience_grouping(Collection, "collections.json")
+        self.collections = load_experience_grouping(Collection, "collections.toml")
         self._fill_experience_collection_map()
 
     def load_folders(self):
-        self.folders = load_experience_grouping(Folder, "folders.json")
+        self.folders = load_experience_grouping(Folder, "folders.toml")
         self._fill_experience_folder_map()
 
     def load_tags(self):
-        self.tags = load_experience_grouping(Tag, "tags.json")
+        self.tags = load_experience_grouping(Tag, "tags.toml")
         self._fill_experience_tag_map()
 
     @property

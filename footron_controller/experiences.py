@@ -262,15 +262,3 @@ def load_experiences_fs(path=EXPERIENCES_PATH):
             map(_load_experience_at_path, path.iterdir()),
         )
     )
-
-
-def load_experience_grouping(type: Type, file_name: str, path=BASE_DATA_PATH):
-    file_path = path.joinpath(file_name)
-
-    if not file_path.exists():
-        return {}
-
-    with open(file_path) as file:
-        data = json.load(file)
-
-    return {id: type(id=id, **value) for id, value in data.items()}
