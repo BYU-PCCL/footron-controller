@@ -134,7 +134,11 @@ def collection(id):
 
 @fastapi_app.get("/folders")
 def folders():
-    return {id: folder_response(folder) for id, folder in _controller.folders.items()}
+    return {
+        id: folder_response(folder)
+        for id, folder in _controller.folders.items()
+        if folder.visible
+    }
 
 
 @fastapi_app.get("/folders/<id>")
