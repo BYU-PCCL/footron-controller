@@ -5,7 +5,7 @@ from typing import Optional
 import aiohttp
 from pydantic import BaseModel
 
-from ..constants import CAPTURE_API_URL
+from ..constants import CAPTURE_API_URL, CAPTURE_REQUEST_TIMEOUT
 
 _capture_api: Optional[CaptureApi] = None
 
@@ -18,8 +18,8 @@ class CurrentCaptureExperience(BaseModel):
 
 
 class CaptureApi:
-    def __init__(self):
-        self._aiohttp_session = aiohttp.ClientSession()
+    def __init__(self, _aiohttp_session: Optional[aiohttp.ClientSession] = None):
+        self._aiohttp_session = _aiohttp_session or aiohttp.ClientSession()
 
     @staticmethod
     def _url_with_endpoint(endpoint) -> str:
@@ -29,13 +29,16 @@ class CaptureApi:
         self, id: Optional[str], path: Optional[str] = None
     ):
         async with self._aiohttp_session.put(
-            self._url_with_endpoint(_ENDPOINT_CURRENT), json={"id": id, "path": path}
+            self._url_with_endpoint(_ENDPOINT_CURRENT),
+            json={"id": id, "path": path},
+            timeout=CAPTURE_REQUEST_TIMEOUT,
         ) as response:
             return await response.json()
 
     async def current_experience(self) -> CurrentCaptureExperience:
         async with self._aiohttp_session.get(
-            self._url_with_endpoint(_ENDPOINT_CURRENT)
+            self._url_with_endpoint(_ENDPOINT_CURRENT),
+            timeout=CAPTURE_REQUEST_TIMEOUT,
         ) as response:
             return CurrentCaptureExperience.parse_obj(await response.json())
 
