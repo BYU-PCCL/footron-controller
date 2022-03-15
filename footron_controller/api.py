@@ -108,7 +108,7 @@ def experiences():
     }
 
 
-@fastapi_app.get("/experiences/<id>")
+@fastapi_app.get("/experiences/{id}")
 def experience(id):
     if id not in _controller.experiences:
         return {}
@@ -124,7 +124,7 @@ def collections():
     }
 
 
-@fastapi_app.get("/collections/<id>")
+@fastapi_app.get("/collections/{id}")
 def collection(id):
     if id not in _controller.collections:
         return {}
@@ -141,7 +141,7 @@ def folders():
     }
 
 
-@fastapi_app.get("/folders/<id>")
+@fastapi_app.get("/folders/{id}")
 def folder(id):
     if id not in _controller.folders:
         return {}
@@ -154,7 +154,7 @@ def tags():
     return {id: tag_response(tag) for id, tag in _controller.tags.items()}
 
 
-@fastapi_app.get("/tags/<id>")
+@fastapi_app.get("/tags/{id}")
 def tag(id):
     if id not in _controller.tags:
         return {}
