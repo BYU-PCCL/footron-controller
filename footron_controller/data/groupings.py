@@ -21,3 +21,4 @@ class Folder(BaseModel):
     title: str
     featured: str
     description: Optional[str]
+    visible: bool = True
