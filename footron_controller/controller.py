@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class Controller:
+    # TODO: Redo these hints the way FastAPI does them internally
     experiences: Dict[str, BaseExperience]
     # TODO: Think up a cleaner way to do this...
     collections: Dict[str, Collection]
