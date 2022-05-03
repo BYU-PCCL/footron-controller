@@ -48,9 +48,7 @@ CAPTURE_API_URL = (
 )
 
 DISABLE_WM = (
-    bool(int(os.environ["FT_DISABLE_WM"]))
-    if "FT_DISABLE_WM" in os.environ
-    else False
+    bool(int(os.environ["FT_DISABLE_WM"])) if "FT_DISABLE_WM" in os.environ else False
 )
 
 DISABLE_PLACARD = (

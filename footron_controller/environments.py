@@ -397,8 +397,7 @@ class CaptureEnvironment(BaseEnvironment):
                 capture_experience_response.id is None
                 or not capture_experience_response.processes
             )
-            and (datetime.now() - self._start_time).seconds
-            > capture_timeout
+            and (datetime.now() - self._start_time).seconds > capture_timeout
         ):
             return EnvironmentState.FAILED
 

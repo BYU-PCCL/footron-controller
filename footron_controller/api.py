@@ -198,7 +198,10 @@ async def set_current_experience(
     if not await _controller.set_experience(body.id, throttle=throttle):
         throttle_scenario = "while it was changing"
         if throttle:
-            throttle_scenario = f"either {throttle_scenario} or before timeout specified in 'throttle' parameter"
+            throttle_scenario = (
+                "either {throttle_scenario} or before timeout "
+                "specified in 'throttle' parameter"
+            )
         raise HTTPException(
             status_code=429,
             detail=f"Tried to change current experience {throttle_scenario}",
