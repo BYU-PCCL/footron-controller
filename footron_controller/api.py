@@ -248,11 +248,16 @@ async def update_placard_experience(body: PlacardExperienceData):
 
 @fastapi_app.get("/placard/url")
 async def placard_url():
-    return await _controller.placard.url()
+    if not (placard := _controller.placard):
+        return {"url": None}
+    return await placard.url()
 
 
 @fastapi_app.patch("/placard/url")
 async def update_placard_url(body: PlacardUrlData):
+    if not (placard := _controller.placard):
+        # Just fail silently if there's no placard
+        return {"status": "no_placard"}
     return await _controller.placard.set_url(body.url)
 
 
