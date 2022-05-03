@@ -22,7 +22,6 @@ from .data.groupings import Collection, Folder, Tag
 from .data.screenshot import create_screenshot_bytes_generator, SCREENSHOT_MIME_TYPES
 from .controller import Controller
 
-
 fastapi_app = FastAPI()
 
 if ROLLBAR_TOKEN:
