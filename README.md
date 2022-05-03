@@ -11,9 +11,9 @@ FT_CAPTURE_API_URL=http://<capture server (windows machine)>
 
 ## Adding web shell
 
-Build footron-web-shell using `yarn dist --linux` and copy the AppImage output to a file at
-`~/.local/share/footron/bin/footron-web-shell` on the target machine. You may have to create
-parent directories if you haven't run the controller yet.
+Build footron-web-shell using `yarn dist --linux` and copy the AppImage output to a file
+at `~/.local/share/footron/bin/footron-web-shell` on the target machine. You may have to
+create parent directories if you haven't run the controller yet.
 
 ## Adding loading screen
 
