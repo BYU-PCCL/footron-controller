@@ -166,7 +166,7 @@ class Controller:
             )
 
     async def set_experience(
-        self, id: Optional[str], *, throttle: int = None, update_throttle=True
+        self, id: Optional[str], *, throttle: int = None, update_throttle: bool = True
     ) -> bool:
         delta_last_experience = (
             (datetime.now() - self.last_started_setting_experience)
@@ -187,10 +187,12 @@ class Controller:
             return False
 
         async with self._modify_lock:
-            await self._set_experience_impl(id)
+            await self._set_experience_impl(id, update_throttle=update_throttle)
         return True
 
-    async def _set_experience_impl(self, id: Optional[str], *, update_throttle=True):
+    async def _set_experience_impl(
+        self, id: Optional[str], *, update_throttle: bool = True
+    ):
         if self._current and self._current.id == id:
             return
 
