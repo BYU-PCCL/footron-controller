@@ -16,9 +16,11 @@ from .data.wm import DisplayLayout
 from .environments import (
     BaseEnvironment,
     DockerEnvironment,
+    EnvironmentState,
     WebEnvironment,
     VideoEnvironment,
     CaptureEnvironment,
+    EnvironmentStateTransitionError,
 )
 from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
@@ -49,18 +51,18 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    _environment: EnvironmentType = PrivateAttr()
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        self._environment = self._create_environment()
+    _environment: Optional[EnvironmentType] = PrivateAttr(None)
 
     @property
     def available(self) -> bool:
+        if not self._environment:
+            raise RuntimeError(
+                "Experience has not been started, its environment is not available"
+            )
         return self._environment.available
 
     @property
-    def environment(self) -> BaseEnvironment:
+    def environment(self) -> Optional[BaseEnvironment]:
         return self._environment
 
     @validator("long_description")
@@ -72,6 +74,13 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         return value
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
+        # We check this state transition here instead of inside of the environment
+        # because we're about to create a new environment instance.
+        if self._environment and self._environment.state == EnvironmentState.RUNNING:
+            raise EnvironmentStateTransitionError(
+                EnvironmentState.RUNNING, EnvironmentState.STARTING
+            )
+        self._environment = self._create_environment()
         last_environment = last_experience._environment if last_experience else None
         await self._environment.start(last_environment)
 
@@ -80,10 +89,13 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         next_experience: Optional[BaseExperience] = None,
         after: Optional[int] = None,
     ):
+        if not self._environment:
+            raise RuntimeError("Can't stop uninitialized environment")
         next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
         await self._environment.stop(next_environment)
+        self._environment = None
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
