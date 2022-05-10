@@ -107,6 +107,9 @@ class BaseEnvironment(
                 EnvironmentState.IDLE,
                 EnvironmentState.STOPPING,
                 EnvironmentState.STOPPED,
+                # TODO: This is in violation of the state diagram. We should think about
+                #  this a little bit and then probably just allow transitioning to
+                #  STARTING/STOPPING from FAILED.
                 EnvironmentState.FAILED,
             ],
             EnvironmentState.STARTING,
