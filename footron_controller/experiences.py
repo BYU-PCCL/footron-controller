@@ -51,14 +51,14 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    _environment: Optional[EnvironmentType] = PrivateAttr(None)
+    _environment: EnvironmentType = PrivateAttr(None)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._environment = self._create_environment()
 
     @property
     def available(self) -> bool:
-        if not self._environment:
-            raise RuntimeError(
-                "Experience has not been started, its environment is not available"
-            )
         return self._environment.available
 
     @property
@@ -74,13 +74,6 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         return value
 
     async def start(self, last_experience: Optional[BaseExperience] = None):
-        # We check this state transition here instead of inside of the environment
-        # because we're about to create a new environment instance.
-        if self._environment and self._environment.state == EnvironmentState.RUNNING:
-            raise EnvironmentStateTransitionError(
-                EnvironmentState.RUNNING, EnvironmentState.STARTING
-            )
-        self._environment = self._create_environment()
         last_environment = last_experience._environment if last_experience else None
         await self._environment.start(last_environment)
 
@@ -95,7 +88,6 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         if after:
             await asyncio.sleep(after)
         await self._environment.stop(next_environment)
-        self._environment = None
 
     @abc.abstractmethod
     def _create_environment(self) -> BaseEnvironment:
