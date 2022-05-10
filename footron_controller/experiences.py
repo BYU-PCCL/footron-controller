@@ -80,6 +80,8 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         next_experience: Optional[BaseExperience] = None,
         after: Optional[int] = None,
     ):
+        if not self._environment:
+            raise RuntimeError("Can't stop uninitialized environment")
         next_environment = next_experience._environment if next_experience else None
         if after:
             await asyncio.sleep(after)
