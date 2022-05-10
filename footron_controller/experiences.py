@@ -51,8 +51,8 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     experience_path: Path
     _environment: EnvironmentType = PrivateAttr()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **data):
+        super().__init__(**data)
         self._environment = self._create_environment()
 
     @property
