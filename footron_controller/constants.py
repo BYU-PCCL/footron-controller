@@ -11,6 +11,7 @@ from .data.placard import PlacardExperienceData
 PACKAGE_PATH = Path(module_path).parent
 
 PACKAGE_STATIC_PATH = PACKAGE_PATH / "static"
+
 PACKAGE_SCRIPTS_PATH = PACKAGE_PATH / "scripts"
 
 BASE_DATA_PATH = (
@@ -40,6 +41,12 @@ STABILITY_CHECK = (
     if "FT_CHECK_STABILITY" in os.environ
     else False
 )
+
+CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
+
+CAPTURE_FAILED_TIMEOUT_S = 10
+
+CAPTURE_REQUEST_TIMEOUT = 3
 
 CAPTURE_API_URL = (
     os.environ["FT_CAPTURE_API_URL"]

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import abc
 import asyncio
 import enum
@@ -23,12 +24,10 @@ from .constants import (
     BASE_MESSAGING_URL,
     EXPERIENCE_DATA_PATH,
     BASE_BIN_PATH,
+    CAPTURE_SHELL_PATH,
+    CAPTURE_FAILED_TIMEOUT_S,
 )
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
-
-CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
-
-CAPTURE_FAILED_TIMEOUT_S = 10
 
 logger = logging.getLogger(__name__)
 
