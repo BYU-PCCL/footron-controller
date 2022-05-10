@@ -51,7 +51,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     queueable: bool = True
     load_time: Optional[int] = None
     experience_path: Path
-    _environment: EnvironmentType = PrivateAttr(None)
+    _environment: EnvironmentType = PrivateAttr()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,7 +62,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         return self._environment.available
 
     @property
-    def environment(self) -> Optional[BaseEnvironment]:
+    def environment(self) -> BaseEnvironment:
         return self._environment
 
     @validator("long_description")

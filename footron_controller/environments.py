@@ -107,6 +107,7 @@ class BaseEnvironment(
                 EnvironmentState.IDLE,
                 EnvironmentState.STOPPING,
                 EnvironmentState.STOPPED,
+                EnvironmentState.FAILED,
             ],
             EnvironmentState.STARTING,
             EnvironmentState.RUNNING,
