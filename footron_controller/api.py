@@ -22,7 +22,6 @@ from .data.groupings import Collection, Folder, Tag
 from .data.screenshot import create_screenshot_bytes_generator, SCREENSHOT_MIME_TYPES
 from .controller import Controller
 
-
 fastapi_app = FastAPI()
 
 if ROLLBAR_TOKEN:
@@ -198,7 +197,10 @@ async def set_current_experience(
     if not await _controller.set_experience(body.id, throttle=throttle):
         throttle_scenario = "while it was changing"
         if throttle:
-            throttle_scenario = f"either {throttle_scenario} or before timeout specified in 'throttle' parameter"
+            throttle_scenario = (
+                "either {throttle_scenario} or before timeout "
+                "specified in 'throttle' parameter"
+            )
         raise HTTPException(
             status_code=429,
             detail=f"Tried to change current experience {throttle_scenario}",
@@ -245,12 +247,16 @@ async def update_placard_experience(body: PlacardExperienceData):
 
 @fastapi_app.get("/placard/url")
 async def placard_url():
-    return await _controller.placard.url()
+    if not (placard := _controller.placard):
+        raise HTTPException(status_code=400, detail="Placard is not connected")
+    return await placard.url()
 
 
 @fastapi_app.patch("/placard/url")
 async def update_placard_url(body: PlacardUrlData):
-    return await _controller.placard.set_url(body.url)
+    if not (placard := _controller.placard):
+        raise HTTPException(status_code=400, detail="Placard is not connected")
+    return await placard.set_url(body.url)
 
 
 @fastapi_app.get("/screenshot")

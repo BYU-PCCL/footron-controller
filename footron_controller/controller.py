@@ -15,6 +15,7 @@ from .constants import (
     BASE_BIN_PATH,
     STABILITY_CHECK,
     EXPERIENCE_DATA_PATH,
+    INITIAL_EMPTY_EXPERIENCE_DELAY_S,
 )
 from .environments import EnvironmentState
 from .experiences import (
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class Controller:
+    # TODO: Redo these hints the way FastAPI does them internally
     experiences: Dict[str, BaseExperience]
     # TODO: Think up a cleaner way to do this...
     collections: Dict[str, Collection]
@@ -72,7 +74,7 @@ class Controller:
         # Clear the placard when starting up, but not if an experience has already been
         # set within the last 5 seconds--this should fix our problem with placard races
         # when starting up
-        asyncio.get_event_loop().create_task(self.set_experience(None, throttle=5))
+        asyncio.get_event_loop().create_task(self._set_initial_empty_experience())
 
     def load_from_fs(self):
         self.load_experiences()
@@ -163,7 +165,9 @@ class Controller:
                 experience.layout if experience else DisplayLayout.Wide
             )
 
-    async def set_experience(self, id: Optional[str], *, throttle: int = None) -> bool:
+    async def set_experience(
+        self, id: Optional[str], *, throttle: int = None, update_throttle: bool = True
+    ) -> bool:
         delta_last_experience = (
             (datetime.now() - self.last_started_setting_experience)
             if throttle and self._current and self.last_started_setting_experience
@@ -183,14 +187,17 @@ class Controller:
             return False
 
         async with self._modify_lock:
-            await self._set_experience_impl(id)
+            await self._set_experience_impl(id, update_throttle=update_throttle)
         return True
 
-    async def _set_experience_impl(self, id: Optional[str]):
+    async def _set_experience_impl(
+        self, id: Optional[str], *, update_throttle: bool = True
+    ):
         if self._current and self._current.id == id:
             return
 
-        self.last_started_setting_experience = datetime.now()
+        if update_throttle:
+            self.last_started_setting_experience = datetime.now()
 
         # Unchecked exception, consumer's responsibility to know that experience with
         # ID exists
@@ -221,6 +228,14 @@ class Controller:
                     if experience
                     else None
                 )
+
+    async def _set_initial_empty_experience(self):
+        await asyncio.sleep(INITIAL_EMPTY_EXPERIENCE_DELAY_S)
+        await self.set_experience(
+            None,
+            throttle=INITIAL_EMPTY_EXPERIENCE_DELAY_S,
+            update_throttle=False,
+        )
 
     async def _try_launch_loader(self, experience: BaseExperience):
         if not experience or not experience.load_time:

@@ -55,9 +55,7 @@ CAPTURE_API_URL = (
 )
 
 DISABLE_WM = (
-    bool(int(os.environ["FT_DISABLE_WM"]))
-    if "FT_DISABLE_WM" in os.environ
-    else False
+    bool(int(os.environ["FT_DISABLE_WM"])) if "FT_DISABLE_WM" in os.environ else False
 )
 
 DISABLE_PLACARD = (
@@ -77,6 +75,7 @@ EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
 )
 
 CURRENT_EXPERIENCE_SET_DELAY_S = 5
+INITIAL_EMPTY_EXPERIENCE_DELAY_S = 2
 
 # noinspection PyTypeChecker
 LOG_IGNORE_PATTERNS: List[Pattern] = list(

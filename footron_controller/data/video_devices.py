@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, Dict
 
 _VIDEO_DEVICE_ENV_PREFIX = "FT_VIDEO_DEV_"
-_ENV_MATCH_PATTERN = re.compile(fr"{_VIDEO_DEVICE_ENV_PREFIX}.*")
+_ENV_MATCH_PATTERN = re.compile(rf"{_VIDEO_DEVICE_ENV_PREFIX}.*")
 
 _device_manager: Optional[VideoDeviceManager] = None
 
