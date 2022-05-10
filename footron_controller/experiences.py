@@ -2,6 +2,7 @@ from __future__ import annotations
 import abc
 import asyncio
 import json
+import tomli
 import operator
 import sys
 from datetime import datetime
@@ -24,6 +25,7 @@ from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
 _DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"
+_CONFIG_FILENAME = "config"
 
 
 class ExperienceType(str, Enum):
@@ -224,29 +226,35 @@ def _serialize_experience(data: JsonDict, path: Path) -> BaseExperience:
 
 
 def _load_config_at_path(path: Path):
-    if not path.exists():
+    json_path = path / f"{_CONFIG_FILENAME}.json"
+    toml_path = path / f"{_CONFIG_FILENAME}.toml"
+
+    json_exists = json_path.exists()
+    toml_exists = toml_path.exists()
+
+    if not json_exists and not toml_exists:
+        # TODO: Log here instead of silently ignoring experiences without configs
         return
 
+    config_path = json_path if json_exists else toml_path
+
     try:
-        with open(path) as config_path:
-            config = json.load(config_path)
-    except ValueError:
+        with open(config_path, "rb") as config_file:
+            config = (json if json_exists else tomli).load(config_file)
+        return config
+    except (ValueError, tomli.TOMLDecodeError):
         print(
-            f"Failed to parse config at path '{path.absolute()}'",
+            f"Failed to parse config at path '{config_path}'",
             file=sys.stderr,
         )
         return
-
-    return config
 
 
 def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
     if not path.is_dir():
         return
 
-    return _serialize_experience(
-        _load_config_at_path(path.joinpath("config.json")), path
-    )
+    return _serialize_experience(_load_config_at_path(path), path)
 
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
@@ -256,15 +264,3 @@ def load_experiences_fs(path=EXPERIENCES_PATH):
             map(_load_experience_at_path, path.iterdir()),
         )
     )
-
-
-def load_experience_grouping(type: Type, file_name: str, path=BASE_DATA_PATH):
-    file_path = path.joinpath(file_name)
-
-    if not file_path.exists():
-        return {}
-
-    with open(file_path) as file:
-        data = json.load(file)
-
-    return {id: type(id=id, **value) for id, value in data.items()}
