@@ -16,11 +16,9 @@ from .data.wm import DisplayLayout
 from .environments import (
     BaseEnvironment,
     DockerEnvironment,
-    EnvironmentState,
     WebEnvironment,
     VideoEnvironment,
     CaptureEnvironment,
-    EnvironmentStateTransitionError,
 )
 from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
 
