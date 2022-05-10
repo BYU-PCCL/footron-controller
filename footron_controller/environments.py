@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import abc
 import asyncio
 import enum
@@ -23,12 +24,10 @@ from .constants import (
     BASE_MESSAGING_URL,
     EXPERIENCE_DATA_PATH,
     BASE_BIN_PATH,
+    CAPTURE_SHELL_PATH,
+    CAPTURE_FAILED_TIMEOUT_S,
 )
 from .data.video_devices import get_video_device_manager, VideoDeviceManager
-
-CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
-
-CAPTURE_FAILED_TIMEOUT_S = 10
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +106,10 @@ class BaseEnvironment(
                 EnvironmentState.IDLE,
                 EnvironmentState.STOPPING,
                 EnvironmentState.STOPPED,
+                # TODO: This is in violation of the state diagram. We should think about
+                #  this a little bit and then probably just allow transitioning to
+                #  STARTING/STOPPING from FAILED.
+                EnvironmentState.FAILED,
             ],
             EnvironmentState.STARTING,
             EnvironmentState.RUNNING,
@@ -397,8 +400,7 @@ class CaptureEnvironment(BaseEnvironment):
                 capture_experience_response.id is None
                 or not capture_experience_response.processes
             )
-            and (datetime.now() - self._start_time).seconds
-            > capture_timeout
+            and (datetime.now() - self._start_time).seconds > capture_timeout
         ):
             return EnvironmentState.FAILED
 

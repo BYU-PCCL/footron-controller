@@ -11,6 +11,7 @@ from .data.placard import PlacardExperienceData
 PACKAGE_PATH = Path(module_path).parent
 
 PACKAGE_STATIC_PATH = PACKAGE_PATH / "static"
+
 PACKAGE_SCRIPTS_PATH = PACKAGE_PATH / "scripts"
 
 BASE_DATA_PATH = (
@@ -41,6 +42,12 @@ STABILITY_CHECK = (
     else False
 )
 
+CAPTURE_SHELL_PATH = BASE_BIN_PATH / "footron-capture-shell"
+
+CAPTURE_FAILED_TIMEOUT_S = 10
+
+CAPTURE_REQUEST_TIMEOUT = 3
+
 CAPTURE_API_URL = (
     os.environ["FT_CAPTURE_API_URL"]
     if "FT_CAPTURE_API_URL" in os.environ
@@ -48,9 +55,7 @@ CAPTURE_API_URL = (
 )
 
 DISABLE_WM = (
-    bool(int(os.environ["FT_DISABLE_WM"]))
-    if "FT_DISABLE_WM" in os.environ
-    else False
+    bool(int(os.environ["FT_DISABLE_WM"])) if "FT_DISABLE_WM" in os.environ else False
 )
 
 DISABLE_PLACARD = (
@@ -70,6 +75,7 @@ EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
 )
 
 CURRENT_EXPERIENCE_SET_DELAY_S = 5
+INITIAL_EMPTY_EXPERIENCE_DELAY_S = 2
 
 # noinspection PyTypeChecker
 LOG_IGNORE_PATTERNS: List[Pattern] = list(
