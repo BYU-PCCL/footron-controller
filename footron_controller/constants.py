@@ -68,6 +68,7 @@ EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
 )
 
 CURRENT_EXPERIENCE_SET_DELAY_S = 5
+INITIAL_EMPTY_EXPERIENCE_DELAY_S = 2
 
 # noinspection PyTypeChecker
 LOG_IGNORE_PATTERNS: List[Pattern] = list(
