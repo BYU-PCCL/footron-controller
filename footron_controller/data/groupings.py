@@ -28,7 +28,7 @@ class Folder(BaseModel):
 
 
 def load_experience_grouping(type: Type, file_name: str, path=BASE_CONFIG_PATH):
-    file_path = path.joinpath(file_name)
+    file_path = path / file_name
 
     if not file_path.exists():
         return {}
