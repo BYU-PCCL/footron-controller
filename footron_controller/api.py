@@ -58,6 +58,7 @@ class UpdateCurrentExperienceBody(BaseModel):
 # TODO: Find a cleaner way to do this
 def experience_response(experience: BaseExperience):
     data = {
+        "type": experience.type.value,
         "id": experience.id,
         "title": experience.title,
         "artist": experience.artist,
