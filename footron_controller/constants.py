@@ -77,6 +77,8 @@ EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
 CURRENT_EXPERIENCE_SET_DELAY_S = 5
 INITIAL_EMPTY_EXPERIENCE_DELAY_S = 2
 
+VIDEO_ACTION_HINTS = ["control video playback"]
+
 # noinspection PyTypeChecker
 LOG_IGNORE_PATTERNS: List[Pattern] = list(
     map(

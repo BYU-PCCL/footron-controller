@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Type, Optional, Generic, TypeVar
+from typing import Dict, Type, Optional, Generic, TypeVar, List
 
 from pydantic import BaseModel, PrivateAttr, validator
 import footron_protocol as protocol
@@ -21,7 +21,7 @@ from .environments import (
     VideoEnvironment,
     CaptureEnvironment,
 )
-from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict
+from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict, VIDEO_ACTION_HINTS
 
 _DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"
@@ -50,6 +50,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
     unlisted: bool = False
     queueable: bool = True
     load_time: Optional[int] = None
+    action_hints: List[str] = []
     experience_path: Path
     _environment: EnvironmentType = PrivateAttr()
 
@@ -121,9 +122,16 @@ class VideoExperience(BaseExperience[VideoEnvironment]):
     layout = DisplayLayout.Hd
     filename: str
     scrubbing: bool = False
+    action_hints: List[str] = VIDEO_ACTION_HINTS
 
     def _create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.experience_path, self.filename)
+
+    @validator("action_hints")
+    def no_video_action_hints(cls, value):
+        if value:
+            raise ValueError("Can't set 'action_hints' for video experiences")
+        return value
 
 
 class CaptureExperience(BaseExperience[CaptureEnvironment]):

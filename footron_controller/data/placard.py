@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 import aiohttp
 from pydantic import BaseModel
@@ -55,6 +55,13 @@ class PlacardApi:
 
     async def experience(self):
         async with self._aiohttp_session.get("http://localhost/experience") as response:
+            return await response.json()
+
+    async def set_action_hints(self, hints: List[str]):
+        async with self._aiohttp_session.put(
+            "http://localhost/action-hints",
+            json=dict(hints=hints),
+        ) as response:
             return await response.json()
 
     async def set_url(self, url: str):
