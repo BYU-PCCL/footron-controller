@@ -258,7 +258,6 @@ class Controller:
                         if experience.long_description
                         else experience.description,
                         artist=experience.artist,
-                        action_hints=experience.action_hints
                     )
                     if experience
                     else EMPTY_EXPERIENCE_DATA
@@ -267,6 +266,9 @@ class Controller:
                 PlacardApi.placard_layout_from_display_layout(
                     experience.layout if experience else DisplayLayout.Wide
                 )
+            )
+            await self._placard.set_action_hints(
+                experience.action_hints if experience else []
             )
         except aiohttp.client_exceptions.ClientError:
             logger.warning(

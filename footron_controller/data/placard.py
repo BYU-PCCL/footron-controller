@@ -27,7 +27,6 @@ class PlacardExperienceData(BaseModel):
     title: Optional[str]
     description: Optional[str]
     artist: Optional[str]
-    action_hints: Optional[List[str]]
 
 
 class PlacardUrlData(BaseModel):
@@ -56,6 +55,13 @@ class PlacardApi:
 
     async def experience(self):
         async with self._aiohttp_session.get("http://localhost/experience") as response:
+            return await response.json()
+
+    async def set_action_hints(self, hints: List[str]):
+        async with self._aiohttp_session.put(
+            "http://localhost/action-hints",
+            json=dict(hints=hints),
+        ) as response:
             return await response.json()
 
     async def set_url(self, url: str):
