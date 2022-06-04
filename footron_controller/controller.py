@@ -258,6 +258,7 @@ class Controller:
                         if experience.long_description
                         else experience.description,
                         artist=experience.artist,
+                        action_hints=experience.action_hints
                     )
                     if experience
                     else EMPTY_EXPERIENCE_DATA

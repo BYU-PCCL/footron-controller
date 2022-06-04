@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 import aiohttp
 from pydantic import BaseModel
@@ -27,6 +27,7 @@ class PlacardExperienceData(BaseModel):
     title: Optional[str]
     description: Optional[str]
     artist: Optional[str]
+    action_hints: Optional[List[str]]
 
 
 class PlacardUrlData(BaseModel):
