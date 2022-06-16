@@ -122,16 +122,16 @@ class VideoExperience(BaseExperience[VideoEnvironment]):
     layout = DisplayLayout.Hd
     filename: str
     scrubbing: bool = False
-    action_hints: List[str] = VIDEO_ACTION_HINTS
+    action_hints: List[str]
 
     def _create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.experience_path, self.filename)
 
     @validator("action_hints")
-    def no_video_action_hints(cls, value):
+    def no_video_action_hints(cls, value, values):
         if value:
             raise ValueError("Can't set 'action_hints' for video experiences")
-        return value
+        return VIDEO_ACTION_HINTS if values["scrubbing"] else []
 
 
 class CaptureExperience(BaseExperience[CaptureEnvironment]):
