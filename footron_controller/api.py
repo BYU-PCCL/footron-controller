@@ -11,7 +11,11 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import footron_protocol as protocol
-from .util import datetime_to_timestamp, timestamp_to_datetime
+from .util import (
+    datetime_to_timestamp,
+    timestamp_to_datetime,
+    create_image_bytes_generator,
+)
 from .constants import (
     ROLLBAR_TOKEN,
     LOG_IGNORE_PATTERNS,
@@ -19,7 +23,7 @@ from .constants import (
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .experiences import BaseExperience, VideoExperience
 from .data.groupings import Collection, Folder, Tag
-from .data.screenshot import create_screenshot_bytes_generator, SCREENSHOT_MIME_TYPES
+from .data.screenshot import SCREENSHOT_MIME_TYPES
 from .controller import Controller
 
 fastapi_app = FastAPI()
@@ -262,17 +266,35 @@ async def update_placard_url(body: PlacardUrlData):
 
 @fastapi_app.get("/screenshot")
 async def screenshot(
-    w: Optional[int] = None, h: Optional[int] = None, format: str = "jpeg", q: int = 95
+    w: Optional[int] = None,
+    h: Optional[int] = None,
+    format: str = "jpeg",
+    q: int = 95,
+    target: str = "display",
 ):
     format = format.lower()
+    target = target.lower()
     if format not in SCREENSHOT_MIME_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"'format' parameter has invalid value '{format}'",
         )
 
+    screenshot_capture = _controller.screenshot_capture
+    if target == "display":
+        image = screenshot_capture.capture_root()
+    elif target == "viewport":
+        image = screenshot_capture.capture_viewport()
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"'target' parameter has invalid value '{target}'",
+        )
+
     return StreamingResponse(
-        create_screenshot_bytes_generator(width=w, height=h, quality=q, format=format),
+        create_image_bytes_generator(
+            image, width=w, height=h, quality=q, format=format
+        ),
         media_type=SCREENSHOT_MIME_TYPES[format],
     )
 

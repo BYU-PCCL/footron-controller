@@ -24,6 +24,7 @@ from .experiences import (
     DockerExperience,
     CurrentExperience,
 )
+from .data.screenshot import ScreenshotCapture
 from .data.wm import WmApi, DisplayLayout
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
@@ -46,6 +47,7 @@ class Controller:
     last_update: datetime
     last_started_setting_experience: Optional[datetime]
     _wm: Optional[WmApi]
+    _screenshot_capture: ScreenshotCapture
     _placard: Optional[PlacardApi]
     _stability: StabilityManager
     _loader: LoaderManager
@@ -62,6 +64,7 @@ class Controller:
         self.experience_tags_map = {}
         self.last_started_setting_experience = None
 
+        self._screenshot_capture = ScreenshotCapture()
         self._wm = WmApi() if not DISABLE_WM else None
         self._placard = PlacardApi() if not DISABLE_PLACARD else None
         self._stability = StabilityManager()
@@ -102,6 +105,10 @@ class Controller:
     @property
     def current(self) -> Optional[CurrentExperience]:
         return self._current
+
+    @property
+    def screenshot_capture(self):
+        return self._screenshot_capture
 
     @property
     def placard(self):
