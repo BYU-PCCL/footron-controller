@@ -274,6 +274,9 @@ class Controller:
                     experience.layout if experience else DisplayLayout.Wide
                 )
             )
+            await self._placard.set_action_hints(
+                experience.action_hints if experience else []
+            )
         except aiohttp.client_exceptions.ClientError:
             logger.warning(
                 "Updating placard failed with client exception, retrying in 1s"

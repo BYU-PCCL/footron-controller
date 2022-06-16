@@ -79,6 +79,8 @@ INITIAL_EMPTY_EXPERIENCE_DELAY_S = 2
 
 VIEWPORT_WINDOW_NAME = "FOOTRON_EXPERIENCE_VIEWPORT"
 
+VIDEO_ACTION_HINTS = ["control video playback"]
+
 # noinspection PyTypeChecker
 LOG_IGNORE_PATTERNS: List[Pattern] = list(
     map(
