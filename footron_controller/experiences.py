@@ -21,7 +21,7 @@ from .environments import (
     VideoEnvironment,
     CaptureEnvironment,
 )
-from .constants import BASE_DATA_PATH, EXPERIENCES_PATH, JsonDict, VIDEO_ACTION_HINTS
+from .constants import EXPERIENCES_PATH, JsonDict, VIDEO_ACTION_HINTS
 
 _DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"
