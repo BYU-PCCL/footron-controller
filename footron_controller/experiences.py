@@ -10,7 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Type, Optional, Generic, TypeVar, List
 
-from pydantic import BaseModel, PrivateAttr, validator
+from pydantic import BaseModel, PrivateAttr, validator, root_validator
 import footron_protocol as protocol
 
 from .data.wm import DisplayLayout
@@ -122,16 +122,17 @@ class VideoExperience(BaseExperience[VideoEnvironment]):
     layout = DisplayLayout.Hd
     filename: str
     scrubbing: bool = False
-    action_hints: List[str]
 
     def _create_environment(self) -> VideoEnvironment:
         return VideoEnvironment(self.id, self.experience_path, self.filename)
 
-    @validator("action_hints")
-    def no_video_action_hints(cls, value, values):
-        if value:
+    @root_validator(pre=True)
+    def validate_video_action_hints(cls, values):
+        if "action_hints" in values:
             raise ValueError("Can't set 'action_hints' for video experiences")
-        return VIDEO_ACTION_HINTS if values["scrubbing"] else []
+        if "scrubbing" in values and values["scrubbing"]:
+            values["action_hints"] = VIDEO_ACTION_HINTS
+        return values
 
 
 class CaptureExperience(BaseExperience[CaptureEnvironment]):
