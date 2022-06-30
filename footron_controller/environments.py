@@ -6,28 +6,27 @@ import enum
 import logging
 import os
 import subprocess
-from pathlib import Path
-from typing import Optional, Union, Callable, Awaitable, List
-import docker
-import docker.errors
 import urllib.parse
 from datetime import datetime
+from pathlib import Path
+from typing import Awaitable, Callable, List, Optional, Union
 
+import docker
+import docker.errors
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
-from .data.capture import CaptureApi, get_capture_api
-from .util import mercilessly_kill_process
 from .browser_runner import BrowserRunner
 from .constants import (
-    PACKAGE_STATIC_PATH,
     BASE_MESSAGING_URL,
-    EXPERIENCE_DATA_PATH,
-    BASE_BIN_PATH,
-    CAPTURE_SHELL_PATH,
     CAPTURE_FAILED_TIMEOUT_S,
+    CAPTURE_SHELL_PATH,
+    EXPERIENCE_DATA_PATH,
+    PACKAGE_STATIC_PATH,
 )
-from .data.video_devices import get_video_device_manager, VideoDeviceManager
+from .data.capture import CaptureApi, get_capture_api
+from .data.video_devices import VideoDeviceManager, get_video_device_manager
+from .util import mercilessly_kill_process
 
 logger = logging.getLogger(__name__)
 
