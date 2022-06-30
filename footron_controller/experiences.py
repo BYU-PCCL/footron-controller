@@ -223,7 +223,7 @@ experience_type_map: Dict[ExperienceType, Type[BaseExperience]] = {
 }
 
 
-def _serialize_experience(data: JsonDict, path: Path) -> BaseExperience:
+def _deserialize_experience(data: JsonDict, path: Path) -> BaseExperience:
     if _FIELD_TYPE not in data:
         raise TypeError(f"Experience doesn't contain required field '{_FIELD_TYPE}'")
 
@@ -264,7 +264,7 @@ def _load_experience_at_path(path: Path) -> Optional[BaseExperience]:
     if not path.is_dir():
         return
 
-    return _serialize_experience(_load_config_at_path(path), path)
+    return _deserialize_experience(_load_config_at_path(path), path)
 
 
 def load_experiences_fs(path=EXPERIENCES_PATH):
