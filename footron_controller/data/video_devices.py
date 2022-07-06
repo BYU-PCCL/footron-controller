@@ -24,7 +24,12 @@ class VideoDeviceManager:
 
     def load_devices(self):
         self._devices = {}
-        video_devs = list(sorted(map(lambda p: p.name, Path("/dev").glob("video*"))))
+        video_devs = list(
+            sorted(
+                map(lambda p: p.name, Path("/dev").glob("video*")),
+                key=lambda a: int(re.findall(r"\d+", a)[0]),
+            )
+        )
         # This is basically what Chrome does, but note that it isn't useful if there
         # are multiple instances of the same product. For that we need probably need
         # pyudev to get a serial number.
