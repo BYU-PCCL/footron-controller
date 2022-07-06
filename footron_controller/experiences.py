@@ -21,7 +21,7 @@ from .environments import (
     CaptureEnvironment,
     DockerEnvironment,
     VideoEnvironment,
-    WebEnvironment
+    WebEnvironment,
 )
 
 _DEFAULT_LIFETIME = 60
