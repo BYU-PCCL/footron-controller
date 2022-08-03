@@ -3,7 +3,7 @@ from typing import List, Optional, Type
 import tomli
 from pydantic import BaseModel
 
-from ..constants import BASE_CONFIG_PATH
+from ..constants import BASE_DATA_PATH
 
 
 class Collection(BaseModel):
@@ -27,7 +27,7 @@ class Folder(BaseModel):
     visible: bool = True
 
 
-def load_experience_grouping(type: Type, file_name: str, path=BASE_CONFIG_PATH):
+def load_experience_grouping(type: Type, file_name: str, path=BASE_DATA_PATH):
     file_path = path / file_name
 
     if not file_path.exists():
