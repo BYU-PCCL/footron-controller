@@ -68,6 +68,8 @@ EXPERIENCES_PATH = Path(BASE_DATA_PATH, "experiences")
 
 EXPERIENCE_DATA_PATH = Path(BASE_DATA_PATH, "experience-data")
 
+EXPERIENCE_COLORS_PATH = Path(BASE_DATA_PATH, "colors.json")
+
 EMPTY_EXPERIENCE_DATA = PlacardExperienceData(
     title="Footron",
     artist="Vin Howe, Chris Luangrath, Matt Powley",

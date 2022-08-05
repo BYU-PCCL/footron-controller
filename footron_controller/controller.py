@@ -28,6 +28,7 @@ from .data.screenshot import ScreenshotCapture
 from .data.wm import WmApi, DisplayLayout
 from .data.placard import PlacardApi, PlacardExperienceData
 from .data.stability import StabilityManager
+from .data.colors import ColorManager
 from .data.groupings import Collection, Folder, Tag, load_experience_grouping
 from .data.loader import LoaderManager
 
@@ -41,6 +42,7 @@ class Controller:
     collections: Dict[str, Collection]
     tags: Dict[str, Tag]
     folders: Dict[str, Folder]
+    colors: ColorManager
     # TODO: ...and this
     experience_collection_map: Dict[str, str]
     experience_tags_map: Dict[str, List[str]]
@@ -83,6 +85,7 @@ class Controller:
         self.load_collections()
         self.load_tags()
         self.load_folders()
+        self.load_colors()
         self.last_update = datetime.now()
 
     def load_experiences(self):
@@ -101,6 +104,10 @@ class Controller:
     def load_tags(self):
         self.tags = load_experience_grouping(Tag, "tags.toml")
         self._fill_experience_tag_map()
+
+    def load_colors(self):
+        self.colors = ColorManager()
+        self.colors.load(list(self.experiences.values()))
 
     @property
     def current(self) -> Optional[CurrentExperience]:
@@ -292,6 +299,15 @@ class Controller:
             ):
                 continue
             await experience.attempt_cleanup()
+
+    async def colors_handling_loop(self):
+        while True:
+            try:
+                self.colors.load_queued_colors()
+            except Exception as e:
+                rollbar.report_exc_info(e)
+                logger.exception("Error while handling colors")
+            await asyncio.sleep(1)
 
     async def handle_experience_exit_loop(self):
         while True:

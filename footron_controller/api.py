@@ -75,6 +75,10 @@ def experience_response(experience: BaseExperience):
         "tags": _controller.experience_tag_map[experience.id],
     }
 
+    colors = _controller.colors.get(experience.id)
+    if colors:
+        data["colors"] = colors.dict()
+
     if experience.id in _controller.experience_collection_map.keys():
         data["collection"] = _controller.experience_collection_map[experience.id]
 
@@ -305,6 +309,7 @@ def on_startup():
     _controller = Controller()
     asyncio.get_event_loop().create_task(_controller.stability_loop())
     asyncio.get_event_loop().create_task(_controller.handle_experience_exit_loop())
+    asyncio.get_event_loop().create_task(_controller.colors_handling_loop())
 
 
 @atexit.register
