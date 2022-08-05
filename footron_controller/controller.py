@@ -7,10 +7,16 @@ from typing import Dict, List, Optional
 import aiohttp.client_exceptions
 import rollbar
 
-from .constants import (BASE_BIN_PATH, DISABLE_PLACARD, DISABLE_WM,
-                        EMPTY_EXPERIENCE_DATA, EXPERIENCE_DATA_PATH,
-                        EXPERIENCES_PATH, INITIAL_EMPTY_EXPERIENCE_DELAY_S,
-                        STABILITY_CHECK)
+from .constants import (
+    BASE_BIN_PATH,
+    DISABLE_PLACARD,
+    DISABLE_WM,
+    EMPTY_EXPERIENCE_DATA,
+    EXPERIENCE_DATA_PATH,
+    EXPERIENCES_PATH,
+    INITIAL_EMPTY_EXPERIENCE_DELAY_S,
+    STABILITY_CHECK,
+)
 from .data.colors import ColorManager
 from .data.groupings import Collection, Folder, Tag, load_experience_grouping
 from .data.loader import LoaderManager
@@ -19,8 +25,12 @@ from .data.screenshot import ScreenshotCapture
 from .data.stability import StabilityManager
 from .data.wm import DisplayLayout, WmApi
 from .environments import EnvironmentState
-from .experiences import (BaseExperience, CurrentExperience, DockerExperience,
-                          load_experiences_fs)
+from .experiences import (
+    BaseExperience,
+    CurrentExperience,
+    DockerExperience,
+    load_experiences_fs,
+)
 
 logger = logging.getLogger(__name__)
 

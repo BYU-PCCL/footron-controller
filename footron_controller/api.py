@@ -18,8 +18,11 @@ from .data.groupings import Collection, Folder, Tag
 from .data.placard import PlacardExperienceData, PlacardUrlData
 from .data.screenshot import SCREENSHOT_MIME_TYPES
 from .experiences import BaseExperience, VideoExperience
-from .util import (create_image_bytes_generator, datetime_to_timestamp,
-                   timestamp_to_datetime)
+from .util import (
+    create_image_bytes_generator,
+    datetime_to_timestamp,
+    timestamp_to_datetime,
+)
 
 fastapi_app = FastAPI()
 
