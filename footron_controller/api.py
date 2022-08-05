@@ -4,27 +4,22 @@ import dataclasses
 import logging
 from typing import Optional
 
-import rollbar
-from rollbar.contrib.fastapi import add_to as rollbar_add_to
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import footron_protocol as protocol
-from .util import (
-    datetime_to_timestamp,
-    timestamp_to_datetime,
-    create_image_bytes_generator,
-)
-from .constants import (
-    ROLLBAR_TOKEN,
-    LOG_IGNORE_PATTERNS,
-)
-from .data.placard import PlacardExperienceData, PlacardUrlData
-from .experiences import BaseExperience, VideoExperience
-from .data.groupings import Collection, Folder, Tag
-from .data.screenshot import SCREENSHOT_MIME_TYPES
+import rollbar
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from rollbar.contrib.fastapi import add_to as rollbar_add_to
+
+from .constants import LOG_IGNORE_PATTERNS, ROLLBAR_TOKEN
 from .controller import Controller
+from .data.groupings import Collection, Folder, Tag
+from .data.placard import PlacardExperienceData, PlacardUrlData
+from .data.screenshot import SCREENSHOT_MIME_TYPES
+from .experiences import BaseExperience, VideoExperience
+from .util import (create_image_bytes_generator, datetime_to_timestamp,
+                   timestamp_to_datetime)
 
 fastapi_app = FastAPI()
 

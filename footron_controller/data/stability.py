@@ -1,10 +1,9 @@
-from datetime import datetime, timedelta
 import logging
+import subprocess
+from datetime import datetime, timedelta
 from typing import List, Tuple
 
 from ..constants import PACKAGE_SCRIPTS_PATH
-import subprocess
-
 
 # Store previous Torch CUDA is_available attempts within this duration--note that we
 # don't control the frequency of invocations within StabilityManager

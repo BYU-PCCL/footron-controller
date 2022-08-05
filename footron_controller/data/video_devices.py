@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 _VIDEO_DEVICE_ENV_PREFIX = "FT_VIDEO_DEV_"
 _ENV_MATCH_PATTERN = re.compile(rf"{_VIDEO_DEVICE_ENV_PREFIX}.*")

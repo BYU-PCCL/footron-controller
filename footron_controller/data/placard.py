@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Optional, List
+from typing import List, Optional
 
 import aiohttp
 from pydantic import BaseModel

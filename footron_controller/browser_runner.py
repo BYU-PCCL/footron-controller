@@ -8,8 +8,8 @@ from aiohttp import web
 from aiohttp.web_log import AccessLogger
 from aiohttp.web_runner import AppRunner, TCPSite
 
-from .util import mercilessly_kill_process, find_free_port
-from .constants import BASE_MESSAGING_URL, BASE_BIN_PATH
+from .constants import BASE_BIN_PATH, BASE_MESSAGING_URL
+from .util import find_free_port, mercilessly_kill_process
 
 WEB_SHELL_PATH = BASE_BIN_PATH / "footron-web-shell"
 

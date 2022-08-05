@@ -1,36 +1,26 @@
 import asyncio
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import aiohttp.client_exceptions
 import rollbar
 
-from .constants import (
-    DISABLE_WM,
-    DISABLE_PLACARD,
-    EMPTY_EXPERIENCE_DATA,
-    EXPERIENCES_PATH,
-    BASE_BIN_PATH,
-    STABILITY_CHECK,
-    EXPERIENCE_DATA_PATH,
-    INITIAL_EMPTY_EXPERIENCE_DELAY_S,
-)
-from .environments import EnvironmentState
-from .experiences import (
-    load_experiences_fs,
-    BaseExperience,
-    DockerExperience,
-    CurrentExperience,
-)
-from .data.screenshot import ScreenshotCapture
-from .data.wm import WmApi, DisplayLayout
-from .data.placard import PlacardApi, PlacardExperienceData
-from .data.stability import StabilityManager
+from .constants import (BASE_BIN_PATH, DISABLE_PLACARD, DISABLE_WM,
+                        EMPTY_EXPERIENCE_DATA, EXPERIENCE_DATA_PATH,
+                        EXPERIENCES_PATH, INITIAL_EMPTY_EXPERIENCE_DELAY_S,
+                        STABILITY_CHECK)
 from .data.colors import ColorManager
 from .data.groupings import Collection, Folder, Tag, load_experience_grouping
 from .data.loader import LoaderManager
+from .data.placard import PlacardApi, PlacardExperienceData
+from .data.screenshot import ScreenshotCapture
+from .data.stability import StabilityManager
+from .data.wm import DisplayLayout, WmApi
+from .environments import EnvironmentState
+from .experiences import (BaseExperience, CurrentExperience, DockerExperience,
+                          load_experiences_fs)
 
 logger = logging.getLogger(__name__)
 

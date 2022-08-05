@@ -1,7 +1,8 @@
+import os
 from datetime import datetime as dt
 from datetime import timedelta
+
 from .api import TimerApi
-import os
 
 CONTROLLER_URL = (
     os.environ["FT_CONTROLLER_URL"]

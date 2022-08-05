@@ -1,6 +1,6 @@
+import json
 import multiprocessing
 import pickle
-import json
 import subprocess
 from pathlib import Path
 from queue import Empty
@@ -47,7 +47,9 @@ class ColorManager:
 
     def _save_color_cache(self):
         with open(EXPERIENCE_COLORS_PATH, "w") as colors_file:
-            json.dump({key: value.dict() for key, value in self._cache.items()}, colors_file)
+            json.dump(
+                {key: value.dict() for key, value in self._cache.items()}, colors_file
+            )
 
     def load_queued_colors(self):
         if not self._processing_colors:

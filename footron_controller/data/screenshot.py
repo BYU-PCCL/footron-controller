@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
+
 import Xlib
 import Xlib.display
-from Xlib.xobject.drawable import Window
 from PIL import Image
-
+from Xlib.xobject.drawable import Window
 
 SCREENSHOT_MIME_TYPES = {
     "jpeg": "image/jpeg",

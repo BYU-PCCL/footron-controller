@@ -1,10 +1,11 @@
 import logging
-from .models import Experience, CurrentExperience
 import random
-import requests
-from typing import List
 import urllib.parse
+from typing import List
 
+import requests
+
+from .models import CurrentExperience, Experience
 
 CURRENT_EXPERIENCE_SET_DELAY_S = 10
 

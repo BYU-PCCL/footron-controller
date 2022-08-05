@@ -17,13 +17,9 @@ from docker.models.containers import Container
 from docker.types import DeviceRequest
 
 from .browser_runner import BrowserRunner
-from .constants import (
-    BASE_MESSAGING_URL,
-    CAPTURE_FAILED_TIMEOUT_S,
-    CAPTURE_SHELL_PATH,
-    EXPERIENCE_DATA_PATH,
-    PACKAGE_STATIC_PATH,
-)
+from .constants import (BASE_MESSAGING_URL, CAPTURE_FAILED_TIMEOUT_S,
+                        CAPTURE_SHELL_PATH, EXPERIENCE_DATA_PATH,
+                        PACKAGE_STATIC_PATH)
 from .data.capture import CaptureApi, get_capture_api
 from .data.video_devices import VideoDeviceManager, get_video_device_manager
 from .util import mercilessly_kill_process

@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import asyncio
 import logging
 import subprocess
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from ..util import mercilessly_kill_process
 from ..constants import BASE_BIN_PATH
+from ..util import mercilessly_kill_process
 
 if TYPE_CHECKING:
     from .wm import WmApi

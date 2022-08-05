@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-import torch
 import sys
+
+import torch
 
 if __name__ == "__main__":
     try:

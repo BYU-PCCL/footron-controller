@@ -1,8 +1,8 @@
 import asyncio
 import io
 import logging
-import subprocess
 import socket
+import subprocess
 from contextlib import closing
 from datetime import datetime
 from typing import Optional

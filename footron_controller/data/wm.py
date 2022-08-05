@@ -1,7 +1,7 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+from typing import List, Optional
 
 import zmq
 import zmq.asyncio

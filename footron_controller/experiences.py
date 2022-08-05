@@ -16,13 +16,8 @@ from pydantic import BaseModel, PrivateAttr, root_validator, validator
 
 from .constants import EXPERIENCES_PATH, VIDEO_ACTION_HINTS, JsonDict
 from .data.wm import DisplayLayout
-from .environments import (
-    BaseEnvironment,
-    CaptureEnvironment,
-    DockerEnvironment,
-    VideoEnvironment,
-    WebEnvironment,
-)
+from .environments import (BaseEnvironment, CaptureEnvironment,
+                           DockerEnvironment, VideoEnvironment, WebEnvironment)
 
 _DEFAULT_LIFETIME = 60
 _FIELD_TYPE = "type"

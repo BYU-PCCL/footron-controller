@@ -1,7 +1,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Dict, Union, Any, List, Pattern
+from typing import Any, Dict, List, Pattern, Union
 
 from xdg import xdg_config_home, xdg_data_home
 
