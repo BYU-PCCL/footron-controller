@@ -105,6 +105,13 @@ def api_reload():
     return {"status": "ok"}
 
 
+@fastapi_app.get("/info/queueable")
+def info_queueable_experiences():
+    return {
+        id for id, experience in _controller.experiences.items() if experience.queueable
+    }
+
+
 # TODO: Finish
 @fastapi_app.get("/experiences")
 def experiences():
