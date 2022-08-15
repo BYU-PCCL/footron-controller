@@ -112,7 +112,6 @@ def info_queueable_experiences():
     }
 
 
-# TODO: Finish
 @fastapi_app.get("/experiences")
 def experiences():
     return {
