@@ -13,6 +13,8 @@ CONTROLLER_URL = (
 COMMERCIAL_INTERVAL_S = 3 * 60
 INTERACTION_TIMEOUT_S = 30
 
+SUNDAY = 6
+
 
 class Timer:
     def __init__(self):
@@ -55,6 +57,12 @@ class Timer:
         return True
 
     def _pop_next(self):
+        # On Sundays we only cycle through sabbath experiences (and skip commercials),
+        # falling back to the regular rotation if none are available. Note that this
+        # uses the machine's local time.
+        if dt.now().weekday() == SUNDAY and self._api.sabbath:
+            return self._api.sabbath.pop()
+
         if (
             self._api.commercials
             and (dt.now() - self._last_commercial_time).seconds >= COMMERCIAL_INTERVAL_S

@@ -12,6 +12,10 @@ CURRENT_EXPERIENCE_SET_DELAY_S = 10
 EXPERIENCES_ENDPOINT = "experiences"
 CURRENT_ENDPOINT = f"current?throttle={CURRENT_EXPERIENCE_SET_DELAY_S}"
 
+# Experiences with this tag (see tags.toml in footron-data) are the only ones we cycle
+# through on Sundays
+SABBATH_TAG = "sabbath"
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +30,7 @@ class TimerApi:
         self._last = None
         self.experiences = None
         self.commercials = None
+        self.sabbath = None
         self.last_update = None
         self.reload()
 
@@ -58,11 +63,15 @@ class TimerApi:
             )
         )
         commercial_base = []
+        sabbath_base = []
         exp_base = []
         collection_base = {}
         for exp in experiences:
             if not exp.queueable:
                 continue
+
+            if SABBATH_TAG in exp.tags:
+                sabbath_base.append(exp)
 
             if exp.collection:
                 collection = exp.collection
@@ -80,6 +89,7 @@ class TimerApi:
 
         self.experiences = Playlist(exp_base)
         self.commercials = Playlist(commercial_base)
+        self.sabbath = Playlist(sabbath_base)
 
     def set_current(self, current) -> bool:
         # TODO check HTTP code before updating internal state
