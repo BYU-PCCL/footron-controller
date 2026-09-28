@@ -129,16 +129,13 @@ class BaseEnvironment(
         )
 
     @abc.abstractmethod
-    async def _start(self, last_environment: Optional[BaseEnvironment] = None):
-        ...
+    async def _start(self, last_environment: Optional[BaseEnvironment] = None): ...
 
     @abc.abstractmethod
-    async def _stop(self, next_environment: Optional[BaseEnvironment] = None):
-        ...
+    async def _stop(self, next_environment: Optional[BaseEnvironment] = None): ...
 
     @abc.abstractmethod
-    async def state(self) -> EnvironmentState:
-        ...
+    async def state(self) -> EnvironmentState: ...
 
     # TODO: Make this a regular function, not a property getter
     #  See https://python.org/dev/peps/pep-0008/#designing-for-inheritance:

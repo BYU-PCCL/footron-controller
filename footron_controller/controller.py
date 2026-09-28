@@ -268,9 +268,11 @@ class Controller:
                 await self._placard.set_experience(
                     PlacardExperienceData(
                         title=experience.title,
-                        description=experience.long_description
-                        if experience.long_description
-                        else experience.description,
+                        description=(
+                            experience.long_description
+                            if experience.long_description
+                            else experience.description
+                        ),
                         artist=experience.artist,
                     )
                     if experience
