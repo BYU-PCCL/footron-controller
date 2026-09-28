@@ -92,8 +92,7 @@ class BaseExperience(BaseModel, abc.ABC, Generic[EnvironmentType]):
         await self._environment.stop(next_environment)
 
     @abc.abstractmethod
-    def _create_environment(self) -> BaseEnvironment:
-        ...
+    def _create_environment(self) -> BaseEnvironment: ...
 
 
 class DockerExperience(BaseExperience[DockerEnvironment]):
