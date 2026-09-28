@@ -8,7 +8,7 @@ class Experience(BaseModel):
     unlisted: bool
     queueable: bool
     collection: Optional[str]
-    tags: List[str] = []
+    folders: List[str] = []
     lifetime: int
     title: str
     artist: Optional[str]

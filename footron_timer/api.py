@@ -12,9 +12,9 @@ CURRENT_EXPERIENCE_SET_DELAY_S = 10
 EXPERIENCES_ENDPOINT = "experiences"
 CURRENT_ENDPOINT = f"current?throttle={CURRENT_EXPERIENCE_SET_DELAY_S}"
 
-# Experiences with this tag (see tags.toml in footron-data) are the only ones we cycle
-# through on Sundays, and are left out of the regular rotation on every other day
-SABBATH_TAG = "sabbath"
+# Experiences in this folder (see folders.toml in footron-data) are the only ones we
+# cycle through on Sundays, and are left out of the regular rotation on every other day
+SABBATH_FOLDER = "lds"
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class TimerApi:
             if not exp.queueable:
                 continue
 
-            if SABBATH_TAG in exp.tags:
+            if SABBATH_FOLDER in exp.folders:
                 sabbath_base.append(exp)
                 continue
 
