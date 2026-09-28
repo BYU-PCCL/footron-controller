@@ -13,7 +13,7 @@ EXPERIENCES_ENDPOINT = "experiences"
 CURRENT_ENDPOINT = f"current?throttle={CURRENT_EXPERIENCE_SET_DELAY_S}"
 
 # Experiences with this tag (see tags.toml in footron-data) are the only ones we cycle
-# through on Sundays
+# through on Sundays, and are left out of the regular rotation on every other day
 SABBATH_TAG = "sabbath"
 
 logger = logging.getLogger(__name__)
@@ -72,6 +72,7 @@ class TimerApi:
 
             if SABBATH_TAG in exp.tags:
                 sabbath_base.append(exp)
+                continue
 
             if exp.collection:
                 collection = exp.collection
